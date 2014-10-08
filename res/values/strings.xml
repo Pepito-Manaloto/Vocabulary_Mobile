@@ -22,6 +22,9 @@
     <string name="text_last_updated">Last Updated</string>
     <string name="text_vocabularies">Vocabularies</string>
 
+    <!-- HINTS -->
+    <string name="hint_search">Search Vocabulary</string>
+    
     <!-- COMBO BOX ITEMS -->
     <string-array name="foreign_language_arrays">
         <item>Hokkien</item>

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.activity.SettingsActivity;
+import com.aaron.vocabulary.activity.VocabularyListSearchActivity;
 import com.aaron.vocabulary.adapter.VocabularyAdapter;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
@@ -21,7 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * Main view fragment containing the vocabulary list.
+ * Main view fragment containing the vocabulary list with main menu bar.
  */
 public class VocabularyListFragment extends ListFragment
 {
@@ -143,6 +144,9 @@ public class VocabularyListFragment extends ListFragment
         {
             case R.id.menu_search:
             {
+                Intent intent = new Intent(getActivity(), VocabularyListSearchActivity.class);
+                startActivity(intent);
+
                 return true;
             }
             case R.id.menu_update:
