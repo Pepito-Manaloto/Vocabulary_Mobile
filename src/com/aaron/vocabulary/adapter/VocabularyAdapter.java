@@ -3,6 +3,7 @@ package com.aaron.vocabulary.adapter;
 import java.util.ArrayList;
 
 import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
 
 import android.app.Activity;
@@ -17,16 +18,23 @@ import android.widget.TextView;
 public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 {
     private Activity activity;
+    private ArrayList<Vocabulary> vocabularyList;
+    private ArrayList<Vocabulary> vocabularyListTemporaryholder;
+    private Settings settings;
+
     /**
      * Default constructor. 0 is passed to the resource id, because we will be creating our own custom layout.
      * @param context the current context
      * @param vocabularyList the vocabulary list
      */
-    public VocabularyAdapter(final Activity context, final ArrayList<Vocabulary> vocabularyList)
+    public VocabularyAdapter(final Activity context, final ArrayList<Vocabulary> vocabularyList, final Settings settings)
     {
         super(context, 0, vocabularyList);
         
         this.activity = context;
+        this.vocabularyList = vocabularyList;
+        this.vocabularyListTemporaryholder = vocabularyList;
+        this.settings = settings;
     }
     
     /**
@@ -60,6 +68,31 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
         return convertView;
     }
     
+    /**
+     * Filters the vocabulary list in the adapter with the given searched text. Only shows english vocabularies that starts with the searched text.
+     * @param searched the searched word
+     */
+    public void filter(final String searched)
+    {
+        String searchedText = searched.trim();
+        this.vocabularyList.clear();
+
+        if(searchedText.length() == 0)
+        {
+            this.vocabularyList.addAll(this.vocabularyListTemporaryholder);
+        }
+        else
+        {
+            for(Vocabulary vocab: this.vocabularyListTemporaryholder)
+            {
+                if(vocab.getEnglishWord().startsWith(searchedText))
+                {
+                    this.vocabularyList.add(vocab);
+                }
+            }
+        }
+    }
+
     /**
      * Helper class for storing view values. Ensures findViewById() will only be called ones if convertView is not null.
      */

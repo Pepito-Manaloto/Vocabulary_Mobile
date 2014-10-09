@@ -165,4 +165,73 @@ public class Settings implements Serializable
     {
         return this.updateInterval.ordinal();
     }
+
+    /**
+     * Returns the content of the Settings object in a formatted String.
+     * @return String
+     */
+    @Override
+    public String toString()
+    {
+        return "Foreign language: " + this.foreignLanguage  +
+               " Font name: " + this.fontName +
+               "Font style: " + this.fontStyle +
+               "Font size: " + this.fontSize +
+               "Update interval: " + this.updateInterval;
+    }
+
+    /**
+     * Sets the foreignLanguage new value.
+     * @param ForeignLanguage
+     * @return the settings object being updated
+     */
+    public Settings setForeignLanguage(final ForeignLanguage foreignLanguage)
+    {
+        this.foreignLanguage = foreignLanguage;
+        return this;
+    }
+
+    /**
+     * Sets the fontName new value.
+     * @param FontName
+     * @return the settings object being updated
+     */
+    public Settings setFontName(final FontName fontName)
+    {
+        this.fontName = fontName;
+        return this;
+    }
+
+    /**
+     * Sets the fontStyle new value.
+     * @param FontStyle
+     * @return the settings object being updated
+     */
+    public Settings setFontStyle(final FontStyle fontStyle)
+    {
+        this.fontStyle = fontStyle;
+        return this;
+    }
+
+    /**
+     * Sets the fontSize new value.
+     * @param fontSize
+     * @return the settings object being updated
+     */
+    public Settings setFontSize(final int fontSize)
+    {
+        this.fontSize = fontSize;
+        return this;
+    }
+
+    /**
+     * Sets the updateInterval new value.
+     * @param UpdateInterval
+     * @return the settings object being updated
+     */
+    public Settings setUpdateInterval(final UpdateInterval updateInterval)
+    {
+        this.updateInterval = updateInterval;
+        return this;
+    }
 }

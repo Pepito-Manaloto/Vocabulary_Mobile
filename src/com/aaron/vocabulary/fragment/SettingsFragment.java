@@ -2,6 +2,10 @@ package com.aaron.vocabulary.fragment;
 
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Settings;
+import com.aaron.vocabulary.bean.Settings.FontName;
+import com.aaron.vocabulary.bean.Settings.FontStyle;
+import com.aaron.vocabulary.bean.Settings.UpdateInterval;
+import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -20,6 +24,12 @@ public class SettingsFragment extends Fragment
     public static final String EXTRA_SETTINGS = "com.aaron.vocabulary.fragment.settings";
     private Settings settings;
 
+    private Spinner foreignLanguageSpinner;
+    private Spinner fontNameSpinner;
+    private Spinner fontStyleSpinner;
+    private Spinner fontSizeSpinner;
+    private Spinner updateIntervalSpinner;
+    
     /**
      * Initializes non-fragment user interface.
      */
@@ -50,21 +60,24 @@ public class SettingsFragment extends Fragment
     {
         View view = inflater.inflate(R.layout.fragment_settings, parent, false);
         
-        Spinner foreignLanguageSpinner = (Spinner) view.findViewById(R.id.spinner_foreign_language);
-        Spinner fontNameSpinner = (Spinner) view.findViewById(R.id.spinner_font_name);
-        Spinner fontStyleSpinner = (Spinner) view.findViewById(R.id.spinner_font_style);
-        Spinner fontSizeSpinner = (Spinner) view.findViewById(R.id.spinner_font_size);
-        Spinner updateIntervalSpinner = (Spinner) view.findViewById(R.id.spinner_update_interval);
-        
-        foreignLanguageSpinner.setSelection(this.settings.getForeignLanguageIndex());
-        fontNameSpinner.setSelection(this.settings.getFontNameIndex());
-        fontStyleSpinner.setSelection(this.settings.getFontStyleIndex());
-        fontSizeSpinner.setSelection(this.settings.getFontSize());
-        updateIntervalSpinner.setSelection(this.settings.getUpdateIntervalIndex());
+        this.foreignLanguageSpinner = (Spinner) view.findViewById(R.id.spinner_foreign_language);
+        this.fontNameSpinner = (Spinner) view.findViewById(R.id.spinner_font_name);
+        this.fontStyleSpinner = (Spinner) view.findViewById(R.id.spinner_font_style);
+        this.fontSizeSpinner = (Spinner) view.findViewById(R.id.spinner_font_size);
+        this.updateIntervalSpinner = (Spinner) view.findViewById(R.id.spinner_update_interval);
+
+        this.foreignLanguageSpinner.setSelection(this.settings.getForeignLanguageIndex());
+        this.fontNameSpinner.setSelection(this.settings.getFontNameIndex());
+        this.fontStyleSpinner.setSelection(this.settings.getFontStyleIndex());
+        this.fontSizeSpinner.setSelection(this.settings.getFontSizeIndex());
+        this.updateIntervalSpinner.setSelection(this.settings.getUpdateIntervalIndex());
 
         return view;
     }
 
+    /**
+     * Saves the selected settings and returns it to the main activity.
+     */
     @Override
     public void onPause()
     {
@@ -72,8 +85,19 @@ public class SettingsFragment extends Fragment
 
         Intent data = new Intent();
 
+        ForeignLanguage foreignLanguage = ForeignLanguage.valueOf(this.foreignLanguageSpinner.getSelectedItem().toString());
+        FontName fontName = FontName.valueOf(this.fontNameSpinner.getSelectedItem().toString()); 
+        FontStyle fontStyle = FontStyle.valueOf(this.fontStyleSpinner.getSelectedItem().toString());
+        int fontSize = Integer.parseInt(this.fontSizeSpinner.getSelectedItem().toString());
+        UpdateInterval updateInterval = UpdateInterval.valueOf(this.updateIntervalSpinner.getSelectedItem().toString());
         
-       // data.putExtra(EXTRA_SETTINGS, );
+        this.settings.setForeignLanguage(foreignLanguage)
+                     .setFontName(fontName)
+                     .setFontStyle(fontStyle)
+                     .setFontSize(fontSize)
+                     .setUpdateInterval(updateInterval);
+
+        data.putExtra(EXTRA_SETTINGS, this.settings);
         getActivity().setResult(Activity.RESULT_OK, data);
     }
 }

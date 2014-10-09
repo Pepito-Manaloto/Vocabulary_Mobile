@@ -2,9 +2,6 @@ package com.aaron.vocabulary.bean;
 
 import java.io.Serializable;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 /**
  * Java bean for a vocabulary.
  */
@@ -21,17 +18,7 @@ public class Vocabulary implements Serializable
         Japanese, 
         Mandarin,
     }
-    
-    /**
-     * Enum for the list of JSON field names. 
-     */
-    public enum FieldName
-    {
-        ENGLISH_WORD,
-        FOREIGN_WORD,
-        FOREIGN_LANGUAGE,
-    }
-    
+
     private final String englishWord;
     private final String foreignWord;
     private final ForeignLanguage foreignLanguage;
@@ -59,20 +46,6 @@ public class Vocabulary implements Serializable
     public ForeignLanguage getForeignLanguage()
     {
         return this.foreignLanguage;
-    }
-
-    /**
-     * Encapsulates the object's attribute into a JSON object.
-     * @return JSONObject
-     */
-    public JSONObject toJSON() throws JSONException
-    {
-        JSONObject json = new JSONObject();
-        json.put(FieldName.ENGLISH_WORD.name(), this.englishWord);
-        json.put(FieldName.FOREIGN_WORD.name(), this.foreignWord);
-        json.put(FieldName.FOREIGN_LANGUAGE.name(), this.foreignLanguage.name());
-
-        return json;
     }
 
     /**

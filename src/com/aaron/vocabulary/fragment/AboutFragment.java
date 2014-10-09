@@ -3,9 +3,11 @@ package com.aaron.vocabulary.fragment;
 import com.aaron.vocabulary.R;
 
 import android.app.Fragment;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -32,11 +34,11 @@ public class AboutFragment extends Fragment
     {
         View view = inflater.inflate(R.layout.fragment_about, parent, false);
 
-        TextView buildNumberTextView = (TextView) getActivity().findViewById(R.id.text_build_number);
-        TextView lastUpdatedTextView = (TextView) getActivity().findViewById(R.id.text_last_updated);
-        TextView hokkienCountTextView = (TextView) getActivity().findViewById(R.id.text_hokkien_count);
-        TextView japaneseCountTextView = (TextView) getActivity().findViewById(R.id.text_japanese_count);
-        TextView mandarinCountTextView = (TextView) getActivity().findViewById(R.id.text_mandarin_count);
+        final TextView buildNumberTextView = (TextView) view.findViewById(R.id.text_build_number);
+        TextView lastUpdatedTextView = (TextView) view.findViewById(R.id.text_last_updated);
+        TextView hokkienCountTextView = (TextView) view.findViewById(R.id.text_hokkien_count);
+        TextView japaneseCountTextView = (TextView) view.findViewById(R.id.text_japanese_count);
+        TextView mandarinCountTextView = (TextView) view.findViewById(R.id.text_mandarin_count);
 
         String threeTabs = "            ";
 

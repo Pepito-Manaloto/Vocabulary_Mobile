@@ -3,8 +3,8 @@ package com.aaron.vocabulary.fragment;
 import java.util.ArrayList;
 
 import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.activity.AboutActivity;
 import com.aaron.vocabulary.activity.SettingsActivity;
-import com.aaron.vocabulary.activity.VocabularyListSearchActivity;
 import com.aaron.vocabulary.adapter.VocabularyAdapter;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
@@ -14,12 +14,15 @@ import android.app.FragmentManager;
 import android.app.ListFragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 
 /**
  * Main view fragment containing the vocabulary list with main menu bar.
@@ -30,6 +33,8 @@ public class VocabularyListFragment extends ListFragment
 
     private static final int REQUEST_UPDATE = 0;
     private static final int REQUEST_SETTINGS = 1;
+
+    public static final String EXTRA_LIST = "com.aaron.vocabulary.fragment.list";
 
     private ArrayList<Vocabulary> list;
     private Settings settings;
@@ -51,8 +56,8 @@ public class VocabularyListFragment extends ListFragment
             this.settings = new Settings();
         }
 
-        this.list = null; // retrieve from db
-        VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(getActivity(), this.list);
+        this.list = new ArrayList<>(); // retrieve from db
+        VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(getActivity(), this.list, this.settings);
         setListAdapter(vocabularyAdapter);
 
         setHasOptionsMenu(true);
@@ -129,6 +134,34 @@ public class VocabularyListFragment extends ListFragment
     {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.vocabulary, menu);
+        
+        
+        /** Get the action view of the menu item whose id is edittext_search_field */
+        View view = (View) menu.findItem(R.id.menu_search).getActionView();
+        
+        /** Get the edit text from the action view */
+        final EditText searchTextfield = (EditText) view.findViewById(R.id.edittext_search_field);
+
+        searchTextfield.addTextChangedListener(new TextWatcher()
+            {
+                @Override
+                public void afterTextChanged(Editable arg0)
+                {
+                    String searched = searchTextfield.getText().toString();
+                    VocabularyAdapter vocabularyAdapter = (VocabularyAdapter) getListAdapter();
+                    vocabularyAdapter.filter(searched);
+                }
+    
+                @Override
+                public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
+                {
+                }
+    
+                @Override
+                public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
+                {
+                }
+            });
     }
 
     /**
@@ -144,8 +177,6 @@ public class VocabularyListFragment extends ListFragment
         {
             case R.id.menu_search:
             {
-                Intent intent = new Intent(getActivity(), VocabularyListSearchActivity.class);
-                startActivity(intent);
 
                 return true;
             }
@@ -167,6 +198,8 @@ public class VocabularyListFragment extends ListFragment
             }
             case R.id.menu_about:
             {
+                Intent intent = new Intent(getActivity(), AboutActivity.class);
+                startActivity(intent);
                 return true;
             }
             case R.id.menu_logs:

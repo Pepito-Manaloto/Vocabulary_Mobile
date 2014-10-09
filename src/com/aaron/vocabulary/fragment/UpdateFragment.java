@@ -129,7 +129,7 @@ public class UpdateFragment extends DialogFragment
         @Override
         public void onPostExecute(String message)
         {
-            dismiss();
+            UpdateFragment.this.dismiss();
             Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
         }
     }
