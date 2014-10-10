@@ -175,9 +175,9 @@ public class Settings implements Serializable
     {
         return "Foreign language: " + this.foreignLanguage  +
                " Font name: " + this.fontName +
-               "Font style: " + this.fontStyle +
-               "Font size: " + this.fontSize +
-               "Update interval: " + this.updateInterval;
+               " Font style: " + this.fontStyle +
+               " Font size: " + this.fontSize +
+               " Update interval: " + this.updateInterval;
     }
 
     /**

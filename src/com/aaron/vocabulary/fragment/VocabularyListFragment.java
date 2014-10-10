@@ -46,12 +46,12 @@ public class VocabularyListFragment extends ListFragment
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        
+
         if(savedInstanceState != null)
         {
             this.settings = (Settings) savedInstanceState.getSerializable(SettingsFragment.EXTRA_SETTINGS);
         }
-        else
+        else if(this.settings == null)
         {
             this.settings = new Settings();
         }
@@ -75,7 +75,7 @@ public class VocabularyListFragment extends ListFragment
     }
 
     /**
-     * Updates the application. We do not update in onCreate() because it might not be called.
+     * Changed the title of the application.
      */
     @Override
     public void onResume()
@@ -84,12 +84,10 @@ public class VocabularyListFragment extends ListFragment
 
         String language = getString(R.string.app_name, this.settings.getForeignLanguage().name());
         getActivity().setTitle(language);
-
-        ((VocabularyAdapter) this.getListAdapter()).notifyDataSetChanged();
     }
 
     /**
-     * Saves current state and settings in memory. This save is temporary.
+     * Saves current state and settings in memory. For screen rotation.
      */
     @Override
     public void onSaveInstanceState(Bundle outState)
@@ -112,7 +110,7 @@ public class VocabularyListFragment extends ListFragment
         }
 
         // Update action bar menu processing result
-        if(requestCode == REQUEST_UPDATE)
+        if(requestCode == REQUEST_UPDATE && data.hasExtra(UpdateFragment.EXTRA_VOCABULARY_LIST))
         {
             @SuppressWarnings("unchecked")
             // But we are sure of its type
@@ -120,7 +118,7 @@ public class VocabularyListFragment extends ListFragment
 
             // TODO: update the list view
         }
-        else if(requestCode == REQUEST_SETTINGS)
+        else if(requestCode == REQUEST_SETTINGS && data.hasExtra(SettingsFragment.EXTRA_SETTINGS))
         {
             this.settings = (Settings) data.getSerializableExtra(SettingsFragment.EXTRA_SETTINGS);
         }
@@ -134,8 +132,7 @@ public class VocabularyListFragment extends ListFragment
     {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.vocabulary, menu);
-        
-        
+
         /** Get the action view of the menu item whose id is edittext_search_field */
         View view = (View) menu.findItem(R.id.menu_search).getActionView();
         
@@ -165,8 +162,7 @@ public class VocabularyListFragment extends ListFragment
     }
 
     /**
-     * This method is called when a user selects an item in the menu bar. Opens
-     * the fragment of selected item.
+     * This method is called when a user selects an item in the menu bar. Opens the fragment of selected item.
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
@@ -177,7 +173,6 @@ public class VocabularyListFragment extends ListFragment
         {
             case R.id.menu_search:
             {
-
                 return true;
             }
             case R.id.menu_update:

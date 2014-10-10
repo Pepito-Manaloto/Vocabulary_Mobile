@@ -1,5 +1,6 @@
 package com.aaron.vocabulary.activity;
 
+import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.fragment.SettingsFragment;
 import android.app.Fragment;
 
@@ -15,7 +16,9 @@ public class SettingsActivity extends SingleFragmentActivity
     @Override
     protected Fragment createFragment()
     {
-        return new SettingsFragment();
+        Settings settings = (Settings) this.getIntent().getSerializableExtra(SettingsFragment.EXTRA_SETTINGS);
+        
+        return SettingsFragment.newInstance(settings);
     }
 
 }

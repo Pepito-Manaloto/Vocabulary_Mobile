@@ -33,9 +33,9 @@
     </string-array>
     <string-array name="font_name_arrays">
         <item>Normal</item>
-        <item>Sans Serif</item>
-        <item>Monospace</item>
+        <item>Sans_Serif</item>
         <item>Serif</item>
+        <item>Monospace</item>
     </string-array>
     <string-array name="font_style_arrays">
         <item>Plain</item>

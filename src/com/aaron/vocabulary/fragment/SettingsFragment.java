@@ -1,6 +1,8 @@
 package com.aaron.vocabulary.fragment;
 
 import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.activity.AboutActivity;
+import com.aaron.vocabulary.activity.SettingsActivity;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Settings.FontName;
 import com.aaron.vocabulary.bean.Settings.FontStyle;
@@ -9,9 +11,11 @@ import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Spinner;
@@ -29,7 +33,26 @@ public class SettingsFragment extends Fragment
     private Spinner fontStyleSpinner;
     private Spinner fontSizeSpinner;
     private Spinner updateIntervalSpinner;
-    
+
+    /**
+     * Empty private constructor, to ensure instantiation only by newInstance(Settings).
+     */
+    private SettingsFragment()
+    {}
+
+    /**
+     * Returns a new SettingsFragment with the given settings as arguments.
+     */
+    public static SettingsFragment newInstance(final Settings settings)
+    {
+        Bundle args = new Bundle();
+        args.putSerializable(EXTRA_SETTINGS, settings);
+        
+        SettingsFragment fragment = new SettingsFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     /**
      * Initializes non-fragment user interface.
      */
@@ -37,15 +60,8 @@ public class SettingsFragment extends Fragment
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        
-        if(savedInstanceState != null)
-        {
-            this.settings = (Settings) savedInstanceState.getSerializable(SettingsFragment.EXTRA_SETTINGS);
-        }
-        else
-        {
-            this.settings = new Settings();
-        }
+  
+        this.settings = (Settings) getArguments().getSerializable(SettingsFragment.EXTRA_SETTINGS);
 
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.menu_settings);
@@ -59,7 +75,7 @@ public class SettingsFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState)
     {
         View view = inflater.inflate(R.layout.fragment_settings, parent, false);
-        
+
         this.foreignLanguageSpinner = (Spinner) view.findViewById(R.id.spinner_foreign_language);
         this.fontNameSpinner = (Spinner) view.findViewById(R.id.spinner_font_name);
         this.fontStyleSpinner = (Spinner) view.findViewById(R.id.spinner_font_style);
@@ -76,21 +92,52 @@ public class SettingsFragment extends Fragment
     }
 
     /**
-     * Saves the selected settings and returns it to the main activity.
+     * Saves current state and settings in memory. For screen rotation.
      */
     @Override
-    public void onPause()
+    public void onSaveInstanceState(Bundle outState)
     {
-        super.onPause();
+        super.onSaveInstanceState(outState);
 
+        outState.putSerializable(SettingsFragment.EXTRA_SETTINGS, this.settings);
+    }
+
+    /**
+     * This method is called when a user selects an item in the menu bar. Home button.
+     * the fragment of selected item.
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch(item.getItemId())
+        {
+            case android.R.id.home:
+            {
+                this.setFragmentAcivityResult();
+                System.out.println("onOptionsItemSelected");
+
+                return true;
+            }
+            default:
+            {
+                return super.onOptionsItemSelected(item);
+            }
+        }
+    }
+
+    /**
+     * Sets the new settings and sends it to the main activity fragment.
+     */
+    private void setFragmentAcivityResult()
+    {
         Intent data = new Intent();
 
         ForeignLanguage foreignLanguage = ForeignLanguage.valueOf(this.foreignLanguageSpinner.getSelectedItem().toString());
-        FontName fontName = FontName.valueOf(this.fontNameSpinner.getSelectedItem().toString()); 
+        FontName fontName = FontName.valueOf(this.fontNameSpinner.getSelectedItem().toString());
         FontStyle fontStyle = FontStyle.valueOf(this.fontStyleSpinner.getSelectedItem().toString());
         int fontSize = Integer.parseInt(this.fontSizeSpinner.getSelectedItem().toString());
         UpdateInterval updateInterval = UpdateInterval.valueOf(this.updateIntervalSpinner.getSelectedItem().toString());
-        
+
         this.settings.setForeignLanguage(foreignLanguage)
                      .setFontName(fontName)
                      .setFontStyle(fontStyle)
@@ -99,5 +146,6 @@ public class SettingsFragment extends Fragment
 
         data.putExtra(EXTRA_SETTINGS, this.settings);
         getActivity().setResult(Activity.RESULT_OK, data);
+        getActivity().finish();
     }
 }
