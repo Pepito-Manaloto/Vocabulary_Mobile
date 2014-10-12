@@ -1,8 +1,6 @@
 package com.aaron.vocabulary.fragment;
 
 import com.aaron.vocabulary.R;
-import com.aaron.vocabulary.activity.AboutActivity;
-import com.aaron.vocabulary.activity.SettingsActivity;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Settings.FontName;
 import com.aaron.vocabulary.bean.Settings.FontStyle;
@@ -11,7 +9,6 @@ import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -33,12 +30,6 @@ public class SettingsFragment extends Fragment
     private Spinner fontStyleSpinner;
     private Spinner fontSizeSpinner;
     private Spinner updateIntervalSpinner;
-
-    /**
-     * Empty private constructor, to ensure instantiation only by newInstance(Settings).
-     */
-    private SettingsFragment()
-    {}
 
     /**
      * Returns a new SettingsFragment with the given settings as arguments.
@@ -92,17 +83,6 @@ public class SettingsFragment extends Fragment
     }
 
     /**
-     * Saves current state and settings in memory. For screen rotation.
-     */
-    @Override
-    public void onSaveInstanceState(Bundle outState)
-    {
-        super.onSaveInstanceState(outState);
-
-        outState.putSerializable(SettingsFragment.EXTRA_SETTINGS, this.settings);
-    }
-
-    /**
      * This method is called when a user selects an item in the menu bar. Home button.
      * the fragment of selected item.
      */
@@ -114,7 +94,6 @@ public class SettingsFragment extends Fragment
             case android.R.id.home:
             {
                 this.setFragmentAcivityResult();
-                System.out.println("onOptionsItemSelected");
 
                 return true;
             }

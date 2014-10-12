@@ -1,9 +1,13 @@
 package com.aaron.vocabulary.fragment;
 
+import java.io.IOException;
 import java.util.ArrayList;
+
+import org.apache.http.client.ClientProtocolException;
 
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Vocabulary;
+import com.aaron.vocabulary.model.VocabularyManager;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -20,6 +24,7 @@ import android.widget.Toast;
 public class UpdateFragment extends DialogFragment
 {
     public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.vocabulary_list";
+    private VocabularyManager vocabularyManager;
 
     /**
      * Creates a new UpdateFragment and sets its arguments.
@@ -46,7 +51,9 @@ public class UpdateFragment extends DialogFragment
         progressDialog.setMessage(getString(R.string.dialog_update_message));
         progressDialog.setIndeterminate(true);
         progressDialog.setCancelable(true);
-        
+
+        this.vocabularyManager = new VocabularyManager(getActivity());
+
         return progressDialog;
     }
 
@@ -89,10 +96,19 @@ public class UpdateFragment extends DialogFragment
         @Override
         protected String doInBackground(Void... arg0)
         {
-            //TODO: GET VOCAB LIST FROM SERVER (JSON format), then save to list
             ArrayList<Vocabulary> list = new ArrayList<>();
             String response = "SUCCESS";
 
+            try
+            {
+                list = vocabularyManager.getVocabularies();
+            }
+            catch(IOException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            
             // Update argument to preserve the list on rotation
             getArguments().putSerializable(EXTRA_VOCABULARY_LIST, list);
             this.sendResult(list, Activity.RESULT_OK);
