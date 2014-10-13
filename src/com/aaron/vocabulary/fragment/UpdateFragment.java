@@ -1,13 +1,6 @@
 package com.aaron.vocabulary.fragment;
 
-import java.io.IOException;
 import java.util.ArrayList;
-
-import org.apache.http.client.ClientProtocolException;
-
-import com.aaron.vocabulary.R;
-import com.aaron.vocabulary.bean.Vocabulary;
-import com.aaron.vocabulary.model.VocabularyManager;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -17,6 +10,10 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Toast;
+
+import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.bean.Vocabulary;
+import com.aaron.vocabulary.model.VocabularyManager;
 
 /**
  * The update dialog fragment that retrieves vocabulary list from the server. 
@@ -91,24 +88,17 @@ public class UpdateFragment extends DialogFragment
         }
 
         /**
-         * Retrieves data from server then returns the data, encapsulated in the intent, to VocaublaryListFragment.
+         * Retrieves data from server (also save to local disk) then returns the data, encapsulated in the intent, to VocaublaryListFragment.
          */
         @Override
         protected String doInBackground(Void... arg0)
         {
             ArrayList<Vocabulary> list = new ArrayList<>();
-            String response = "SUCCESS";
 
-            try
-            {
-                list = vocabularyManager.getVocabularies();
-            }
-            catch(IOException e)
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            
+            list = vocabularyManager.getVocabularies();
+            String responseCode = vocabularyManager.getStatusText();
+            String responseText = vocabularyManager.getResponseText();
+
             // Update argument to preserve the list on rotation
             getArguments().putSerializable(EXTRA_VOCABULARY_LIST, list);
             this.sendResult(list, Activity.RESULT_OK);
@@ -116,9 +106,13 @@ public class UpdateFragment extends DialogFragment
             int listLength = list.size();
             String message = "";
 
-            if("SUCCESS".equals(response))
+            if("Ok".equals(responseCode))
             {
-                if(listLength > 1)
+                if(!"Success".equals(responseText))
+                {
+                    message = responseText;
+                }
+                else if(listLength > 1)
                 {
                     message = listLength + " new vocabularies added.";
                 }
@@ -133,12 +127,12 @@ public class UpdateFragment extends DialogFragment
             }
             else
             {
-                message = response;
+                message = responseCode + ". " + responseText;
             }
 
             return message;
         }
-        
+
         /**
          * Removes the dialog from screen, and shows the result of the operation on toast.
          */

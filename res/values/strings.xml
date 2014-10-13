@@ -30,11 +30,6 @@
     <string name="url_resource">/Vocabulary/get.php</string>
 
     <!-- COMBO BOX ITEMS -->
-    <string-array name="foreign_language_arrays">
-        <item>Hokkien</item>
-        <item>Japanese</item>
-        <item>Mandarin</item>
-    </string-array>
     <string-array name="font_name_arrays">
         <item>Normal</item>
         <item>Sans_Serif</item>

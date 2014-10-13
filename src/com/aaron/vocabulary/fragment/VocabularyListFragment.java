@@ -50,13 +50,23 @@ public class VocabularyListFragment extends ListFragment
         if(savedInstanceState != null)
         {
             this.settings = (Settings) savedInstanceState.getSerializable(SettingsFragment.EXTRA_SETTINGS);
+
+            @SuppressWarnings("unchecked")
+            // But we are sure of its type
+            ArrayList<Vocabulary> listTemp = (ArrayList<Vocabulary>) savedInstanceState.getSerializable(EXTRA_LIST);
+            this.list = listTemp;
         }
-        else if(this.settings == null)
+
+        if(this.settings == null)
         {
             this.settings = new Settings();
         }
 
-        this.list = new ArrayList<>(); // retrieve from db
+        if(this.list == null)
+        {
+            this.list = new ArrayList<>(); // retrieve from db
+        }
+
         VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(getActivity(), this.list, this.settings);
         setListAdapter(vocabularyAdapter);
 
@@ -95,6 +105,7 @@ public class VocabularyListFragment extends ListFragment
         super.onSaveInstanceState(outState);
 
         outState.putSerializable(SettingsFragment.EXTRA_SETTINGS, this.settings);
+        outState.putSerializable(EXTRA_LIST, this.list);
     }
 
     /**
@@ -112,8 +123,9 @@ public class VocabularyListFragment extends ListFragment
         // Update action bar menu processing result
         if(requestCode == REQUEST_UPDATE && data.hasExtra(UpdateFragment.EXTRA_VOCABULARY_LIST))
         {
-            @SuppressWarnings("unchecked")
+            
             // But we are sure of its type
+            @SuppressWarnings("unchecked")
             ArrayList<Vocabulary> list = (ArrayList<Vocabulary>) data.getSerializableExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
 
             // TODO: update the list view

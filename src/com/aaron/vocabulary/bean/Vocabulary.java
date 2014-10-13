@@ -19,6 +19,15 @@ public class Vocabulary implements Serializable
         Mandarin,
     }
 
+    /**
+     * Enum for the json key.
+     */
+    public enum JsonKey
+    {
+        english_word, 
+        foreign_word, 
+    }
+
     private final String englishWord;
     private final String foreignWord;
     private final ForeignLanguage foreignLanguage;

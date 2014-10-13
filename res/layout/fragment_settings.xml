@@ -12,8 +12,7 @@
     <Spinner
         android:id="@+id/spinner_foreign_language"
         style="@style/Spinner_settings"
-        android:layout_below="@id/textview_foreign_language"
-        android:entries="@array/foreign_language_arrays" />
+        android:layout_below="@id/textview_foreign_language" />
 
     <TextView
         android:id="@+id/textview_font"

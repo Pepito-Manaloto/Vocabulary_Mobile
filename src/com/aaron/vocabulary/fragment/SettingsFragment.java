@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
 /**
@@ -24,7 +25,9 @@ public class SettingsFragment extends Fragment
 {
     public static final String EXTRA_SETTINGS = "com.aaron.vocabulary.fragment.settings";
     private Settings settings;
-
+    private static final ForeignLanguage[] languages = ForeignLanguage.values();
+    private final ArrayAdapter<ForeignLanguage> languageAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_dropdown_item, languages);
+    
     private Spinner foreignLanguageSpinner;
     private Spinner fontNameSpinner;
     private Spinner fontStyleSpinner;
@@ -51,7 +54,7 @@ public class SettingsFragment extends Fragment
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-  
+
         this.settings = (Settings) getArguments().getSerializable(SettingsFragment.EXTRA_SETTINGS);
 
         setHasOptionsMenu(true);
@@ -68,6 +71,8 @@ public class SettingsFragment extends Fragment
         View view = inflater.inflate(R.layout.fragment_settings, parent, false);
 
         this.foreignLanguageSpinner = (Spinner) view.findViewById(R.id.spinner_foreign_language);
+        this.foreignLanguageSpinner.setAdapter(languageAdapter);
+
         this.fontNameSpinner = (Spinner) view.findViewById(R.id.spinner_font_name);
         this.fontStyleSpinner = (Spinner) view.findViewById(R.id.spinner_font_style);
         this.fontSizeSpinner = (Spinner) view.findViewById(R.id.spinner_font_size);
