@@ -103,7 +103,7 @@ public class UpdateFragment extends DialogFragment
             getArguments().putSerializable(EXTRA_VOCABULARY_LIST, list);
             this.sendResult(list, Activity.RESULT_OK);
 
-            int listLength = list.size();
+            int newCount = vocabularyManager.getRecentlyAddedCount();
             String message = "";
 
             if("Ok".equals(responseCode))
@@ -112,13 +112,13 @@ public class UpdateFragment extends DialogFragment
                 {
                     message = responseText;
                 }
-                else if(listLength > 1)
+                else if(newCount > 1)
                 {
-                    message = listLength + " new vocabularies added.";
+                    message = newCount + " new vocabularies added.";
                 }
-                else if(listLength == 1)
+                else if(newCount == 1)
                 {
-                    message = listLength + " new vocabulary added.";
+                    message = newCount + " new vocabulary added.";
                 }
                 else
                 {

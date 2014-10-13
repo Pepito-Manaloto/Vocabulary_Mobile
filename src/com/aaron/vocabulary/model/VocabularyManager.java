@@ -20,9 +20,9 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 
+import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
-import static com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage.*;
 import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.*;
 
 /**
@@ -31,10 +31,12 @@ import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.*;
  */
 public class VocabularyManager
 {
-    private final String url;
     private int responseCode = HttpStatus.SC_INTERNAL_SERVER_ERROR;
     private String responseText;
     private ForeignLanguage languageSelected;
+    private int recentlyAddedCount;
+
+    private final String url;
     private static final String AUTH_KEY = "449a36b6689d841d7d27f31b4b7cc73a";
 
     /**
@@ -43,9 +45,12 @@ public class VocabularyManager
      */
     public VocabularyManager(final Activity activity)
     {   
-        this.languageSelected = ForeignLanguage.valueOf(activity.getTitle().toString());
-        //this.url = "http://" + activity.getString(R.string.url_address) + activity.getString(R.string.url_resource);
-        this.url = "http://10.11.3.106/test/get.php";
+        String parsedTitle = activity.getTitle().toString();
+        parsedTitle = parsedTitle.substring(12, parsedTitle.length() - 1); // Extract selected language from the title
+
+        this.languageSelected = ForeignLanguage.valueOf(parsedTitle);
+        this.url = "http://" + activity.getString(R.string.url_address) + activity.getString(R.string.url_resource);
+        //this.url = "http://10.11.3.106/test/get.php";
     }
 
     /**
@@ -86,6 +91,8 @@ public class VocabularyManager
                 {
                     this.responseCode = HttpStatus.SC_INTERNAL_SERVER_ERROR;
                     this.responseText = "Failed saving to disk.";
+                    
+                    return new ArrayList<>(0);
                 }
 
                 this.responseText = "Success";
@@ -123,14 +130,17 @@ public class VocabularyManager
             JSONObject jsonLangValues; // JSON items of the array of each language
 
             int jsonLangArrayLength = jsonLangArray.length();
-
+            ArrayList<Vocabulary> listTemp = new ArrayList<>();
+            
             // Loop each values of the language
             for(int i = 0; i < jsonLangArrayLength; i++)
             {
                 jsonLangValues = jsonLangArray.getJSONObject(i);
                 vocabulary = new Vocabulary(jsonLangValues.getString(english_word.name()), jsonLangValues.getString(foreign_word.name()), foreignLanguage);
-System.out.println(vocabulary);
+                listTemp.add(vocabulary);
             }
+
+            map.put(foreignLanguage, listTemp);
         }
         
         return map;
@@ -141,7 +151,7 @@ System.out.println(vocabulary);
      */
     private boolean saveToDisk(final HashMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap)
     {
-        return false;
+        return true;
     }
 
     /**
@@ -165,7 +175,7 @@ System.out.println(vocabulary);
                 return "Status Code Unknown";
         }
     }
-    
+
     /**
      * Returns the response text by the last web call.
      * Empty text is returned if the class does not have a previous web call.
@@ -174,5 +184,14 @@ System.out.println(vocabulary);
     public String getResponseText()
     {
         return this.responseText;
+    }
+
+    /**
+     * Returns the number of vocabularies that are new.
+     * @return int
+     */
+    public int getRecentlyAddedCount()
+    {
+        return this.recentlyAddedCount;
     }
 }

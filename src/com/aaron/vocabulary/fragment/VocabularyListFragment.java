@@ -51,8 +51,8 @@ public class VocabularyListFragment extends ListFragment
         {
             this.settings = (Settings) savedInstanceState.getSerializable(SettingsFragment.EXTRA_SETTINGS);
 
-            @SuppressWarnings("unchecked")
             // But we are sure of its type
+            @SuppressWarnings("unchecked")
             ArrayList<Vocabulary> listTemp = (ArrayList<Vocabulary>) savedInstanceState.getSerializable(EXTRA_LIST);
             this.list = listTemp;
         }
