@@ -8,6 +8,7 @@ import java.io.Serializable;
 public class Vocabulary implements Serializable
 {
     private static final long serialVersionUID = 6591616622682725968L;
+    public static final ForeignLanguage[] foreignLanguageArray = ForeignLanguage.values();
 
     /**
      * Enum for the list of available foreign languages.

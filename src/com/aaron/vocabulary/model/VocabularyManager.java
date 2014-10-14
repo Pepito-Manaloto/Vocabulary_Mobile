@@ -194,4 +194,12 @@ public class VocabularyManager
     {
         return this.recentlyAddedCount;
     }
+
+    /**
+     * 
+     */
+    public ArrayList<Vocabulary> getFromDisk()
+    {
+        return null;
+    }
 }

@@ -6,11 +6,13 @@ import com.aaron.vocabulary.bean.Settings.FontName;
 import com.aaron.vocabulary.bean.Settings.FontStyle;
 import com.aaron.vocabulary.bean.Settings.UpdateInterval;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+import static com.aaron.vocabulary.bean.Vocabulary.*;
 
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,8 +27,8 @@ public class SettingsFragment extends Fragment
 {
     public static final String EXTRA_SETTINGS = "com.aaron.vocabulary.fragment.settings";
     private Settings settings;
-    private static final ForeignLanguage[] languages = ForeignLanguage.values();
-    private final ArrayAdapter<ForeignLanguage> languageAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_dropdown_item, languages);
+    
+    private ArrayAdapter<ForeignLanguage> languageAdapter;
     
     private Spinner foreignLanguageSpinner;
     private Spinner fontNameSpinner;
@@ -60,6 +62,9 @@ public class SettingsFragment extends Fragment
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.menu_settings);
         getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+
+        this.languageAdapter = new ArrayAdapter<ForeignLanguage>(getActivity(), android.R.layout.simple_spinner_item, foreignLanguageArray);
+        this.languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     }
 
     /**
@@ -84,6 +89,26 @@ public class SettingsFragment extends Fragment
         this.fontSizeSpinner.setSelection(this.settings.getFontSizeIndex());
         this.updateIntervalSpinner.setSelection(this.settings.getUpdateIntervalIndex());
 
+        view.setFocusableInTouchMode(true);
+        view.requestFocus();
+        view.setOnKeyListener(new View.OnKeyListener()
+        {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) 
+            {
+                // For back button
+                if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
+                {
+                    setFragmentAcivityResult();
+                    return true;
+                } 
+                else 
+                {
+                    return false;
+                }
+            }
+        });
+
         return view;
     }
 
@@ -99,7 +124,6 @@ public class SettingsFragment extends Fragment
             case android.R.id.home:
             {
                 this.setFragmentAcivityResult();
-
                 return true;
             }
             default:
