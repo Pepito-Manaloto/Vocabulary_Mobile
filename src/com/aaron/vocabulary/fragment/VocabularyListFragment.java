@@ -8,6 +8,7 @@ import com.aaron.vocabulary.activity.SettingsActivity;
 import com.aaron.vocabulary.adapter.VocabularyAdapter;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
+import com.aaron.vocabulary.model.VocabularyManager;
 
 import android.app.Activity;
 import android.app.FragmentManager;
@@ -38,6 +39,7 @@ public class VocabularyListFragment extends ListFragment
 
     private ArrayList<Vocabulary> list;
     private Settings settings;
+    private VocabularyManager vocabularyManager;
 
     /**
      * Initializes non-fragment user interface.
@@ -70,6 +72,8 @@ public class VocabularyListFragment extends ListFragment
         VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(getActivity(), this.list, this.settings);
         setListAdapter(vocabularyAdapter);
 
+        this.vocabularyManager = new VocabularyManager(getActivity());
+
         setHasOptionsMenu(true);
     }
 
@@ -94,6 +98,8 @@ public class VocabularyListFragment extends ListFragment
 
         String language = getString(R.string.app_name, this.settings.getForeignLanguage().name());
         getActivity().setTitle(language);
+
+        ((VocabularyAdapter) this.getListAdapter()).notifyDataSetChanged();
     }
 
     /**
@@ -127,12 +133,14 @@ public class VocabularyListFragment extends ListFragment
             // But we are sure of its type
             @SuppressWarnings("unchecked")
             ArrayList<Vocabulary> list = (ArrayList<Vocabulary>) data.getSerializableExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
+            this.list = list;
 
             // TODO: update the list view
         }
         else if(requestCode == REQUEST_SETTINGS && data.hasExtra(SettingsFragment.EXTRA_SETTINGS))
         {
             this.settings = (Settings) data.getSerializableExtra(SettingsFragment.EXTRA_SETTINGS);
+            this.list = this.vocabularyManager.getVocabulariesFromDisk();
         }
     }
 
@@ -159,6 +167,7 @@ public class VocabularyListFragment extends ListFragment
                     String searched = searchTextfield.getText().toString();
                     VocabularyAdapter vocabularyAdapter = (VocabularyAdapter) getListAdapter();
                     vocabularyAdapter.filter(searched);
+                    vocabularyAdapter.notifyDataSetChanged();
                 }
     
                 @Override

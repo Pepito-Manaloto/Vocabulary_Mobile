@@ -19,11 +19,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+
 import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.*;
+import static com.aaron.vocabulary.model.MySQLiteHelper.*;
 
 /**
  * Handles the web call to retrieve vocabularies in JSON object representation.
@@ -39,6 +44,8 @@ public class VocabularyManager
     private final String url;
     private static final String AUTH_KEY = "449a36b6689d841d7d27f31b4b7cc73a";
 
+    private MySQLiteHelper dbHelper;
+
     /**
      * Constructor initializes the url.
      * @param Activity the caller activity
@@ -51,6 +58,7 @@ public class VocabularyManager
         this.languageSelected = ForeignLanguage.valueOf(parsedTitle);
         this.url = "http://" + activity.getString(R.string.url_address) + activity.getString(R.string.url_resource);
         //this.url = "http://10.11.3.106/test/get.php";
+        this.dbHelper = new MySQLiteHelper(activity);
     }
 
     /**
@@ -60,7 +68,7 @@ public class VocabularyManager
      * (3) Returns the vocabulary list of the current selected language.
      * @return ArrayList<Vocabulary>
      */
-    public ArrayList<Vocabulary> getVocabularies() 
+    public ArrayList<Vocabulary> getVocabulariesFromWeb() 
     {
         HttpParams httpParams = new BasicHttpParams();
         HttpConnectionParams.setConnectionTimeout(httpParams, 15000);
@@ -147,10 +155,52 @@ public class VocabularyManager
     }
 
     /**
-     * 
+     * Saves the given vocabulary map in the local database.
+     * @param vocabularyMap the vocabulary map to be stored
+     * @return true on success, else false
      */
     private boolean saveToDisk(final HashMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap)
     {
+        SQLiteDatabase db = this.dbHelper.getWritableDatabase();
+        ArrayList<Vocabulary> listTemp;
+        ContentValues values;
+        long result;
+
+        db.beginTransaction();
+
+        try
+        {
+            // Loop each language
+            for(ForeignLanguage foreignLanguage: vocabularyMap.keySet())
+            {
+                listTemp = vocabularyMap.get(foreignLanguage);
+                values = new ContentValues();
+    
+                // Loop contents of the language
+                for(Vocabulary vocabulary: listTemp)
+                {
+                    values.put(Column.english_word.name(), vocabulary.getEnglishWord());
+                    values.put(Column.foreign_word.name(), vocabulary.getForeignWord());
+                    values.put(Column.foreign_word.name(), foreignLanguage.name());
+
+                    result = db.insert(TABLE_VOCABULARY, null, values);
+                    
+                    if(result <= -1)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            db.setTransactionSuccessful();
+        }
+        finally
+        {
+            db.endTransaction();
+            db.close();
+            this.dbHelper.close();
+        }
+
         return true;
     }
 
@@ -193,5 +243,49 @@ public class VocabularyManager
     public int getRecentlyAddedCount()
     {
         return this.recentlyAddedCount;
+    }
+
+    /**
+     * Does the following logic.
+     * (1) Retrieves the vocabularies from the local disk.
+     * (2) Returns the vocabulary list of the selected language.
+     * @return ArrayList<Vocabulary>
+     */
+    public ArrayList<Vocabulary> getVocabulariesFromDisk()
+    {
+        SQLiteDatabase db = this.dbHelper.getWritableDatabase();
+        String whereClause = "foreign_language = ?";
+        String[] whereArgs = new String[]{this.languageSelected.name()};
+
+        Cursor cursor = db.query(TABLE_VOCABULARY, columnStringArray, whereClause, whereArgs, null, null, null);
+        ArrayList<Vocabulary> list = new ArrayList<>();
+
+        if(cursor.moveToFirst())
+        {
+            do
+            {
+                list.add(cursorToVocabulary(cursor));
+            } 
+            while(cursor.moveToNext());
+        }
+
+        db.close();
+        this.dbHelper.close();
+
+        return list;
+    }
+
+    /**
+     * Retrieves the vocabulary from the cursor.
+     * @param cursor the cursor resulting from a query
+     * @return Vocabulary
+     */
+    private Vocabulary cursorToVocabulary(final Cursor cursor)
+    {
+        String englishWord = cursor.getString(0);
+        String foreignWord = cursor.getString(1);
+        ForeignLanguage foreignLanguage = ForeignLanguage.valueOf(cursor.getString(2));
+
+        return new Vocabulary(englishWord, foreignWord, foreignLanguage);
     }
 }

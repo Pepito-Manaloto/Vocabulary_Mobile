@@ -2,6 +2,8 @@ package com.aaron.vocabulary.bean;
 
 import java.io.Serializable;
 
+import android.graphics.Typeface;
+
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
 /**
@@ -16,7 +18,7 @@ public class Settings implements Serializable
      */
     public enum FontName
     {
-        Normal,
+        Default,
         Serif,
         Sans_Serif,
         Monospace,
@@ -27,9 +29,10 @@ public class Settings implements Serializable
      */
     public enum FontStyle
     {
-        Plain,
+        Normal,
         Bold,
         Italic,
+        Bold_Italic,
     }
 
     /**
@@ -52,8 +55,8 @@ public class Settings implements Serializable
     public Settings()
     {
         this.foreignLanguage = ForeignLanguage.Hokkien;
-        this.fontName = FontName.Normal;
-        this.fontStyle = FontStyle.Plain;
+        this.fontName = FontName.Default;
+        this.fontStyle = FontStyle.Normal;
         this.fontSize = 14;
         this.updateInterval = UpdateInterval.Never;
     }
@@ -65,24 +68,6 @@ public class Settings implements Serializable
     public ForeignLanguage getForeignLanguage()
     {
         return this.foreignLanguage;
-    }
-
-    /**
-     * Getter for FontName.
-     * @return FontName
-     */
-    public FontName getFontName()
-    {
-        return this.fontName;
-    }
-
-    /**
-     * Getter for FontStyle.
-     * @return FontStyle
-     */
-    public FontStyle getFontStyle()
-    {
-        return this.fontStyle;
     }
 
     /**
@@ -180,6 +165,29 @@ public class Settings implements Serializable
                " Update interval: " + this.updateInterval;
     }
 
+    /**
+     * Returns the typeface of this vocabulary.
+     * @return Typeface
+     */
+    public Typeface getTypeface()
+    {
+        Typeface family;
+
+        switch(this.fontName)
+        {
+            case Serif:      family = Typeface.SERIF; 
+                             break;
+            case Sans_Serif: family = Typeface.SANS_SERIF; 
+                             break;
+            case Monospace:  family = Typeface.MONOSPACE; 
+                             break;
+
+            default: family = Typeface.DEFAULT;
+        }
+        
+        return Typeface.create(family, this.getFontStyleIndex());
+    }
+    
     /**
      * Sets the foreignLanguage new value.
      * @param ForeignLanguage

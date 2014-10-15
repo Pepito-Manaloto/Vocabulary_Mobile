@@ -17,7 +17,7 @@ public class SettingsActivity extends SingleFragmentActivity
     protected Fragment createFragment()
     {
         Settings settings = (Settings) this.getIntent().getSerializableExtra(SettingsFragment.EXTRA_SETTINGS);
-        
+
         return SettingsFragment.newInstance(settings);
     }
 

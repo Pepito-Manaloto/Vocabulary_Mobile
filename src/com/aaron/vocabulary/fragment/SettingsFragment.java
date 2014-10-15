@@ -6,12 +6,15 @@ import com.aaron.vocabulary.bean.Settings.FontName;
 import com.aaron.vocabulary.bean.Settings.FontStyle;
 import com.aaron.vocabulary.bean.Settings.UpdateInterval;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+import com.aaron.vocabulary.model.LogManager;
+
 import static com.aaron.vocabulary.bean.Vocabulary.*;
 
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -65,6 +68,8 @@ public class SettingsFragment extends Fragment
 
         this.languageAdapter = new ArrayAdapter<ForeignLanguage>(getActivity(), android.R.layout.simple_spinner_item, foreignLanguageArray);
         this.languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        Log.d(LogManager.TAG, "SettingsFragment: onCreate");
     }
 
     /**
@@ -108,6 +113,8 @@ public class SettingsFragment extends Fragment
                 }
             }
         });
+
+        Log.d(LogManager.TAG, "SettingsFragment: onCreateView");
 
         return view;
     }
@@ -155,5 +162,7 @@ public class SettingsFragment extends Fragment
         data.putExtra(EXTRA_SETTINGS, this.settings);
         getActivity().setResult(Activity.RESULT_OK, data);
         getActivity().finish();
+
+        Log.d(LogManager.TAG, "SettingsFragment: setFragmentAcivityResult. New settings -> " + this.settings);
     }
 }

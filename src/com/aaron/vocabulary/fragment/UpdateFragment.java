@@ -95,7 +95,7 @@ public class UpdateFragment extends DialogFragment
         {
             ArrayList<Vocabulary> list = new ArrayList<>();
 
-            list = vocabularyManager.getVocabularies();
+            list = vocabularyManager.getVocabulariesFromWeb();
             String responseCode = vocabularyManager.getStatusText();
             String responseText = vocabularyManager.getResponseText();
 

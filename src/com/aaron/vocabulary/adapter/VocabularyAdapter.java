@@ -5,8 +5,11 @@ import java.util.ArrayList;
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
+import com.aaron.vocabulary.model.LogManager;
 
 import android.app.Activity;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -36,7 +39,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
         this.vocabularyListTemporaryholder = vocabularyList;
         this.settings = settings;
     }
-    
+
     /**
      * Populates the ListView.
      */
@@ -47,7 +50,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 
         if(convertView == null)
         {
-            convertView = this.activity.getLayoutInflater().inflate(R.layout.list_item_vocabulary, null);
+            convertView = this.activity.getLayoutInflater().inflate(R.layout.list_item_vocabulary, parent, false);
             
             holder = new ViewHolder();
             holder.englishText = (TextView) convertView.findViewById(R.id.text_english_language);
@@ -63,11 +66,16 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
         Vocabulary vocabulary = getItem(position);
 
         holder.englishText.setText(vocabulary.getEnglishWord());
+        holder.englishText.setTextSize(TypedValue.COMPLEX_UNIT_SP, this.settings.getFontSize());
+        holder.englishText.setTypeface(this.settings.getTypeface());
+
         holder.foreignText.setText(vocabulary.getForeignWord());
+        holder.foreignText.setTextSize(TypedValue.COMPLEX_UNIT_SP, this.settings.getFontSize());
+        holder.foreignText.setTypeface(this.settings.getTypeface());
 
         return convertView;
     }
-    
+
     /**
      * Filters the vocabulary list in the adapter with the given searched text. Only shows english vocabularies that starts with the searched text.
      * @param searched the searched word
@@ -91,6 +99,8 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
                 }
             }
         }
+
+        Log.d(LogManager.TAG, "VocabularyAdapter: filter. New list -> " + this.vocabularyList);
     }
 
     /**

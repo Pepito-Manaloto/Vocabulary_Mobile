@@ -31,15 +31,16 @@
 
     <!-- COMBO BOX ITEMS -->
     <string-array name="font_name_arrays">
-        <item>Normal</item>
+        <item>Default</item>
         <item>Sans_Serif</item>
         <item>Serif</item>
         <item>Monospace</item>
     </string-array>
     <string-array name="font_style_arrays">
-        <item>Plain</item>
+        <item>Normal</item>
         <item>Bold</item>
         <item>Italic</item>
+        <item>Bold_Italic</item>
     </string-array>
     <string-array name="font_size_arrays">
         <item>14</item>
