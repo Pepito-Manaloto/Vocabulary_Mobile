@@ -33,9 +33,9 @@ public class MySQLiteHelper extends SQLiteOpenHelper
     private static final String CREATE_TABLE_VOCABULARY = "CREATE TABLE " + TABLE_VOCABULARY +
                                                "(" + 
                                                Column.id.name() + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                                               Column.english_word.name() + " TEXT NOT NULL," +
-                                               Column.foreign_word.name() + " TEXT NOT NULL," +
-                                               Column.foreign_language.name() + " TEXT NOT NULL," +
+                                               Column.english_word.name() + " TEXT NOT NULL, " +
+                                               Column.foreign_word.name() + " TEXT NOT NULL, " +
+                                               Column.foreign_language.name() + " TEXT NOT NULL, " +
                                                Column.date_in.name() + " TEXT DEFAULT DATE() NOT NULL" +
                                                ");";
 
