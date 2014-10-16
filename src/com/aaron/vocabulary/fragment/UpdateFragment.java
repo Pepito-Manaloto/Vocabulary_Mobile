@@ -9,10 +9,12 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Vocabulary;
+import com.aaron.vocabulary.model.LogManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
 /**
@@ -51,6 +53,7 @@ public class UpdateFragment extends DialogFragment
 
         this.vocabularyManager = new VocabularyManager(getActivity());
 
+        Log.d(LogManager.TAG, "UpdateFragment: onCreateDialog");
         return progressDialog;
     }
 
@@ -62,6 +65,7 @@ public class UpdateFragment extends DialogFragment
     {
         super.onStart();
         new VocabularyRetrieverThread().execute();
+        Log.d(LogManager.TAG, "UpdateFragment: onStart");
     }
 
     /**

@@ -8,6 +8,7 @@ import com.aaron.vocabulary.activity.SettingsActivity;
 import com.aaron.vocabulary.adapter.VocabularyAdapter;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
+import com.aaron.vocabulary.model.LogManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
 import android.app.Activity;
@@ -17,6 +18,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -75,6 +77,8 @@ public class VocabularyListFragment extends ListFragment
         this.vocabularyManager = new VocabularyManager(getActivity());
 
         setHasOptionsMenu(true);
+
+        Log.d(LogManager.TAG, "VocabularyListFragment: onCreate");
     }
 
     /**
@@ -84,7 +88,8 @@ public class VocabularyListFragment extends ListFragment
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState)
     {
         View view = inflater.inflate(R.layout.fragment_vocabulary_list, parent, false);
-        
+        Log.d(LogManager.TAG, "VocabularyListFragment: onCreateView");
+
         return view;
     }
 
@@ -100,6 +105,8 @@ public class VocabularyListFragment extends ListFragment
         getActivity().setTitle(language);
 
         ((VocabularyAdapter) this.getListAdapter()).notifyDataSetChanged();
+
+        Log.d(LogManager.TAG, "VocabularyListFragment: onResume");
     }
 
     /**
@@ -112,6 +119,8 @@ public class VocabularyListFragment extends ListFragment
 
         outState.putSerializable(SettingsFragment.EXTRA_SETTINGS, this.settings);
         outState.putSerializable(EXTRA_LIST, this.list);
+
+        Log.d(LogManager.TAG, "VocabularyListFragment: onSaveInstanceState");
     }
 
     /**
@@ -142,6 +151,8 @@ public class VocabularyListFragment extends ListFragment
             this.settings = (Settings) data.getSerializableExtra(SettingsFragment.EXTRA_SETTINGS);
             this.list = this.vocabularyManager.getVocabulariesFromDisk();
         }
+
+        Log.d(LogManager.TAG, "VocabularyListFragment: onActivityResult");
     }
 
     /**

@@ -22,6 +22,7 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Vocabulary;
@@ -113,10 +114,11 @@ public class VocabularyManager
         }
         catch(final IOException | JSONException e)
         {
-            //TODO: log error
+            Log.e(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. Exception " + e.getMessage());
             this.responseText = e.getMessage();
         }
 
+        Log.d(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. responseText=" + this.responseText + " responseCode=" + this.responseCode);
         return new ArrayList<>(0);
     }
 
@@ -150,7 +152,8 @@ public class VocabularyManager
 
             map.put(foreignLanguage, listTemp);
         }
-        
+
+        Log.d(LogManager.TAG, "VocabularyManager: parseJsonObject.");
         return map;
     }
 
@@ -201,6 +204,7 @@ public class VocabularyManager
             this.dbHelper.close();
         }
 
+        Log.d(LogManager.TAG, "VocabularyManager: saveToDisk.");
         return true;
     }
 
@@ -272,6 +276,7 @@ public class VocabularyManager
         db.close();
         this.dbHelper.close();
 
+        Log.d(LogManager.TAG, "VocabularyManager: getVocabulariesFromDisk. list=" + list);
         return list;
     }
 
