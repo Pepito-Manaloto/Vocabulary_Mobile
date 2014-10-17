@@ -53,13 +53,26 @@ public class VocabularyManager
      */
     public VocabularyManager(final Activity activity)
     {   
-        String parsedTitle = activity.getTitle().toString();
-        parsedTitle = parsedTitle.substring(12, parsedTitle.length() - 1); // Extract selected language from the title
-
-        this.languageSelected = ForeignLanguage.valueOf(parsedTitle);
+        this.languageSelected = ForeignLanguage.valueOf(this.getLanguageFromTitle(activity));
         this.url = "http://" + activity.getString(R.string.url_address) + activity.getString(R.string.url_resource);
         //this.url = "http://10.11.3.106/test/get.php";
         this.dbHelper = new MySQLiteHelper(activity);
+    }
+
+    private String getLanguageFromTitle(final Activity activity)
+    {
+        String parsedTitle = activity.getTitle().toString();
+
+        if(parsedTitle.length() > 12) // If title is already set in the UI
+        {
+            parsedTitle = parsedTitle.substring(12, parsedTitle.length() - 1);
+        }
+        else // Default is Hokkien
+        {
+            parsedTitle = ForeignLanguage.Hokkien.name();
+        }
+
+        return parsedTitle;
     }
 
     /**
