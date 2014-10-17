@@ -50,7 +50,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 
         if(convertView == null)
         {
-            convertView = this.activity.getLayoutInflater().inflate(R.layout.list_item_vocabulary, parent, false);
+            convertView = this.activity.getLayoutInflater().inflate(R.layout.fragment_vocabulary_list_row, parent, false);
             
             holder = new ViewHolder();
             holder.englishText = (TextView) convertView.findViewById(R.id.text_english_language);
