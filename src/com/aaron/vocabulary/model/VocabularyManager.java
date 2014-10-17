@@ -3,6 +3,7 @@ package com.aaron.vocabulary.model;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -54,8 +55,8 @@ public class VocabularyManager
     public VocabularyManager(final Activity activity)
     {   
         this.languageSelected = ForeignLanguage.valueOf(this.getLanguageFromTitle(activity));
-        this.url = "http://" + activity.getString(R.string.url_address) + activity.getString(R.string.url_resource);
-        //this.url = "http://10.11.3.106/test/get.php";
+        //this.url = "http://" + activity.getString(R.string.url_address) + activity.getString(R.string.url_resource);
+        this.url = "http://10.11.3.106/Vocabulary/get.php";
         this.dbHelper = new MySQLiteHelper(activity);
     }
 
@@ -103,6 +104,9 @@ public class VocabularyManager
                 HttpEntity httpEntity = response.getEntity();
 
                 String responseString = EntityUtils.toString(httpEntity); // Response body
+
+                Log.d(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. responseString=" + responseString);
+
                 JSONObject jsonObject = new JSONObject(responseString); // Response body in JSON object
 
                 HashMap<ForeignLanguage, ArrayList<Vocabulary>> map = this.parseJsonObject(jsonObject);
@@ -127,7 +131,7 @@ public class VocabularyManager
         }
         catch(final IOException | JSONException e)
         {
-            Log.e(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. Exception " + e.getMessage());
+            Log.e(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. " + e.getClass().getSimpleName() + ": " + e.getMessage());
             this.responseText = e.getMessage();
         }
 
@@ -166,7 +170,7 @@ public class VocabularyManager
             map.put(foreignLanguage, listTemp);
         }
 
-        Log.d(LogManager.TAG, "VocabularyManager: parseJsonObject.");
+        Log.d(LogManager.TAG, "VocabularyManager: parseJsonObject. json=" + jsonObject);
         return map;
     }
 
