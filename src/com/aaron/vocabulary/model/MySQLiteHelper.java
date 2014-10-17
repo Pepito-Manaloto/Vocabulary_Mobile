@@ -3,10 +3,10 @@ package com.aaron.vocabulary.model;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 /**
  * Model for creating and updating the database.
- * http://www.vogella.com/tutorials/AndroidSQLite/article.html
  */
 public class MySQLiteHelper extends SQLiteOpenHelper
 {
@@ -53,6 +53,8 @@ public class MySQLiteHelper extends SQLiteOpenHelper
     @Override
     public void onCreate(SQLiteDatabase database)
     {
+        Log.d(LogManager.TAG, "MySQLiteHelper: onCreate. query=" + CREATE_TABLE_VOCABULARY);
+
         database.execSQL(CREATE_TABLE_VOCABULARY);
     }
 
