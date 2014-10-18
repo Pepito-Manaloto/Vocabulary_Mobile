@@ -12,4 +12,7 @@
     <color name="sysTransparent">#00000000</color>
     <color name="sysWhite">#FFFFFFFF</color>
     <color name="sysYellow">#FFFFFF00</color>
+    
+    <color name="CornflowerBlueDark">#4668A6</color>
+    <color name="ForestGreenDark">#186118</color>
 </resources>

@@ -1,9 +1,12 @@
 package com.aaron.vocabulary.model;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Locale;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -26,6 +29,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
@@ -45,35 +49,35 @@ public class VocabularyManager
 
     private final String url;
     private static final String AUTH_KEY = "449a36b6689d841d7d27f31b4b7cc73a";
+    
+    private static final String DATE_FORMAT_SHORT = "yyyy-MM-dd";
+    private static final String DATE_FORMAT_LONG = "MMMM d, yyyy";
+    private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMAT_SHORT, Locale.getDefault());
 
     private MySQLiteHelper dbHelper;
+    private Date curDate;
 
     /**
      * Constructor initializes the url.
      * @param Activity the caller activity
      */
     public VocabularyManager(final Activity activity)
-    {   
-        this.languageSelected = ForeignLanguage.valueOf(this.getLanguageFromTitle(activity));
-        //this.url = "http://" + activity.getString(R.string.url_address) + activity.getString(R.string.url_resource);
-        this.url = "http://10.11.3.106/Vocabulary/get.php";
+    {
+        this.url = "http://" + activity.getString(R.string.url_address) + activity.getString(R.string.url_resource);
+        //this.url = "http://10.11.3.106/Vocabulary/get.php";
         this.dbHelper = new MySQLiteHelper(activity);
+        this.curDate = new Date();
     }
 
-    private String getLanguageFromTitle(final Activity activity)
+    /**
+     * Constructor initializes the url and the current application settings.
+     * @param activity the caller activity
+     * @param settings the current settings
+     */
+    public VocabularyManager(final Activity activity, final Settings settings)
     {
-        String parsedTitle = activity.getTitle().toString();
-
-        if(parsedTitle.length() > 12) // If title is already set in the UI
-        {
-            parsedTitle = parsedTitle.substring(12, parsedTitle.length() - 1);
-        }
-        else // Default is Hokkien
-        {
-            parsedTitle = ForeignLanguage.Hokkien.name();
-        }
-
-        return parsedTitle;
+        this(activity);
+        this.languageSelected = settings.getForeignLanguage();
     }
 
     /**
@@ -105,8 +109,6 @@ public class VocabularyManager
 
                 String responseString = EntityUtils.toString(httpEntity); // Response body
 
-                Log.d(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. responseString=" + responseString);
-
                 JSONObject jsonObject = new JSONObject(responseString); // Response body in JSON object
 
                 HashMap<ForeignLanguage, ArrayList<Vocabulary>> map = this.parseJsonObject(jsonObject);
@@ -123,19 +125,25 @@ public class VocabularyManager
 
                 this.responseText = "Success";
 
+                // Entity is already consumed by EntityUtils; thus is already closed.
+
                 return map.get(this.languageSelected);
             }
 
-            // Closes the connection.
+            // Closes the connection/ Consume the entity.
             response.getEntity().getContent().close();
         }
         catch(final IOException | JSONException e)
         {
-            Log.e(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            Log.e(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
             this.responseText = e.getMessage();
         }
+        finally
+        {
+            Log.d(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. responseText=" + this.responseText +
+                                  " responseCode=" + this.responseCode + " languageSelected=" + this.languageSelected);
+        }
 
-        Log.d(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. responseText=" + this.responseText + " responseCode=" + this.responseCode);
         return new ArrayList<>(0);
     }
 
@@ -186,6 +194,7 @@ public class VocabularyManager
         ContentValues values;
         long result;
 
+        dateFormatter.applyPattern(DATE_FORMAT_SHORT);
         db.beginTransaction();
 
         try
@@ -201,13 +210,14 @@ public class VocabularyManager
                 {
                     values.put(Column.english_word.name(), vocabulary.getEnglishWord());
                     values.put(Column.foreign_word.name(), vocabulary.getForeignWord());
-                    values.put(Column.foreign_word.name(), foreignLanguage.name());
+                    values.put(Column.foreign_language.name(), foreignLanguage.name());
+                    values.put(Column.date_in.name(), dateFormatter.format(this.curDate));
 
                     result = db.insert(TABLE_VOCABULARY, null, values);
-                    
-                    if(result <= -1)
+
+                    if(result > -1)
                     {
-                        return false;
+                        this.recentlyAddedCount++;
                     }
                 }
             }
@@ -275,10 +285,14 @@ public class VocabularyManager
     public ArrayList<Vocabulary> getVocabulariesFromDisk()
     {
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
+
+        String[] columns = new String[]{Column.english_word.name(),
+                                        Column.foreign_word.name(),
+                                        Column.foreign_language.name()};
         String whereClause = "foreign_language = ?";
         String[] whereArgs = new String[]{this.languageSelected.name()};
 
-        Cursor cursor = db.query(TABLE_VOCABULARY, columnStringArray, whereClause, whereArgs, null, null, null);
+        Cursor cursor = db.query(TABLE_VOCABULARY, columns, whereClause, whereArgs, null, null, null);
         ArrayList<Vocabulary> list = new ArrayList<>();
 
         if(cursor.moveToFirst())
@@ -310,4 +324,94 @@ public class VocabularyManager
 
         return new Vocabulary(englishWord, foreignWord, foreignLanguage);
     }
+
+    /**
+     * Sets the language selected.
+     * @param settings the current application settings
+     */
+    public void setLanguageSelected(final Settings settings)
+    {
+        if(settings != null)
+        {
+            this.languageSelected = settings.getForeignLanguage();
+        }
+    }
+
+    /**
+     * Gets the current vocabulary count per foreign languages, and returns them as a hashmap.
+     * @return HashMap<ForeignLanguage, Integer>
+     */
+    public HashMap<ForeignLanguage, Integer> getVocabulariesCount()
+    {
+        HashMap<ForeignLanguage, Integer> map = new HashMap<>();
+        SQLiteDatabase db = this.dbHelper.getReadableDatabase();
+        String whereClause = "foreign_language = ?";
+        Cursor cursor;
+        
+        for(ForeignLanguage language: ForeignLanguage.values())
+        {
+            cursor = db.query(TABLE_VOCABULARY, COLUMN_COUNT, whereClause, new String[]{language.name()}, null, null, null);
+            
+            if(cursor.moveToFirst())
+            {
+                map.put(language, cursor.getInt(0));
+            }
+        }
+
+        Log.d(LogManager.TAG, "VocabularyManager: getVocabulariesCount. keys=" + map.keySet() + " values=" + map.values());
+        return map;
+    }
+
+    /**
+     * Gets the latest date_in of the vocabularies.
+     * @return String
+     */
+    public String getLastUpdated()
+    {
+        String lastUpdatedDate = "";
+        SQLiteDatabase db = this.dbHelper.getReadableDatabase();
+        String[] columns = new String[]{Column.date_in.name(),};
+        String orderBy = "date_in DESC";
+        String limit = "1";
+
+        Cursor cursor = db.query(TABLE_VOCABULARY, columns, null, null, null, null, orderBy, limit);
+
+        if(cursor.moveToFirst())
+        {
+            lastUpdatedDate = cursor.getString(0);
+        }
+
+        try
+        {
+            dateFormatter.applyPattern(DATE_FORMAT_SHORT);
+            Date date = dateFormatter.parse(lastUpdatedDate);
+            dateFormatter.applyPattern(DATE_FORMAT_LONG);
+            lastUpdatedDate = dateFormatter.format(date);
+        }
+        catch(ParseException e)
+        {
+            Log.e(LogManager.TAG, "VocabularyManager: getLastUpdated. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+        }
+
+        return lastUpdatedDate;
+    }
+
+    /**
+     * Deletes the vocabulary from disk.
+     * Warning: this action cannot be reverted
+     */
+    public void deleteVocabularyFromDisk()
+    {
+        SQLiteDatabase db = this.dbHelper.getWritableDatabase();
+        String whereClause = "1";
+        String[] whereArgs = null;
+
+        int result = db.delete(TABLE_VOCABULARY, whereClause, whereArgs);
+
+        db.close();
+        this.dbHelper.close();
+
+        Log.d(LogManager.TAG, "VocabularyManager: deleteVocabularyFromDisk. affected=" + result);
+    }
+
 }

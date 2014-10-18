@@ -14,9 +14,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper
     private static final int DATABASE_VERSION = 1;
 
     public static final String TABLE_VOCABULARY = "vocabulary";
-    public static final String[] columnStringArray = new String[]{"english_word",
-                                                                  "foreign_word",
-                                                                  "foreign_language",};
+    public static final String[] COLUMN_COUNT = new String[]{"COUNT(*)",};
 
     /**
      * The database's column names.
@@ -32,11 +30,12 @@ public class MySQLiteHelper extends SQLiteOpenHelper
 
     private static final String CREATE_TABLE_VOCABULARY = "CREATE TABLE " + TABLE_VOCABULARY +
                                                "(" + 
-                                               Column.id.name() + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                                               Column.id.name() + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                                                Column.english_word.name() + " TEXT NOT NULL, " +
                                                Column.foreign_word.name() + " TEXT NOT NULL, " +
                                                Column.foreign_language.name() + " TEXT NOT NULL, " +
-                                               Column.date_in.name() + " TEXT DEFAULT DATE() NOT NULL" +
+                                               Column.date_in.name() + " TEXT NOT NULL, " +
+                                               "UNIQUE(" + Column.english_word.name() + ", " + Column.foreign_word.name() + ")" +
                                                ");";
 
     /**

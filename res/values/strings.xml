@@ -2,6 +2,7 @@
 <resources>
 
     <string name="app_name">Vocabulary (%1$s)</string>
+    <string name="build_num"></string>
 
     <!-- MENU LABELS -->
     <string name="menu_update">Update</string>

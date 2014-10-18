@@ -13,6 +13,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.model.LogManager;
 import com.aaron.vocabulary.model.VocabularyManager;
@@ -29,10 +30,10 @@ public class UpdateFragment extends DialogFragment
      * Creates a new UpdateFragment and sets its arguments.
      * @return UpdateFragment
      */
-    public static UpdateFragment newInstance()
+    public static UpdateFragment newInstance(final Settings settings)
     {
         Bundle args = new Bundle();
-
+        args.putSerializable(SettingsFragment.EXTRA_SETTINGS, settings);
         UpdateFragment fragment = new UpdateFragment();
         fragment.setArguments(args);
 
@@ -51,7 +52,8 @@ public class UpdateFragment extends DialogFragment
         progressDialog.setIndeterminate(true);
         progressDialog.setCancelable(true);
 
-        this.vocabularyManager = new VocabularyManager(getActivity());
+        Settings settings = (Settings) this.getArguments().getSerializable(SettingsFragment.EXTRA_SETTINGS);
+        this.vocabularyManager = new VocabularyManager(getActivity(), settings);
 
         Log.d(LogManager.TAG, "UpdateFragment: onCreateDialog");
         return progressDialog;
@@ -103,8 +105,6 @@ public class UpdateFragment extends DialogFragment
             String responseCode = vocabularyManager.getStatusText();
             String responseText = vocabularyManager.getResponseText();
 
-            // Update argument to preserve the list on rotation
-            getArguments().putSerializable(EXTRA_VOCABULARY_LIST, list);
             this.sendResult(list, Activity.RESULT_OK);
 
             int newCount = vocabularyManager.getRecentlyAddedCount();

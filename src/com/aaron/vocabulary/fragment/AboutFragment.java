@@ -1,6 +1,10 @@
 package com.aaron.vocabulary.fragment;
 
+import java.util.HashMap;
+
 import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+import com.aaron.vocabulary.model.VocabularyManager;
 
 import android.app.Fragment;
 import android.os.Bundle;
@@ -9,8 +13,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import static com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage.*;
+
 public class AboutFragment extends Fragment
 {
+    private VocabularyManager vocabularyManager;
+
     /**
      * Initializes non-fragment user interface.
      */
@@ -22,6 +30,8 @@ public class AboutFragment extends Fragment
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.menu_about);
         getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+        
+        this.vocabularyManager = new VocabularyManager(getActivity());
     }
 
     /**
@@ -38,13 +48,15 @@ public class AboutFragment extends Fragment
         TextView japaneseCountTextView = (TextView) view.findViewById(R.id.text_japanese_count);
         TextView mandarinCountTextView = (TextView) view.findViewById(R.id.text_mandarin_count);
 
-        String threeTabs = "            ";
+        String buildNumber = getActivity().getString(R.string.build_num);
+        String lastUpdated = this.vocabularyManager.getLastUpdated();
+        HashMap<ForeignLanguage, Integer> vocabularyCount = this.vocabularyManager.getVocabulariesCount();
 
-        buildNumberTextView.setText("");
-        lastUpdatedTextView.setText("");
-        hokkienCountTextView.setText("Hokkien" + threeTabs);
-        japaneseCountTextView.setText("Japanese" + threeTabs);
-        mandarinCountTextView.setText("Mandarin" + threeTabs);
+        buildNumberTextView.setText(buildNumber);
+        lastUpdatedTextView.setText(lastUpdated);
+        hokkienCountTextView.setText("Hokkien               " + vocabularyCount.get(Hokkien));
+        japaneseCountTextView.setText("Japanese            " + vocabularyCount.get(Japanese));
+        mandarinCountTextView.setText("Mandarin             " + vocabularyCount.get(Mandarin));
 
         return view;
     }

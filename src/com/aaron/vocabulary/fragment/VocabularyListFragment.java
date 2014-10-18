@@ -66,15 +66,14 @@ public class VocabularyListFragment extends ListFragment
             this.settings = new Settings();
         }
 
+        this.vocabularyManager = new VocabularyManager(getActivity(), this.settings);
+
         if(this.list == null)
         {
-            this.list = new ArrayList<>(); // retrieve from db
+            this.list = this.vocabularyManager.getVocabulariesFromDisk();
         }
 
-        VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(getActivity(), this.list, this.settings);
-        setListAdapter(vocabularyAdapter);
-
-        this.vocabularyManager = new VocabularyManager(getActivity());
+        this.updateListOnUiThread(this.list);
 
         setHasOptionsMenu(true);
 
@@ -135,24 +134,26 @@ public class VocabularyListFragment extends ListFragment
             return;
         }
 
+        Log.d(LogManager.TAG, "VocabularyListFragment: onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
+
         // Update action bar menu processing result
         if(requestCode == REQUEST_UPDATE && data.hasExtra(UpdateFragment.EXTRA_VOCABULARY_LIST))
         {
-            
             // But we are sure of its type
             @SuppressWarnings("unchecked")
             ArrayList<Vocabulary> list = (ArrayList<Vocabulary>) data.getSerializableExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
-            this.list = list;
 
-            // TODO: update the list view
+            this.list = list;
+            this.updateListOnUiThread(this.list);
         }
         else if(requestCode == REQUEST_SETTINGS && data.hasExtra(SettingsFragment.EXTRA_SETTINGS))
         {
             this.settings = (Settings) data.getSerializableExtra(SettingsFragment.EXTRA_SETTINGS);
-            this.list = this.vocabularyManager.getVocabulariesFromDisk();
-        }
+            this.vocabularyManager.setLanguageSelected(this.settings);
 
-        Log.d(LogManager.TAG, "VocabularyListFragment: onActivityResult");
+            this.list = this.vocabularyManager.getVocabulariesFromDisk();
+            this.updateListOnUiThread(this.list);
+        }
     }
 
     /**
@@ -209,7 +210,7 @@ public class VocabularyListFragment extends ListFragment
             }
             case R.id.menu_update:
             {
-                UpdateFragment updateDialog = UpdateFragment.newInstance();
+                UpdateFragment updateDialog = UpdateFragment.newInstance(this.settings);
                 updateDialog.setTargetFragment(this, REQUEST_UPDATE);
                 updateDialog.show(fm, DIALOG_UPDATE);
 
@@ -231,6 +232,12 @@ public class VocabularyListFragment extends ListFragment
             }
             case R.id.menu_logs:
             {
+                /**
+                 * TODO: FOR TESTING ONLY
+                 */
+                this.vocabularyManager.deleteVocabularyFromDisk();
+                this.list.clear();
+                ((VocabularyAdapter) getListAdapter()).notifyDataSetChanged();
                 return true;
             }
             default:
@@ -238,5 +245,23 @@ public class VocabularyListFragment extends ListFragment
                 return super.onOptionsItemSelected(item);
             }
         }
+    }
+
+    /**
+     * Updates the list view on UI thread.
+     * @param list the new list
+     */
+    private void updateListOnUiThread(final ArrayList<Vocabulary> list)
+    {
+        this.getActivity().runOnUiThread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                //((VocabularyAdapter) getListAdapter()).notifyDataSetChanged();
+                VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(getActivity(), list, settings);
+                setListAdapter(vocabularyAdapter);
+            }
+        });
     }
 }
