@@ -58,6 +58,12 @@ public class AboutFragment extends Fragment
         japaneseCountTextView.setText("Japanese            " + vocabularyCount.get(Japanese));
         mandarinCountTextView.setText("Mandarin             " + vocabularyCount.get(Mandarin));
 
+        /**
+         * TODO: ON PRESS.
+         * this.vocabularyManager.deleteVocabularyFromDisk();
+         * this.list.clear();
+         * ((VocabularyAdapter) getListAdapter()).notifyDataSetChanged();
+         */
         return view;
     }
 }

@@ -232,12 +232,7 @@ public class VocabularyListFragment extends ListFragment
             }
             case R.id.menu_logs:
             {
-                /**
-                 * TODO: FOR TESTING ONLY
-                 */
-                this.vocabularyManager.deleteVocabularyFromDisk();
-                this.list.clear();
-                ((VocabularyAdapter) getListAdapter()).notifyDataSetChanged();
+
                 return true;
             }
             default:
