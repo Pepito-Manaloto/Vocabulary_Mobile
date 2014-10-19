@@ -6,6 +6,7 @@ import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.model.LogManager;
+import com.aaron.vocabulary.model.VocabularyManager;
 
 import android.app.Activity;
 import android.util.Log;
@@ -24,6 +25,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     private ArrayList<Vocabulary> vocabularyList;
     private ArrayList<Vocabulary> vocabularyListTemporaryholder;
     private Settings settings;
+    private VocabularyManager vocabularyManager;
 
     /**
      * Default constructor. 0 is passed to the resource id, because we will be creating our own custom layout.
@@ -33,10 +35,12 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     public VocabularyAdapter(final Activity context, final ArrayList<Vocabulary> vocabularyList, final Settings settings)
     {
         super(context, 0, vocabularyList);
-        
+
+        this.vocabularyManager = new VocabularyManager(context, settings);
+
         this.activity = context;
         this.vocabularyList = vocabularyList;
-        this.vocabularyListTemporaryholder = vocabularyList;
+        this.vocabularyListTemporaryholder = this.vocabularyManager.getVocabulariesFromDisk();
         this.settings = settings;
     }
 
