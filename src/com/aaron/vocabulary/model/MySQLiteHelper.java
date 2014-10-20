@@ -52,7 +52,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper
     @Override
     public void onCreate(SQLiteDatabase database)
     {
-        Log.d(LogManager.TAG, "MySQLiteHelper: onCreate. query=" + CREATE_TABLE_VOCABULARY);
+        Log.d(LogsManager.TAG, "MySQLiteHelper: onCreate. query=" + CREATE_TABLE_VOCABULARY);
 
         database.execSQL(CREATE_TABLE_VOCABULARY);
     }

@@ -15,7 +15,7 @@ import android.widget.Toast;
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
-import com.aaron.vocabulary.model.LogManager;
+import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
 /**
@@ -52,10 +52,10 @@ public class UpdateFragment extends DialogFragment
         progressDialog.setIndeterminate(true);
         progressDialog.setCancelable(true);
 
-        Settings settings = (Settings) this.getArguments().getSerializable(SettingsFragment.EXTRA_SETTINGS);
+        Settings settings = (Settings) getArguments().getSerializable(SettingsFragment.EXTRA_SETTINGS);
         this.vocabularyManager = new VocabularyManager(getActivity(), settings);
 
-        Log.d(LogManager.TAG, "UpdateFragment: onCreateDialog");
+        Log.d(LogsManager.TAG, "UpdateFragment: onCreateDialog");
         return progressDialog;
     }
 
@@ -67,7 +67,7 @@ public class UpdateFragment extends DialogFragment
     {
         super.onStart();
         new VocabularyRetrieverThread().execute();
-        Log.d(LogManager.TAG, "UpdateFragment: onStart");
+        Log.d(LogsManager.TAG, "UpdateFragment: onStart");
     }
 
     /**

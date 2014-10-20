@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
-import com.aaron.vocabulary.model.LogManager;
+import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
 import android.app.Activity;
@@ -104,7 +104,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
             }
         }
 
-        Log.d(LogManager.TAG, "VocabularyAdapter: filter. New list -> " + this.vocabularyList);
+        Log.d(LogsManager.TAG, "VocabularyAdapter: filter. New list -> " + this.vocabularyList);
     }
 
     /**

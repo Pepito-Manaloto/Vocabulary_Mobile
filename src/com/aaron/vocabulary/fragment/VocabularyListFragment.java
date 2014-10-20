@@ -4,11 +4,12 @@ import java.util.ArrayList;
 
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.activity.AboutActivity;
+import com.aaron.vocabulary.activity.LogsActivity;
 import com.aaron.vocabulary.activity.SettingsActivity;
 import com.aaron.vocabulary.adapter.VocabularyAdapter;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
-import com.aaron.vocabulary.model.LogManager;
+import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
 import android.app.Activity;
@@ -36,6 +37,7 @@ public class VocabularyListFragment extends ListFragment
 
     private static final int REQUEST_UPDATE = 0;
     private static final int REQUEST_SETTINGS = 1;
+    private static final int REQUEST_ABOUT = 2;
 
     public static final String EXTRA_LIST = "com.aaron.vocabulary.fragment.list";
 
@@ -77,7 +79,7 @@ public class VocabularyListFragment extends ListFragment
 
         setHasOptionsMenu(true);
 
-        Log.d(LogManager.TAG, "VocabularyListFragment: onCreate");
+        Log.d(LogsManager.TAG, "VocabularyListFragment: onCreate");
     }
 
     /**
@@ -87,7 +89,7 @@ public class VocabularyListFragment extends ListFragment
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState)
     {
         View view = inflater.inflate(R.layout.fragment_vocabulary_list, parent, false);
-        Log.d(LogManager.TAG, "VocabularyListFragment: onCreateView");
+        Log.d(LogsManager.TAG, "VocabularyListFragment: onCreateView");
 
         return view;
     }
@@ -105,7 +107,7 @@ public class VocabularyListFragment extends ListFragment
 
         ((VocabularyAdapter) this.getListAdapter()).notifyDataSetChanged();
 
-        Log.d(LogManager.TAG, "VocabularyListFragment: onResume");
+        Log.d(LogsManager.TAG, "VocabularyListFragment: onResume");
     }
 
     /**
@@ -119,7 +121,7 @@ public class VocabularyListFragment extends ListFragment
         outState.putSerializable(SettingsFragment.EXTRA_SETTINGS, this.settings);
         outState.putSerializable(EXTRA_LIST, this.list);
 
-        Log.d(LogManager.TAG, "VocabularyListFragment: onSaveInstanceState");
+        Log.d(LogsManager.TAG, "VocabularyListFragment: onSaveInstanceState");
     }
 
     /**
@@ -134,7 +136,7 @@ public class VocabularyListFragment extends ListFragment
             return;
         }
 
-        Log.d(LogManager.TAG, "VocabularyListFragment: onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
+        Log.d(LogsManager.TAG, "VocabularyListFragment: onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
 
         // Update action bar menu processing result
         if(requestCode == REQUEST_UPDATE && data.hasExtra(UpdateFragment.EXTRA_VOCABULARY_LIST))
@@ -154,6 +156,11 @@ public class VocabularyListFragment extends ListFragment
             this.list = this.vocabularyManager.getVocabulariesFromDisk();
             this.updateListOnUiThread(this.list);
         }
+        else if(requestCode == REQUEST_ABOUT)
+        {
+            this.list = this.vocabularyManager.getVocabulariesFromDisk();
+            this.updateListOnUiThread(this.list);
+        }
     }
 
     /**
@@ -170,6 +177,7 @@ public class VocabularyListFragment extends ListFragment
         
         /** Get the edit text from the action view */
         final EditText searchTextfield = (EditText) view.findViewById(R.id.edittext_search_field);
+        searchTextfield.setHint(R.string.hint_vocabulary);
 
         searchTextfield.addTextChangedListener(new TextWatcher()
             {
@@ -227,11 +235,14 @@ public class VocabularyListFragment extends ListFragment
             case R.id.menu_about:
             {
                 Intent intent = new Intent(getActivity(), AboutActivity.class);
-                startActivity(intent);
+                startActivityForResult(intent, REQUEST_ABOUT);
+
                 return true;
             }
             case R.id.menu_logs:
             {
+                Intent intent = new Intent(getActivity(), LogsActivity.class);
+                startActivity(intent);
 
                 return true;
             }

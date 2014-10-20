@@ -135,12 +135,12 @@ public class VocabularyManager
         }
         catch(final IOException | JSONException e)
         {
-            Log.e(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+            Log.e(LogsManager.TAG, "VocabularyManager: getVocabulariesFromWeb. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
             this.responseText = e.getMessage();
         }
         finally
         {
-            Log.d(LogManager.TAG, "VocabularyManager: getVocabulariesFromWeb. responseText=" + this.responseText +
+            Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesFromWeb. responseText=" + this.responseText +
                                   " responseCode=" + this.responseCode + " languageSelected=" + this.languageSelected);
         }
 
@@ -178,7 +178,7 @@ public class VocabularyManager
             map.put(foreignLanguage, listTemp);
         }
 
-        Log.d(LogManager.TAG, "VocabularyManager: parseJsonObject. json=" + jsonObject);
+        Log.d(LogsManager.TAG, "VocabularyManager: parseJsonObject. json=" + jsonObject);
         return map;
     }
 
@@ -231,7 +231,7 @@ public class VocabularyManager
             this.dbHelper.close();
         }
 
-        Log.d(LogManager.TAG, "VocabularyManager: saveToDisk.");
+        Log.d(LogsManager.TAG, "VocabularyManager: saveToDisk.");
         return true;
     }
 
@@ -307,7 +307,7 @@ public class VocabularyManager
         db.close();
         this.dbHelper.close();
 
-        Log.d(LogManager.TAG, "VocabularyManager: getVocabulariesFromDisk. list=" + list);
+        Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesFromDisk. list=" + list);
         return list;
     }
 
@@ -358,7 +358,7 @@ public class VocabularyManager
             }
         }
 
-        Log.d(LogManager.TAG, "VocabularyManager: getVocabulariesCount. keys=" + map.keySet() + " values=" + map.values());
+        Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesCount. keys=" + map.keySet() + " values=" + map.values());
         return map;
     }
 
@@ -381,6 +381,11 @@ public class VocabularyManager
             lastUpdatedDate = cursor.getString(0);
         }
 
+        if(lastUpdatedDate.length() <= 0)
+        {
+            return lastUpdatedDate;
+        }
+
         try
         {
             dateFormatter.applyPattern(DATE_FORMAT_SHORT);
@@ -390,7 +395,7 @@ public class VocabularyManager
         }
         catch(ParseException e)
         {
-            Log.e(LogManager.TAG, "VocabularyManager: getLastUpdated. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+            Log.e(LogsManager.TAG, "VocabularyManager: getLastUpdated. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         }
 
         return lastUpdatedDate;
@@ -411,7 +416,7 @@ public class VocabularyManager
         db.close();
         this.dbHelper.close();
 
-        Log.d(LogManager.TAG, "VocabularyManager: deleteVocabularyFromDisk. affected=" + result);
+        Log.d(LogsManager.TAG, "VocabularyManager: deleteVocabularyFromDisk. affected=" + result);
     }
 
 }
