@@ -109,7 +109,7 @@ public class UpdateFragment extends DialogFragment
             getTargetFragment().onActivityResult(getTargetRequestCode(), resultCode, data);
 
             Log.d(LogsManager.TAG, "UpdateFragment(VocabularyRetrieverThread): sendResult. list=" + vocabList);
-            LogsManager.addToLogs("UpdateFragment(VocabularyRetrieverThread): sendResult. list=" + vocabList);
+            LogsManager.addToLogs("UpdateFragment(VocabularyRetrieverThread): sendResult. list_size=" + vocabList.size());
         }
 
         /**

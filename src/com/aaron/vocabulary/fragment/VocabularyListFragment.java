@@ -26,6 +26,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.EditText;
 
 /**
@@ -81,7 +83,7 @@ public class VocabularyListFragment extends ListFragment
         setHasOptionsMenu(true);
 
         Log.d(LogsManager.TAG, "VocabularyListFragment: onCreate. settings=" + this.settings + " list=" + this.list);
-        LogsManager.addToLogs("VocabularyListFragment: onCreate. settings=" + this.settings + " list=" + this.list);
+        LogsManager.addToLogs("VocabularyListFragment: onCreate. settings=" + this.settings + " list_size=" + this.list.size());
     }
 
     /**
@@ -92,11 +94,46 @@ public class VocabularyListFragment extends ListFragment
     {
         View view = inflater.inflate(R.layout.fragment_vocabulary_list, parent, false);
 
-        Log.d(LogsManager.TAG, "VocabularyListFragment: onCreateView");
+        Log.d(LogsManager.TAG, "VocabularyListFragment: onCreateView.");
 
         return view;
     }
 
+    /**
+     * Called after onCreateView(), sets the action listeners of the UI.
+     */
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState)
+    {
+        super.onActivityCreated(savedInstanceState);
+        
+        Log.d(LogsManager.TAG, "VocabularyListFragment: onActivityCreated.");
+
+        getListView().setOnScrollListener(new OnScrollListener()
+        {
+            @Override
+            public void onScroll(AbsListView view , int firstVisibleItem , int visibleItemCount , int totalItemCount)
+            {
+            }
+
+            /**
+             * Shows the fast-scroll if scrolling and hides the fast-scroll if not scrolling.
+             */
+            @Override
+            public void onScrollStateChanged(AbsListView view , int scrollState)
+            {
+                switch(scrollState)
+                {
+                    case SCROLL_STATE_TOUCH_SCROLL:
+                        view.setFastScrollAlwaysVisible(true);
+                        break;
+                    case SCROLL_STATE_IDLE:
+                        view.setFastScrollAlwaysVisible(false);
+                }
+            }
+        });
+    }
+    
     /**
      * Changed the title of the application.
      */
@@ -190,6 +227,9 @@ public class VocabularyListFragment extends ListFragment
 
         searchTextfield.addTextChangedListener(new TextWatcher()
             {
+                /**
+                 * Handles search on text update.
+                 */
                 @Override
                 public void afterTextChanged(Editable arg0)
                 {
@@ -199,7 +239,6 @@ public class VocabularyListFragment extends ListFragment
                     vocabularyAdapter.notifyDataSetChanged();
                     
                     Log.d(LogsManager.TAG, "VocabularyListFragment: onCreateOptionsMenu(afterTextChanged). searched=" + searched);
-                    LogsManager.addToLogs( "VocabularyListFragment: onCreateOptionsMenu(afterTextChanged). searched=" + searched);
                 }
     
                 @Override
@@ -280,7 +319,7 @@ public class VocabularyListFragment extends ListFragment
                 setListAdapter(vocabularyAdapter);
 
                 Log.d(LogsManager.TAG, "VocabularyListFragment: updateListOnUiThread(run). settings=" + settings + " list=" + list);
-                LogsManager.addToLogs( "VocabularyListFragment: updateListOnUiThread(run). settings=" + settings + " list=" + list);
+                LogsManager.addToLogs( "VocabularyListFragment: updateListOnUiThread(run). settings=" + settings + " list_size=" + list.size());
             }
         });
     }

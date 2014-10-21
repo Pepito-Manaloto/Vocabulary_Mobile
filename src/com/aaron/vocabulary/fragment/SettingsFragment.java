@@ -103,6 +103,9 @@ public class SettingsFragment extends Fragment
         view.requestFocus();
         view.setOnKeyListener(new View.OnKeyListener()
         {
+            /**
+             * Handles back button.
+             */
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) 
             {

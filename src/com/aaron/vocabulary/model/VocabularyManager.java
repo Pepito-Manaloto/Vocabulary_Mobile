@@ -183,7 +183,7 @@ public class VocabularyManager
         }
 
         Log.d(LogsManager.TAG, "VocabularyManager: parseJsonObject. json=" + jsonObject);
-        LogsManager.addToLogs("VocabularyManager: parseJsonObject. json=" + jsonObject);
+        LogsManager.addToLogs("VocabularyManager: parseJsonObject. json_length=" + jsonObject.length());
 
         return map;
     }
@@ -315,7 +315,7 @@ public class VocabularyManager
         this.dbHelper.close();
 
         Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesFromDisk. list=" + list);
-        LogsManager.addToLogs("VocabularyManager: getVocabulariesFromDisk. list=" + list);
+        LogsManager.addToLogs("VocabularyManager: getVocabulariesFromDisk. list_size=" + list.size());
 
         return list;
     }
@@ -368,7 +368,7 @@ public class VocabularyManager
         }
 
         Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesCount. keys=" + map.keySet() + " values=" + map.values());
-        LogsManager.addToLogs("VocabularyManager: getVocabulariesCount. keys=" + map.keySet() + " values=" + map.values());
+        LogsManager.addToLogs("VocabularyManager: getVocabulariesCount. keys=" + map.keySet() + " values_size=" + map.values().size());
 
         return map;
     }

@@ -106,7 +106,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
         }
 
         Log.d(LogsManager.TAG, "VocabularyAdapter: filter. New list -> " + this.vocabularyList);
-        LogsManager.addToLogs("VocabularyAdapter: filter. New list -> " + this.vocabularyList);
+        LogsManager.addToLogs("VocabularyAdapter: filter. New list size -> " + this.vocabularyList.size());
     }
 
     /**

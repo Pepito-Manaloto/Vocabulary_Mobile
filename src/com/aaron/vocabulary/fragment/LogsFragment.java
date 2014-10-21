@@ -50,7 +50,7 @@ public class LogsFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState)
     {
         View view = inflater.inflate(R.layout.fragment_logs, parent, false);
-        
+
         this.textarea = (TextView) view.findViewById(R.id.textarea_logs);
         this.textarea.setText(this.logsManager.getLogs());
         this.textarea.setMovementMethod(new ScrollingMovementMethod());
@@ -78,6 +78,9 @@ public class LogsFragment extends Fragment
 
         searchTextfield.addTextChangedListener(new TextWatcher()
             {
+                /**
+                 * Handles search on text update.
+                 */
                 @Override
                 public void afterTextChanged(Editable arg0)
                 {
