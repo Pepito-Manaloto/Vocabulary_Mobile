@@ -80,7 +80,7 @@ public class AboutFragment extends Fragment
         buildNumberTextView.setText(buildNumber);
         lastUpdatedTextView.setText(lastUpdated);
         hokkienCountTextView.setText("Hokkien               " + vocabularyCount.get(Hokkien));
-        japaneseCountTextView.setText("Japanese             " + vocabularyCount.get(Japanese));
+        japaneseCountTextView.setText("Japanese            " + vocabularyCount.get(Japanese));
         mandarinCountTextView.setText("Mandarin             " + vocabularyCount.get(Mandarin));
 
         Log.d(LogsManager.TAG, "AboutFragment: onCreateView.");

@@ -9,4 +9,4 @@ echo "Version: $version";
 
 string_xml=$(pwd)'/res/values/strings.xml'
 
-sed -i "s/<string name=\"build_num\">*<\/string>/<string name=\"build_num\">$version<\/string>/g" "$string_xml";
+#sed -i "s/<string name=\"build_num\">*<\/string>/<string name=\"build_num\">$version<\/string>/g" "$string_xml";
