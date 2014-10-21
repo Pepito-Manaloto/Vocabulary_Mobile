@@ -49,7 +49,8 @@ public class VocabularyManager
 
     private final String url;
     private static final String AUTH_KEY = "449a36b6689d841d7d27f31b4b7cc73a";
-    
+
+    public static final String TAG = "VocabularyManager";
     private static final String DATE_FORMAT_SHORT = "yyyy-MM-dd";
     private static final String DATE_FORMAT_LONG = "MMMM d, yyyy";
     private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMAT_SHORT, Locale.getDefault());
@@ -64,7 +65,6 @@ public class VocabularyManager
     public VocabularyManager(final Activity activity)
     {
         this.url = "http://" + activity.getString(R.string.url_address) + activity.getString(R.string.url_resource);
-        //this.url = "http://10.11.3.106/Vocabulary/get.php";
         this.dbHelper = new MySQLiteHelper(activity);
         this.curDate = new Date();
     }
@@ -90,8 +90,8 @@ public class VocabularyManager
     public ArrayList<Vocabulary> getVocabulariesFromWeb() 
     {
         HttpParams httpParams = new BasicHttpParams();
-        HttpConnectionParams.setConnectionTimeout(httpParams, 15000);
-        HttpConnectionParams.setSoTimeout(httpParams, 15000);
+        HttpConnectionParams.setConnectionTimeout(httpParams, 10000);
+        HttpConnectionParams.setSoTimeout(httpParams, 10000);
 
         HttpClient httpclient = new DefaultHttpClient(httpParams);
 
@@ -136,11 +136,15 @@ public class VocabularyManager
         catch(final IOException | JSONException e)
         {
             Log.e(LogsManager.TAG, "VocabularyManager: getVocabulariesFromWeb. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+            LogsManager.addToLogs("VocabularyManager: getVocabulariesFromWeb. Exception=" + e.getClass().getSimpleName() + " trace=" + e.getStackTrace());
+
             this.responseText = e.getMessage();
         }
         finally
         {
             Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesFromWeb. responseText=" + this.responseText +
+                                   " responseCode=" + this.responseCode + " languageSelected=" + this.languageSelected);
+            LogsManager.addToLogs("VocabularyManager: getVocabulariesFromWeb. responseText=" + this.responseText +
                                   " responseCode=" + this.responseCode + " languageSelected=" + this.languageSelected);
         }
 
@@ -165,7 +169,7 @@ public class VocabularyManager
             JSONObject jsonLangValues; // JSON items of the array of each language
 
             int jsonLangArrayLength = jsonLangArray.length();
-            ArrayList<Vocabulary> listTemp = new ArrayList<>();
+            ArrayList<Vocabulary> listTemp = new ArrayList<>(jsonLangArrayLength);
             
             // Loop each values of the language
             for(int i = 0; i < jsonLangArrayLength; i++)
@@ -179,6 +183,8 @@ public class VocabularyManager
         }
 
         Log.d(LogsManager.TAG, "VocabularyManager: parseJsonObject. json=" + jsonObject);
+        LogsManager.addToLogs("VocabularyManager: parseJsonObject. json=" + jsonObject);
+
         return map;
     }
 
@@ -232,6 +238,7 @@ public class VocabularyManager
         }
 
         Log.d(LogsManager.TAG, "VocabularyManager: saveToDisk.");
+
         return true;
     }
 
@@ -293,7 +300,7 @@ public class VocabularyManager
         String[] whereArgs = new String[]{this.languageSelected.name()};
 
         Cursor cursor = db.query(TABLE_VOCABULARY, columns, whereClause, whereArgs, null, null, null);
-        ArrayList<Vocabulary> list = new ArrayList<>();
+        ArrayList<Vocabulary> list = new ArrayList<>(cursor.getCount());
 
         if(cursor.moveToFirst())
         {
@@ -308,6 +315,8 @@ public class VocabularyManager
         this.dbHelper.close();
 
         Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesFromDisk. list=" + list);
+        LogsManager.addToLogs("VocabularyManager: getVocabulariesFromDisk. list=" + list);
+
         return list;
     }
 
@@ -359,6 +368,8 @@ public class VocabularyManager
         }
 
         Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesCount. keys=" + map.keySet() + " values=" + map.values());
+        LogsManager.addToLogs("VocabularyManager: getVocabulariesCount. keys=" + map.keySet() + " values=" + map.values());
+
         return map;
     }
 
@@ -396,7 +407,11 @@ public class VocabularyManager
         catch(ParseException e)
         {
             Log.e(LogsManager.TAG, "VocabularyManager: getLastUpdated. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+            LogsManager.addToLogs("VocabularyManager: getLastUpdated. Exception=" + e.getClass().getSimpleName() + " trace=" + e.getStackTrace());
         }
+
+        Log.d(LogsManager.TAG, "VocabularyManager: getLastUpdated. lastUpdatedDate=" + lastUpdatedDate);
+        LogsManager.addToLogs("VocabularyManager: getLastUpdated. lastUpdatedDate=" + lastUpdatedDate);
 
         return lastUpdatedDate;
     }

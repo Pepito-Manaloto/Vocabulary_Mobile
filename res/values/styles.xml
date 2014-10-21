@@ -68,4 +68,10 @@
         <item name="android:layout_marginRight">5dp</item>
         <item name="android:background">@color/sysLightGray</item>
     </style>
+    
+    <style name="Item_menu_search">
+        <item name="android:icon">@android:drawable/ic_menu_search</item>
+        <item name="android:showAsAction">always|collapseActionView</item>
+        <item name="android:actionLayout">@layout/search_layout</item>
+    </style>
 </resources>

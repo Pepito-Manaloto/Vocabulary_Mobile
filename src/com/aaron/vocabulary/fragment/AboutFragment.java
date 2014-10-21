@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
 import android.app.Activity;
@@ -11,6 +12,7 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnLongClickListener;
@@ -19,8 +21,12 @@ import android.widget.TextView;
 
 import static com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage.*;
 
+/**
+ * The application about fragment.
+ */
 public class AboutFragment extends Fragment
 {
+    public static final String TAG = "AboutFragment";
     private VocabularyManager vocabularyManager;
 
     /**
@@ -36,6 +42,8 @@ public class AboutFragment extends Fragment
         getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
 
         this.vocabularyManager = new VocabularyManager(getActivity());
+
+        Log.d(LogsManager.TAG, "AboutFragment: onCreate.");
     }
 
     /**
@@ -75,6 +83,8 @@ public class AboutFragment extends Fragment
         japaneseCountTextView.setText("Japanese             " + vocabularyCount.get(Japanese));
         mandarinCountTextView.setText("Mandarin             " + vocabularyCount.get(Mandarin));
 
+        Log.d(LogsManager.TAG, "AboutFragment: onCreateView.");
+
         return view;
     }
 
@@ -84,6 +94,9 @@ public class AboutFragment extends Fragment
      */
     private void promptUserOnDelete()
     {
+        Log.d(LogsManager.TAG, "AboutFragment: promptUserOnDelete.");
+        LogsManager.addToLogs("AboutFragment: promptUserOnDelete.");
+
         AlertDialog.Builder prompt = new AlertDialog.Builder(getActivity());
         prompt.setMessage("Delete vocabularies from disk?");
 
@@ -91,6 +104,9 @@ public class AboutFragment extends Fragment
             {
                 public void onClick(DialogInterface dialog, int id)
                 {
+                    Log.d(LogsManager.TAG, "AboutFragment: promptUserOnDelete. Yes selected.");
+                    LogsManager.addToLogs("AboutFragment: promptUserOnDelete. Yes selected.");
+
                     vocabularyManager.deleteVocabularyFromDisk();
                     getActivity().setResult(Activity.RESULT_OK);
                     getActivity().finish();
@@ -100,6 +116,9 @@ public class AboutFragment extends Fragment
             {
                 public void onClick(DialogInterface dialog, int id)
                 {
+                    Log.d(LogsManager.TAG, "AboutFragment: promptUserOnDelete. No selected.");
+                    LogsManager.addToLogs("AboutFragment: promptUserOnDelete. No selected.");
+
                     dialog.cancel();
                 }
             });

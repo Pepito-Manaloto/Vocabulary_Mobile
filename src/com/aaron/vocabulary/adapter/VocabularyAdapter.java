@@ -21,6 +21,7 @@ import android.widget.TextView;
  */
 public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 {
+    public static final String TAG = "VocabularyAdapter";
     private Activity activity;
     private ArrayList<Vocabulary> vocabularyList;
     private ArrayList<Vocabulary> vocabularyListTemporaryholder;
@@ -105,6 +106,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
         }
 
         Log.d(LogsManager.TAG, "VocabularyAdapter: filter. New list -> " + this.vocabularyList);
+        LogsManager.addToLogs("VocabularyAdapter: filter. New list -> " + this.vocabularyList);
     }
 
     /**

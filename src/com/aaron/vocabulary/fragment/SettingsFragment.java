@@ -28,6 +28,7 @@ import android.widget.Spinner;
  */
 public class SettingsFragment extends Fragment
 {
+    public static final String TAG = "SettingsFragment";
     public static final String EXTRA_SETTINGS = "com.aaron.vocabulary.fragment.settings";
     private Settings settings;
     
@@ -50,6 +51,8 @@ public class SettingsFragment extends Fragment
         SettingsFragment fragment = new SettingsFragment();
         fragment.setArguments(args);
 
+        Log.d(LogsManager.TAG, "SettingsFragment: newInstance. settings=" + settings);
+
         return fragment;
     }
 
@@ -70,7 +73,8 @@ public class SettingsFragment extends Fragment
         this.languageAdapter = new ArrayAdapter<ForeignLanguage>(getActivity(), android.R.layout.simple_spinner_item, foreignLanguageArray);
         this.languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        Log.d(LogsManager.TAG, "SettingsFragment: onCreate");
+        Log.d(LogsManager.TAG, "SettingsFragment: onCreate. settings=" + this.settings);
+        LogsManager.addToLogs("SettingsFragment: onCreate. settings=" + this.settings);
     }
 
     /**
@@ -165,5 +169,6 @@ public class SettingsFragment extends Fragment
         getActivity().finish();
 
         Log.d(LogsManager.TAG, "SettingsFragment: setFragmentAcivityResult. New settings -> " + this.settings);
+        LogsManager.addToLogs("SettingsFragment: setFragmentAcivityResult. New settings -> " + this.settings);
     }
 }

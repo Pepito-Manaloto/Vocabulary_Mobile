@@ -33,6 +33,7 @@ import android.widget.EditText;
  */
 public class VocabularyListFragment extends ListFragment
 {
+    public static final String TAG = "VocabularyListFragment";
     private static final String DIALOG_UPDATE = "update";
 
     private static final int REQUEST_UPDATE = 0;
@@ -79,7 +80,8 @@ public class VocabularyListFragment extends ListFragment
 
         setHasOptionsMenu(true);
 
-        Log.d(LogsManager.TAG, "VocabularyListFragment: onCreate");
+        Log.d(LogsManager.TAG, "VocabularyListFragment: onCreate. settings=" + this.settings + " list=" + this.list);
+        LogsManager.addToLogs("VocabularyListFragment: onCreate. settings=" + this.settings + " list=" + this.list);
     }
 
     /**
@@ -89,6 +91,7 @@ public class VocabularyListFragment extends ListFragment
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState)
     {
         View view = inflater.inflate(R.layout.fragment_vocabulary_list, parent, false);
+
         Log.d(LogsManager.TAG, "VocabularyListFragment: onCreateView");
 
         return view;
@@ -137,6 +140,7 @@ public class VocabularyListFragment extends ListFragment
         }
 
         Log.d(LogsManager.TAG, "VocabularyListFragment: onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
+        LogsManager.addToLogs( "VocabularyListFragment: onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
 
         // Update action bar menu processing result
         if(requestCode == REQUEST_UPDATE && data.hasExtra(UpdateFragment.EXTRA_VOCABULARY_LIST))
@@ -145,7 +149,12 @@ public class VocabularyListFragment extends ListFragment
             @SuppressWarnings("unchecked")
             ArrayList<Vocabulary> list = (ArrayList<Vocabulary>) data.getSerializableExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
 
-            this.list = list;
+            // Handles occasional NullPointerException.
+            if(list != null)
+            {
+                this.list = list;
+            }
+
             this.updateListOnUiThread(this.list);
         }
         else if(requestCode == REQUEST_SETTINGS && data.hasExtra(SettingsFragment.EXTRA_SETTINGS))
@@ -188,6 +197,9 @@ public class VocabularyListFragment extends ListFragment
                     VocabularyAdapter vocabularyAdapter = (VocabularyAdapter) getListAdapter();
                     vocabularyAdapter.filter(searched);
                     vocabularyAdapter.notifyDataSetChanged();
+                    
+                    Log.d(LogsManager.TAG, "VocabularyListFragment: onCreateOptionsMenu(afterTextChanged). searched=" + searched);
+                    LogsManager.addToLogs( "VocabularyListFragment: onCreateOptionsMenu(afterTextChanged). searched=" + searched);
                 }
     
                 @Override
@@ -264,9 +276,11 @@ public class VocabularyListFragment extends ListFragment
             @Override
             public void run()
             {
-                //((VocabularyAdapter) getListAdapter()).notifyDataSetChanged();
                 VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(getActivity(), list, settings);
                 setListAdapter(vocabularyAdapter);
+
+                Log.d(LogsManager.TAG, "VocabularyListFragment: updateListOnUiThread(run). settings=" + settings + " list=" + list);
+                LogsManager.addToLogs( "VocabularyListFragment: updateListOnUiThread(run). settings=" + settings + " list=" + list);
             }
         });
     }

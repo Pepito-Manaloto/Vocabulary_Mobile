@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -23,8 +24,10 @@ import com.aaron.vocabulary.model.VocabularyManager;
  */
 public class UpdateFragment extends DialogFragment
 {
+    public static final String TAG = "UpdateFragment";
     public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.vocabulary_list";
     private VocabularyManager vocabularyManager;
+    private VocabularyRetrieverThread vocabularyRetrieverThread;
 
     /**
      * Creates a new UpdateFragment and sets its arguments.
@@ -36,6 +39,8 @@ public class UpdateFragment extends DialogFragment
         args.putSerializable(SettingsFragment.EXTRA_SETTINGS, settings);
         UpdateFragment fragment = new UpdateFragment();
         fragment.setArguments(args);
+
+        Log.d(LogsManager.TAG, "UpdateFragment: newInstance. settings=" + settings);
 
         return fragment;
     }
@@ -50,12 +55,14 @@ public class UpdateFragment extends DialogFragment
         progressDialog.setTitle(getString(R.string.dialog_update_title));
         progressDialog.setMessage(getString(R.string.dialog_update_message));
         progressDialog.setIndeterminate(true);
-        progressDialog.setCancelable(true);
 
         Settings settings = (Settings) getArguments().getSerializable(SettingsFragment.EXTRA_SETTINGS);
         this.vocabularyManager = new VocabularyManager(getActivity(), settings);
+        this.vocabularyRetrieverThread = new VocabularyRetrieverThread();
 
-        Log.d(LogsManager.TAG, "UpdateFragment: onCreateDialog");
+        Log.d(LogsManager.TAG, "UpdateFragment: onCreateDialog. settings=" + settings);
+        LogsManager.addToLogs("UpdateFragment: onCreateDialog. settings=" + settings);
+
         return progressDialog;
     }
 
@@ -66,8 +73,17 @@ public class UpdateFragment extends DialogFragment
     public void onStart()
     {
         super.onStart();
-        new VocabularyRetrieverThread().execute();
+        this.vocabularyRetrieverThread.execute();
         Log.d(LogsManager.TAG, "UpdateFragment: onStart");
+    }
+
+    /**
+     * Called when dialog is cancelled before finishing its task. Stops the retriever thread.
+     */
+    @Override
+    public void onDismiss(DialogInterface dialog)
+    {
+        this.vocabularyRetrieverThread.cancel(true);
     }
 
     /**
@@ -91,6 +107,9 @@ public class UpdateFragment extends DialogFragment
             Intent data = new Intent();
             data.putExtra(EXTRA_VOCABULARY_LIST, vocabList);
             getTargetFragment().onActivityResult(getTargetRequestCode(), resultCode, data);
+
+            Log.d(LogsManager.TAG, "UpdateFragment(VocabularyRetrieverThread): sendResult. list=" + vocabList);
+            LogsManager.addToLogs("UpdateFragment(VocabularyRetrieverThread): sendResult. list=" + vocabList);
         }
 
         /**
