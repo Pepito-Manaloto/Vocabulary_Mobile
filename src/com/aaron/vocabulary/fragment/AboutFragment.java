@@ -55,17 +55,17 @@ public class AboutFragment extends Fragment
         View view = inflater.inflate(R.layout.fragment_about, parent, false);
 
         view.setOnLongClickListener(new OnLongClickListener()
-        {
-            /**
-             * If yes is selected, vocabularies on disk will be deleted.
-             */
-            @Override
-            public boolean onLongClick(View arg0)
             {
-                promptUserOnDelete();
-                return true;
-            }
-        });
+                /**
+                 * If yes is selected, vocabularies on disk will be deleted.
+                 */
+                @Override
+                public boolean onLongClick(View arg0)
+                {
+                    promptUserOnDelete();
+                    return true;
+                }
+            });
 
         final TextView buildNumberTextView = (TextView) view.findViewById(R.id.text_build_number);
         TextView lastUpdatedTextView = (TextView) view.findViewById(R.id.text_last_updated);

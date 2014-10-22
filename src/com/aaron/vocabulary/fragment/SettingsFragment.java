@@ -102,25 +102,25 @@ public class SettingsFragment extends Fragment
         view.setFocusableInTouchMode(true);
         view.requestFocus();
         view.setOnKeyListener(new View.OnKeyListener()
-        {
-            /**
-             * Handles back button.
-             */
-            @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) 
             {
-                // For back button
-                if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
+                /**
+                 * Handles back button.
+                 */
+                @Override
+                public boolean onKey(View v, int keyCode, KeyEvent event) 
                 {
-                    setFragmentAcivityResult();
-                    return true;
-                } 
-                else 
-                {
-                    return false;
+                    // For back button
+                    if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
+                    {
+                        setFragmentAcivityResult();
+                        return true;
+                    } 
+                    else 
+                    {
+                        return false;
+                    }
                 }
-            }
-        });
+            });
 
         Log.d(LogsManager.TAG, "SettingsFragment: onCreateView");
 
