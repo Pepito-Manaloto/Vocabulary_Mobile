@@ -65,6 +65,7 @@ public class VocabularyManager
     public VocabularyManager(final Activity activity)
     {
         this.url = "http://" + activity.getString(R.string.url_address) + activity.getString(R.string.url_resource);
+
         this.dbHelper = new MySQLiteHelper(activity);
         this.curDate = new Date();
     }

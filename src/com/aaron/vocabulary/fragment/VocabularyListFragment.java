@@ -9,6 +9,7 @@ import com.aaron.vocabulary.activity.SettingsActivity;
 import com.aaron.vocabulary.adapter.VocabularyAdapter;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
+import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
@@ -26,8 +27,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AbsListView.OnScrollListener;
 import android.widget.EditText;
 
 /**
@@ -63,7 +62,11 @@ public class VocabularyListFragment extends ListFragment
             // But we are sure of its type
             @SuppressWarnings("unchecked")
             ArrayList<Vocabulary> listTemp = (ArrayList<Vocabulary>) savedInstanceState.getSerializable(EXTRA_LIST);
-            this.list = listTemp;
+            
+            if(listTemp != null)
+            {
+                this.list = listTemp;
+            }
         }
 
         if(this.settings == null)
@@ -99,41 +102,6 @@ public class VocabularyListFragment extends ListFragment
         return view;
     }
 
-    /**
-     * Called after onCreateView(), sets the action listeners of the UI.
-     */
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState)
-    {
-        super.onActivityCreated(savedInstanceState);
-        
-        Log.d(LogsManager.TAG, "VocabularyListFragment: onActivityCreated.");
-
-        getListView().setOnScrollListener(new OnScrollListener()
-        {
-            @Override
-            public void onScroll(AbsListView view , int firstVisibleItem , int visibleItemCount , int totalItemCount)
-            {
-            }
-
-            /**
-             * Shows the fast-scroll if scrolling and hides the fast-scroll if not scrolling.
-             */
-            @Override
-            public void onScrollStateChanged(AbsListView view , int scrollState)
-            {
-                switch(scrollState)
-                {
-                    case SCROLL_STATE_TOUCH_SCROLL:
-                        view.setFastScrollAlwaysVisible(true);
-                        break;
-                    case SCROLL_STATE_IDLE:
-                        view.setFastScrollAlwaysVisible(false);
-                }
-            }
-        });
-    }
-    
     /**
      * Changed the title of the application.
      */
