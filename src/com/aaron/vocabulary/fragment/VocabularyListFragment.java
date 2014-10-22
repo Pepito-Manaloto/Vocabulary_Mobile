@@ -316,7 +316,7 @@ public class VocabularyListFragment extends ListFragment
      */
     private static class ShowHideFastScrollListener implements OnScrollListener
     {
-        private static final int DELAY = 2000;
+        private static final int DELAY = 1000;
         private AbsListView view;
 
         private Handler handler = new Handler();
@@ -340,12 +340,18 @@ public class VocabularyListFragment extends ListFragment
             if(scrollState != SCROLL_STATE_IDLE)
             {
                 view.setFastScrollAlwaysVisible(true);
+                
+                // Removes the runnable from the message queue.
+                // Stops the handler from hiding the fast-scroll.
                 this.handler.removeCallbacks(this.runnable);
             }
             else
             {
                 this.view = view;
-                this.handler.postDelayed(this.runnable, DELAY);
+
+                // Adds the runnable to the message queue, will run after the DELAY.
+                // Hides the fast-scroll after two seconds of no scrolling.
+                this.handler.postDelayed(this.runnable, DELAY); 
             }
         }
 
