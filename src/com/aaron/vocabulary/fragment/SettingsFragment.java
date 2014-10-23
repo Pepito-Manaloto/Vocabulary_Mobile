@@ -70,7 +70,7 @@ public class SettingsFragment extends Fragment
         getActivity().setTitle(R.string.menu_settings);
         getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
 
-        this.languageAdapter = new ArrayAdapter<ForeignLanguage>(getActivity(), android.R.layout.simple_spinner_item, foreignLanguageArray);
+        this.languageAdapter = new ArrayAdapter<ForeignLanguage>(getActivity(), android.R.layout.simple_spinner_item, FOREIGN_LANGUAGE_ARRAY);
         this.languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         Log.d(LogsManager.TAG, "SettingsFragment: onCreate. settings=" + this.settings);

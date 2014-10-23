@@ -33,6 +33,7 @@ import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
+import static com.aaron.vocabulary.bean.Vocabulary.*;
 import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.*;
 import static com.aaron.vocabulary.model.MySQLiteHelper.*;
 
@@ -95,8 +96,9 @@ public class VocabularyManager
         HttpConnectionParams.setSoTimeout(httpParams, 10000);
 
         HttpClient httpclient = new DefaultHttpClient(httpParams);
+        String params = "?last_updated=" + this.getLastUpdated();
 
-        HttpGet httpGet = new HttpGet(this.url);
+        HttpGet httpGet = new HttpGet(this.url + params);
         httpGet.addHeader("Authorization", AUTH_KEY);
 
         try
@@ -164,7 +166,7 @@ public class VocabularyManager
         HashMap<ForeignLanguage, ArrayList<Vocabulary>> map = new HashMap<>(); // Map containing the parsed result
 
         // Loop each language
-        for(ForeignLanguage foreignLanguage: ForeignLanguage.values())
+        for(ForeignLanguage foreignLanguage: FOREIGN_LANGUAGE_ARRAY)
         {
             JSONArray jsonLangArray = jsonObject.getJSONArray(foreignLanguage.name()); // JSON array, for each language
             JSONObject jsonLangValues; // JSON items of the array of each language
@@ -183,6 +185,8 @@ public class VocabularyManager
             map.put(foreignLanguage, listTemp);
         }
 
+        this.recentlyAddedCount = jsonObject.getInt(recently_added_count.name());
+
         Log.d(LogsManager.TAG, "VocabularyManager: parseJsonObject. json=" + jsonObject);
         LogsManager.addToLogs("VocabularyManager: parseJsonObject. json_length=" + jsonObject.length());
 
@@ -199,13 +203,15 @@ public class VocabularyManager
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
         ArrayList<Vocabulary> listTemp;
         ContentValues values;
-        long result;
 
         dateFormatter.applyPattern(DATE_FORMAT_SHORT);
         db.beginTransaction();
 
         try
         {
+            // Delete vocabularies. To ensure no duplicates, if existing vocabularies are modified in the server.
+            db.delete(TABLE_VOCABULARY, "1", null);
+
             // Loop each language
             for(ForeignLanguage foreignLanguage: vocabularyMap.keySet())
             {
@@ -220,12 +226,7 @@ public class VocabularyManager
                     values.put(Column.foreign_language.name(), foreignLanguage.name());
                     values.put(Column.date_in.name(), dateFormatter.format(this.curDate));
 
-                    result = db.insert(TABLE_VOCABULARY, null, values);
-
-                    if(result > -1)
-                    {
-                        this.recentlyAddedCount++;
-                    }
+                    db.insert(TABLE_VOCABULARY, null, values);
                 }
             }
 
@@ -358,7 +359,7 @@ public class VocabularyManager
         String whereClause = "foreign_language = ?";
         Cursor cursor;
         
-        for(ForeignLanguage language: ForeignLanguage.values())
+        for(ForeignLanguage language: FOREIGN_LANGUAGE_ARRAY)
         {
             cursor = db.query(TABLE_VOCABULARY, COLUMN_COUNT, whereClause, new String[]{language.name()}, null, null, null);
             
