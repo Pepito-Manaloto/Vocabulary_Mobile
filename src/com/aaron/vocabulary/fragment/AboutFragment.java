@@ -20,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import static com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage.*;
+import static com.aaron.vocabulary.model.VocabularyManager.*;
 
 /**
  * The application about fragment.
@@ -74,7 +75,7 @@ public class AboutFragment extends Fragment
         TextView mandarinCountTextView = (TextView) view.findViewById(R.id.text_mandarin_count);
 
         String buildNumber = getActivity().getString(R.string.build_num);
-        String lastUpdated = this.vocabularyManager.getLastUpdated();
+        String lastUpdated = this.vocabularyManager.getLastUpdated(DATE_FORMAT_LONG);
         HashMap<ForeignLanguage, Integer> vocabularyCount = this.vocabularyManager.getVocabulariesCount();
 
         buildNumberTextView.setText(buildNumber);

@@ -26,7 +26,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper
         english_word,
         foreign_word,
         foreign_language,
-        date_in
+        date_in,
     }
 
     private static final String CREATE_TABLE_VOCABULARY = "CREATE TABLE " + TABLE_VOCABULARY +

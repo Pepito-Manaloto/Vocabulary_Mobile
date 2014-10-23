@@ -52,9 +52,10 @@ public class VocabularyManager
     private static final String AUTH_KEY = "449a36b6689d841d7d27f31b4b7cc73a";
 
     public static final String TAG = "VocabularyManager";
-    private static final String DATE_FORMAT_SHORT = "yyyy-MM-dd";
-    private static final String DATE_FORMAT_LONG = "MMMM d, yyyy";
-    private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMAT_SHORT, Locale.getDefault());
+
+    public static final String DATE_FORMAT_LONG = "MMMM d, yyyy hh:mm:ss a";
+    public static final String DATE_FORMAT_SHORT_24 = "yyyy-MM-dd hh:mm:ss";
+    private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMAT_LONG, Locale.getDefault());
 
     private MySQLiteHelper dbHelper;
     private Date curDate;
@@ -96,7 +97,7 @@ public class VocabularyManager
         HttpConnectionParams.setSoTimeout(httpParams, 10000);
 
         HttpClient httpclient = new DefaultHttpClient(httpParams);
-        String params = "?last_updated=" + this.getLastUpdated();
+        String params = "?last_updated=" + this.getLastUpdated(DATE_FORMAT_SHORT_24);
 
         HttpGet httpGet = new HttpGet(this.url + params);
         httpGet.addHeader("Authorization", AUTH_KEY);
@@ -204,7 +205,7 @@ public class VocabularyManager
         ArrayList<Vocabulary> listTemp;
         ContentValues values;
 
-        dateFormatter.applyPattern(DATE_FORMAT_SHORT);
+        dateFormatter.applyPattern(DATE_FORMAT_LONG);
         db.beginTransaction();
 
         try
@@ -377,9 +378,10 @@ public class VocabularyManager
 
     /**
      * Gets the latest date_in of the vocabularies.
+     * @param useLongFormat flag for returning date format
      * @return String
      */
-    public String getLastUpdated()
+    public String getLastUpdated(final String format)
     {
         String lastUpdatedDate = "";
         SQLiteDatabase db = this.dbHelper.getReadableDatabase();
@@ -401,9 +403,10 @@ public class VocabularyManager
 
         try
         {
-            dateFormatter.applyPattern(DATE_FORMAT_SHORT);
-            Date date = dateFormatter.parse(lastUpdatedDate);
             dateFormatter.applyPattern(DATE_FORMAT_LONG);
+            Date date = dateFormatter.parse(lastUpdatedDate);
+            
+            dateFormatter.applyPattern(format);
             lastUpdatedDate = dateFormatter.format(date);
         }
         catch(ParseException e)
