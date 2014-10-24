@@ -1,6 +1,7 @@
 package com.aaron.vocabulary.model;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public class VocabularyManager
     public static final String TAG = "VocabularyManager";
 
     public static final String DATE_FORMAT_LONG = "MMMM d, yyyy hh:mm:ss a";
-    public static final String DATE_FORMAT_SHORT_24 = "yyyy-MM-dd hh:mm:ss";
+    public static final String DATE_FORMAT_SHORT_24 = "yyyy-MM-dd HH:mm:ss";
     private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMAT_LONG, Locale.getDefault());
 
     private MySQLiteHelper dbHelper;
@@ -96,14 +97,17 @@ public class VocabularyManager
         HttpConnectionParams.setConnectionTimeout(httpParams, 10000);
         HttpConnectionParams.setSoTimeout(httpParams, 10000);
 
-        HttpClient httpclient = new DefaultHttpClient(httpParams);
-        String params = "?last_updated=" + this.getLastUpdated(DATE_FORMAT_SHORT_24);
-
-        HttpGet httpGet = new HttpGet(this.url + params);
-        httpGet.addHeader("Authorization", AUTH_KEY);
-
         try
         {
+            HttpClient httpclient = new DefaultHttpClient(httpParams);
+            String params = "?last_updated=" + URLEncoder.encode(this.getLastUpdated(DATE_FORMAT_SHORT_24), "UTF-8");
+    
+            Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesFromWeb. params=" + params);
+            LogsManager.addToLogs("VocabularyManager: getVocabulariesFromWeb. params=" + params);
+
+            HttpGet httpGet = new HttpGet(this.url + params);
+            httpGet.addHeader("Authorization", AUTH_KEY);
+
             HttpResponse response = httpclient.execute(httpGet);
             this.responseCode = response.getStatusLine().getStatusCode();
 

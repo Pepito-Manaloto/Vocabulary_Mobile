@@ -87,8 +87,9 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
      */
     public void filter(final String searched)
     {
-        String searchedText = searched.trim();
         this.vocabularyList.clear();
+        String searchedText = searched.trim();
+        String englishWord;
 
         if(searchedText.length() == 0)
         {
@@ -98,9 +99,14 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
         {
             for(Vocabulary vocab: this.vocabularyListTemporaryholder)
             {
-                if(vocab.getEnglishWord().startsWith(searchedText))
+                englishWord = vocab.getEnglishWord();
+
+                for(String word: englishWord.split(" / "))
                 {
-                    this.vocabularyList.add(vocab);
+                    if(word.startsWith(searchedText))
+                    {
+                        this.vocabularyList.add(vocab);
+                    }
                 }
             }
         }
