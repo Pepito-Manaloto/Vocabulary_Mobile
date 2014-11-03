@@ -108,7 +108,7 @@ public class AboutFragment extends Fragment
                     Log.d(LogsManager.TAG, "AboutFragment: promptUserOnDelete. Yes selected.");
                     LogsManager.addToLogs("AboutFragment: promptUserOnDelete. Yes selected.");
 
-                    vocabularyManager.deleteVocabularyFromDisk();
+                    vocabularyManager.deleteVocabulariesFromDisk();
                     getActivity().setResult(Activity.RESULT_OK);
                     getActivity().finish();
                 }

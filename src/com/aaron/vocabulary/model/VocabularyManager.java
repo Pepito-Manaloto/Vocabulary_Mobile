@@ -429,7 +429,7 @@ public class VocabularyManager
      * Deletes the vocabulary from disk.
      * Warning: this action cannot be reverted
      */
-    public void deleteVocabularyFromDisk()
+    public void deleteVocabulariesFromDisk()
     {
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
         String whereClause = "1";
