@@ -76,7 +76,7 @@ public class VocabularyListFragment extends ListFragment
             this.settings = new Settings();
         }
 
-        this.vocabularyManager = new VocabularyManager(getActivity(), this.settings);
+        this.vocabularyManager = new VocabularyManager(getActivity(), this.settings.getForeignLanguage());
 
         if(this.list == null)
         {

@@ -78,10 +78,10 @@ public class VocabularyManager
      * @param activity the caller activity
      * @param settings the current settings
      */
-    public VocabularyManager(final Activity activity, final Settings settings)
+    public VocabularyManager(final Activity activity, final ForeignLanguage foreignLanguage)
     {
         this(activity);
-        this.languageSelected = settings.getForeignLanguage();
+        this.languageSelected = foreignLanguage;
     }
 
     /**

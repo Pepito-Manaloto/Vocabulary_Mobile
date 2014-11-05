@@ -70,7 +70,7 @@ public class SettingsFragment extends Fragment
         getActivity().setTitle(R.string.menu_settings);
         getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
 
-        this.languageAdapter = new ArrayAdapter<ForeignLanguage>(getActivity(), android.R.layout.simple_spinner_item, FOREIGN_LANGUAGE_ARRAY);
+        this.languageAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, FOREIGN_LANGUAGE_ARRAY);
         this.languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         Log.d(LogsManager.TAG, "SettingsFragment: onCreate. settings=" + this.settings);
@@ -86,7 +86,7 @@ public class SettingsFragment extends Fragment
         View view = inflater.inflate(R.layout.fragment_settings, parent, false);
 
         this.foreignLanguageSpinner = (Spinner) view.findViewById(R.id.spinner_foreign_language);
-        this.foreignLanguageSpinner.setAdapter(languageAdapter);
+        this.foreignLanguageSpinner.setAdapter(this.languageAdapter);
 
         this.fontNameSpinner = (Spinner) view.findViewById(R.id.spinner_font_name);
         this.fontStyleSpinner = (Spinner) view.findViewById(R.id.spinner_font_style);

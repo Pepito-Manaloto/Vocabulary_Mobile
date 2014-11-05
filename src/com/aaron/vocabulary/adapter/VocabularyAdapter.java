@@ -37,7 +37,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     {
         super(context, 0, vocabularyList);
 
-        this.vocabularyManager = new VocabularyManager(context, settings);
+        this.vocabularyManager = new VocabularyManager(context, settings.getForeignLanguage());
 
         this.activity = context;
         this.vocabularyList = vocabularyList;
