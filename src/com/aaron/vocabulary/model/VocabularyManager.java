@@ -71,6 +71,7 @@ public class VocabularyManager
 
         this.dbHelper = new MySQLiteHelper(activity);
         this.curDate = new Date();
+        this.languageSelected = ForeignLanguage.Hokkien;
     }
 
     /**
