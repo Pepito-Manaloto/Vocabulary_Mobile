@@ -6,12 +6,13 @@
     <TextView
         android:id="@+id/textview_foreign_language"
         style="@style/TextView_settings"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="15dp"
         android:text="@string/text_foreign_language" />
 
     <Spinner
         android:id="@+id/spinner_foreign_language"
         style="@style/Spinner_settings"
+        android:layout_marginTop="15dp"
         android:layout_toRightOf="@id/textview_foreign_language" />
 
     <TextView
