@@ -11,7 +11,7 @@ import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
  */
 public class Settings implements Serializable
 {
-    private static final long serialVersionUID = 4213847540393030207L;
+    private static final long serialVersionUID = -2294411296821808604L;
 
     /**
      * Enum for the list of default font name.

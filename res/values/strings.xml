@@ -3,7 +3,7 @@
 
     <string name="app_name">Vocabulary (%1$s)</string>
     <!-- &#8211; is the unicode html_entity of "-" -->
-    <string name="build_num">master&#8211;29&#8211;06254ec</string>
+    <string name="build_num">master&#8211;32&#8211;5472e9e</string>
 
     <!-- MENU LABELS -->
     <string name="menu_update">Update</string>
@@ -39,12 +39,14 @@
         <item>Serif</item>
         <item>Monospace</item>
     </string-array>
+
     <string-array name="font_style_arrays">
         <item>Normal</item>
         <item>Bold</item>
         <item>Italic</item>
         <item>Bold_Italic</item>
     </string-array>
+
     <string-array name="font_size_arrays">
         <item>14</item>
         <item>15</item>
@@ -54,6 +56,7 @@
         <item>19</item>
         <item>20</item>
     </string-array>
+
     <string-array name="update_interval_arrays">
         <item>Never</item>
     </string-array>
