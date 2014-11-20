@@ -31,15 +31,13 @@
     <Spinner
         android:id="@+id/spinner_font_style"
         style="@style/Spinner_settings"
-        android:layout_below="@id/textview_font"
-        android:layout_toRightOf="@id/spinner_font_name"
+        android:layout_below="@id/spinner_font_name"
         android:entries="@array/font_style_arrays" />
 
     <Spinner
         android:id="@+id/spinner_font_size"
         style="@style/Spinner_settings"
-        android:layout_below="@id/textview_font"
-        android:layout_toRightOf="@id/spinner_font_style"
+        android:layout_below="@id/spinner_font_style"
         android:entries="@array/font_size_arrays" />
 
     <TextView
