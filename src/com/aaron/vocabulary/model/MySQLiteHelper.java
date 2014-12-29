@@ -65,10 +65,10 @@ public class MySQLiteHelper extends SQLiteOpenHelper
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion)
     {
         /**
-         * TODO (1) store db contents in temp
+         * TODO (1) store db contents in temp --- NOT YET
          *      (2) drop db --- IMPLEMENTED
          *      (3) create new db --- IMPLEMENTED 
-         *      (4) insert temp data in new db
+         *      (4) insert temp data in new db --- NOT YET
          */ 
         database.execSQL("DROP IF TABLE EXISTS " + TABLE_VOCABULARY);
         this.onCreate(database);

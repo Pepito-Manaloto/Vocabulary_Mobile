@@ -9,6 +9,7 @@ import com.aaron.vocabulary.activity.SettingsActivity;
 import com.aaron.vocabulary.adapter.VocabularyAdapter;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
+import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
@@ -180,7 +181,14 @@ public class VocabularyListFragment extends ListFragment
         else if(requestCode == REQUEST_SETTINGS && data.hasExtra(SettingsFragment.EXTRA_SETTINGS))
         {
             this.settings = (Settings) data.getSerializableExtra(SettingsFragment.EXTRA_SETTINGS);
-            this.vocabularyManager.setLanguageSelected(this.settings);
+            
+            ForeignLanguage language = ForeignLanguage.Hokkien;
+            if(this.settings != null)
+            {
+                language = this.settings.getForeignLanguage();
+            }
+
+            this.vocabularyManager.setSelectedLanguage(language);
 
             this.list = this.vocabularyManager.getVocabulariesFromDisk();
             this.updateListOnUiThread(this.list);

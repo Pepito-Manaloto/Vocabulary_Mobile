@@ -17,9 +17,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
+import android.widget.GridLayout;
 import android.widget.TextView;
 
-import static com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage.*;
 import static com.aaron.vocabulary.model.VocabularyManager.*;
 
 /**
@@ -70,9 +70,6 @@ public class AboutFragment extends Fragment
 
         final TextView buildNumberTextView = (TextView) view.findViewById(R.id.text_build_number);
         TextView lastUpdatedTextView = (TextView) view.findViewById(R.id.text_last_updated);
-        TextView hokkienCountTextView = (TextView) view.findViewById(R.id.text_hokkien_count);
-        TextView japaneseCountTextView = (TextView) view.findViewById(R.id.text_japanese_count);
-        TextView mandarinCountTextView = (TextView) view.findViewById(R.id.text_mandarin_count);
 
         String buildNumber = getActivity().getString(R.string.build_num);
         String lastUpdated = this.vocabularyManager.getLastUpdated(DATE_FORMAT_LONG);
@@ -80,9 +77,35 @@ public class AboutFragment extends Fragment
 
         buildNumberTextView.setText(buildNumber);
         lastUpdatedTextView.setText(lastUpdated);
-        hokkienCountTextView.setText("Hokkien               " + vocabularyCount.get(Hokkien));
-        japaneseCountTextView.setText("Japanese            " + vocabularyCount.get(Japanese));
-        mandarinCountTextView.setText("Mandarin             " + vocabularyCount.get(Mandarin));
+
+        GridLayout grid = (GridLayout) view.findViewById(R.id.gridlayout_count);
+        grid.setColumnCount(2);
+        grid.setRowCount(vocabularyCount.keySet().size());
+
+        int ctr = 0;
+        for(ForeignLanguage key: vocabularyCount.keySet())
+        {
+            // Label
+            GridLayout.LayoutParams layoutParamLabel = new GridLayout.LayoutParams(GridLayout.spec(ctr, GridLayout.LEFT),
+                                                                                   GridLayout.spec(0, GridLayout.LEFT));
+
+            TextView label = new TextView(getActivity());
+            label.setText(key.name());
+            label.setTextAppearance(getActivity(), R.style.TextView_sub_about);
+
+            // Count
+            GridLayout.LayoutParams layoutParamCount = new GridLayout.LayoutParams(GridLayout.spec(ctr, GridLayout.LEFT),
+                                                                                   GridLayout.spec(1, GridLayout.LEFT));
+            layoutParamCount.setMargins(75, 0, 0, 0);
+            TextView count = new TextView(getActivity());
+            count.setText(String.valueOf(vocabularyCount.get(key)));
+            count.setTextAppearance(getActivity(), R.style.TextView_sub_about);
+
+            grid.addView(label, layoutParamLabel);
+            grid.addView(count, layoutParamCount);
+            
+            ctr++;
+        }
 
         Log.d(LogsManager.TAG, "AboutFragment: onCreateView.");
 

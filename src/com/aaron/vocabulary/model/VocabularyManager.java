@@ -30,7 +30,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.aaron.vocabulary.R;
-import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
@@ -46,7 +45,7 @@ public class VocabularyManager
 {
     private int responseCode = HttpStatus.SC_INTERNAL_SERVER_ERROR;
     private String responseText;
-    private ForeignLanguage languageSelected;
+    private ForeignLanguage selectedLanguage;
     private int recentlyAddedCount;
 
     private final String url;
@@ -71,7 +70,7 @@ public class VocabularyManager
 
         this.dbHelper = new MySQLiteHelper(activity);
         this.curDate = new Date();
-        this.languageSelected = ForeignLanguage.Hokkien;
+        this.selectedLanguage = ForeignLanguage.Hokkien;
     }
 
     /**
@@ -82,7 +81,7 @@ public class VocabularyManager
     public VocabularyManager(final Activity activity, final ForeignLanguage foreignLanguage)
     {
         this(activity);
-        this.languageSelected = foreignLanguage;
+        this.selectedLanguage = foreignLanguage;
     }
 
     /**
@@ -116,6 +115,11 @@ public class VocabularyManager
             {
                 HttpEntity httpEntity = response.getEntity();
 
+                if(httpEntity.getContentLength() >= 0 && httpEntity.getContentLength() <= 2) // Response is empty
+                {
+                    return new ArrayList<>(0);
+                }
+
                 String responseString = EntityUtils.toString(httpEntity); // Response body
 
                 JSONObject jsonObject = new JSONObject(responseString); // Response body in JSON object
@@ -136,7 +140,7 @@ public class VocabularyManager
 
                 // Entity is already consumed by EntityUtils; thus is already closed.
 
-                return map.get(this.languageSelected);
+                return map.get(this.selectedLanguage);
             }
 
             // Closes the connection/ Consume the entity.
@@ -152,9 +156,9 @@ public class VocabularyManager
         finally
         {
             Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesFromWeb. responseText=" + this.responseText +
-                                   " responseCode=" + this.responseCode + " languageSelected=" + this.languageSelected);
+                                   " responseCode=" + this.responseCode + " SelectedLanguage=" + this.selectedLanguage);
             LogsManager.addToLogs("VocabularyManager: getVocabulariesFromWeb. responseText=" + this.responseText +
-                                  " responseCode=" + this.responseCode + " languageSelected=" + this.languageSelected);
+                                  " responseCode=" + this.responseCode + " SelectedLanguage=" + this.selectedLanguage);
         }
 
         return new ArrayList<>(0);
@@ -200,7 +204,7 @@ public class VocabularyManager
     }
 
     /**
-     * Saves the given vocabulary map in the local database.
+     * Saves the given vocabulary map to the local database.
      * @param vocabularyMap the vocabulary map to be stored
      * @return true on success, else false
      */
@@ -208,7 +212,7 @@ public class VocabularyManager
     {
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
         ArrayList<Vocabulary> listTemp;
-        ContentValues values;
+        ContentValues values = new ContentValues();
 
         dateFormatter.applyPattern(DATE_FORMAT_LONG);
         db.beginTransaction();
@@ -222,8 +226,7 @@ public class VocabularyManager
             for(ForeignLanguage foreignLanguage: vocabularyMap.keySet())
             {
                 listTemp = vocabularyMap.get(foreignLanguage);
-                values = new ContentValues();
-    
+
                 // Loop contents of the language
                 for(Vocabulary vocabulary: listTemp)
                 {
@@ -299,13 +302,13 @@ public class VocabularyManager
      */
     public ArrayList<Vocabulary> getVocabulariesFromDisk()
     {
-        SQLiteDatabase db = this.dbHelper.getWritableDatabase();
+        SQLiteDatabase db = this.dbHelper.getReadableDatabase();
 
         String[] columns = new String[]{Column.english_word.name(),
                                         Column.foreign_word.name(),
                                         Column.foreign_language.name()};
         String whereClause = "foreign_language = ?";
-        String[] whereArgs = new String[]{this.languageSelected.name()};
+        String[] whereArgs = new String[]{this.selectedLanguage.name()};
 
         Cursor cursor = db.query(TABLE_VOCABULARY, columns, whereClause, whereArgs, null, null, null);
         ArrayList<Vocabulary> list = new ArrayList<>(cursor.getCount());
@@ -314,7 +317,7 @@ public class VocabularyManager
         {
             do
             {
-                list.add(cursorToVocabulary(cursor));
+                list.add(this.cursorToVocabulary(cursor));
             } 
             while(cursor.moveToNext());
         }
@@ -344,14 +347,11 @@ public class VocabularyManager
 
     /**
      * Sets the language selected.
-     * @param settings the current application settings
+     * @param language the language selected
      */
-    public void setLanguageSelected(final Settings settings)
+    public void setSelectedLanguage(final ForeignLanguage language)
     {
-        if(settings != null)
-        {
-            this.languageSelected = settings.getForeignLanguage();
-        }
+        this.selectedLanguage = language;
     }
 
     /**
@@ -383,12 +383,12 @@ public class VocabularyManager
 
     /**
      * Gets the latest date_in of the vocabularies.
-     * @param useLongFormat flag for returning date format
+     * @param format the date format used in formatting the last_updated date
      * @return String
      */
     public String getLastUpdated(final String format)
     {
-        String lastUpdatedDate = "";
+        String lastUpdatedDate = "1950-01-01 00:00:00";
         SQLiteDatabase db = this.dbHelper.getReadableDatabase();
         String[] columns = new String[]{Column.date_in.name(),};
         String orderBy = "date_in DESC";
@@ -400,8 +400,7 @@ public class VocabularyManager
         {
             lastUpdatedDate = cursor.getString(0);
         }
-
-        if(lastUpdatedDate.length() <= 0)
+        else
         {
             return lastUpdatedDate;
         }
@@ -409,8 +408,8 @@ public class VocabularyManager
         try
         {
             dateFormatter.applyPattern(DATE_FORMAT_LONG);
-            Date date = dateFormatter.parse(lastUpdatedDate);
-            
+            Date date = dateFormatter.parse(lastUpdatedDate); // Parse String to Date, to be able to format properly.
+
             dateFormatter.applyPattern(format);
             lastUpdatedDate = dateFormatter.format(date);
         }

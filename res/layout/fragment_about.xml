@@ -33,21 +33,12 @@
         style="@style/TextView_about"
         android:text="@string/text_vocabularies" />
 
-    <TextView
-        android:id="@+id/text_hokkien_count"
-        style="@style/TextView_sub_about"
-        android:layout_marginBottom="5dp"
-        android:text="@string/text_vocabularies" />
+    <GridLayout
+        android:id="@+id/gridlayout_count"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="15dp" >
 
-    <TextView
-        android:id="@+id/text_japanese_count"
-        style="@style/TextView_sub_about"
-        android:layout_marginBottom="5dp"
-        android:text="@string/text_vocabularies" />
-
-    <TextView
-        android:id="@+id/text_mandarin_count"
-        style="@style/TextView_sub_about"
-        android:text="@string/text_vocabularies" />
+    </GridLayout>
 
 </LinearLayout>
