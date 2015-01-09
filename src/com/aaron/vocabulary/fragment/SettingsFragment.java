@@ -129,7 +129,6 @@ public class SettingsFragment extends Fragment
 
     /**
      * This method is called when a user selects an item in the menu bar. Home button.
-     * the fragment of selected item.
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item)

@@ -32,6 +32,8 @@ import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.EditText;
 
+import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
+
 /**
  * Main view fragment containing the vocabulary list with main menu bar.
  */
@@ -43,6 +45,7 @@ public class VocabularyListFragment extends ListFragment
     private static final int REQUEST_UPDATE = 0;
     private static final int REQUEST_SETTINGS = 1;
     private static final int REQUEST_ABOUT = 2;
+    private static final int REQUEST_LOGS = 3;
 
     public static final String EXTRA_LIST = "com.aaron.vocabulary.fragment.list";
 
@@ -53,6 +56,7 @@ public class VocabularyListFragment extends ListFragment
     /**
      * Initializes non-fragment user interface.
      */
+    @SuppressWarnings("unchecked")
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -60,16 +64,10 @@ public class VocabularyListFragment extends ListFragment
 
         if(savedInstanceState != null)
         {
-            this.settings = (Settings) savedInstanceState.getSerializable(SettingsFragment.EXTRA_SETTINGS);
+            this.settings = (Settings) savedInstanceState.getSerializable(EXTRA_SETTINGS);
 
             // But we are sure of its type
-            @SuppressWarnings("unchecked")
-            ArrayList<Vocabulary> listTemp = (ArrayList<Vocabulary>) savedInstanceState.getSerializable(EXTRA_LIST);
-
-            if(listTemp != null)
-            {
-                this.list = listTemp;
-            }
+            this.list = (ArrayList<Vocabulary>) savedInstanceState.getSerializable(EXTRA_LIST);
         }
 
         if(this.settings == null)
@@ -142,7 +140,7 @@ public class VocabularyListFragment extends ListFragment
     {
         super.onSaveInstanceState(outState);
 
-        outState.putSerializable(SettingsFragment.EXTRA_SETTINGS, this.settings);
+        outState.putSerializable(EXTRA_SETTINGS, this.settings);
         outState.putSerializable(EXTRA_LIST, this.list);
 
         Log.d(LogsManager.TAG, "VocabularyListFragment: onSaveInstanceState");
@@ -178,9 +176,10 @@ public class VocabularyListFragment extends ListFragment
 
             this.updateListOnUiThread(this.list);
         }
-        else if(requestCode == REQUEST_SETTINGS && data.hasExtra(SettingsFragment.EXTRA_SETTINGS))
+        else if((requestCode == REQUEST_SETTINGS || requestCode == REQUEST_ABOUT || requestCode == REQUEST_LOGS) &&
+                data.hasExtra(EXTRA_SETTINGS))
         {
-            this.settings = (Settings) data.getSerializableExtra(SettingsFragment.EXTRA_SETTINGS);
+            this.settings = (Settings) data.getSerializableExtra(EXTRA_SETTINGS);
             
             ForeignLanguage language = ForeignLanguage.Hokkien;
             if(this.settings != null)
@@ -273,7 +272,7 @@ public class VocabularyListFragment extends ListFragment
             case R.id.menu_settings:
             {
                 Intent intent = new Intent(getActivity(), SettingsActivity.class);
-                intent.putExtra(SettingsFragment.EXTRA_SETTINGS, this.settings);
+                intent.putExtra(EXTRA_SETTINGS, this.settings);
                 startActivityForResult(intent, REQUEST_SETTINGS);
 
                 return true;
@@ -281,6 +280,7 @@ public class VocabularyListFragment extends ListFragment
             case R.id.menu_about:
             {
                 Intent intent = new Intent(getActivity(), AboutActivity.class);
+                intent.putExtra(EXTRA_SETTINGS, this.settings);
                 startActivityForResult(intent, REQUEST_ABOUT);
 
                 return true;
@@ -288,7 +288,8 @@ public class VocabularyListFragment extends ListFragment
             case R.id.menu_logs:
             {
                 Intent intent = new Intent(getActivity(), LogsActivity.class);
-                startActivity(intent);
+                intent.putExtra(EXTRA_SETTINGS, this.settings);
+                startActivityForResult(intent, REQUEST_LOGS);
 
                 return true;
             }
