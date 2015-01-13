@@ -33,6 +33,7 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.EditText;
 
 import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
+import static com.aaron.vocabulary.fragment.UpdateFragment.EXTRA_VOCABULARY_LIST;
 
 /**
  * Main view fragment containing the vocabulary list with main menu bar.
@@ -162,22 +163,26 @@ public class VocabularyListFragment extends ListFragment
         LogsManager.addToLogs("VocabularyListFragment: onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
 
         // Update action bar menu processing result
-        if(requestCode == REQUEST_UPDATE && data.hasExtra(UpdateFragment.EXTRA_VOCABULARY_LIST))
+        if(requestCode == REQUEST_UPDATE && data != null && data.hasExtra(EXTRA_VOCABULARY_LIST))
         {
             // But we are sure of its type
             @SuppressWarnings("unchecked")
-            ArrayList<Vocabulary> list = (ArrayList<Vocabulary>) data.getSerializableExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
+            ArrayList<Vocabulary> list = (ArrayList<Vocabulary>) data.getSerializableExtra(EXTRA_VOCABULARY_LIST);
 
             // Handles occasional NullPointerException.
-            if(list != null)
+            if(list != null && list.size() > 0)
             {
                 this.list = list;
+            }
+            else
+            {
+                this.list = this.vocabularyManager.getVocabulariesFromDisk();
             }
 
             this.updateListOnUiThread(this.list);
         }
         else if((requestCode == REQUEST_SETTINGS || requestCode == REQUEST_ABOUT || requestCode == REQUEST_LOGS) &&
-                data.hasExtra(EXTRA_SETTINGS))
+                (data != null && data.hasExtra(EXTRA_SETTINGS)))
         {
             this.settings = (Settings) data.getSerializableExtra(EXTRA_SETTINGS);
             

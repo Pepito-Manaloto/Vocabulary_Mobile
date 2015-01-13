@@ -44,7 +44,7 @@ import static com.aaron.vocabulary.model.MySQLiteHelper.*;
 public class VocabularyManager
 {
     private int responseCode = HttpStatus.SC_INTERNAL_SERVER_ERROR;
-    private String responseText;
+    private String responseText = "Success";
     private ForeignLanguage selectedLanguage;
     private int recentlyAddedCount;
 
@@ -126,6 +126,12 @@ public class VocabularyManager
 
                 HashMap<ForeignLanguage, ArrayList<Vocabulary>> map = this.parseJsonObject(jsonObject);
 
+                if(this.recentlyAddedCount <= 0) // No need to save to disk, because there are no new data entries.
+                {
+
+                    return new ArrayList<>(0);
+                }
+
                 boolean saveToDiskSuccess = this.saveToDisk(map);
                 
                 if(!saveToDiskSuccess)
@@ -135,8 +141,6 @@ public class VocabularyManager
                     
                     return new ArrayList<>(0);
                 }
-
-                this.responseText = "Success";
 
                 // Entity is already consumed by EntityUtils; thus is already closed.
 
@@ -249,6 +253,7 @@ public class VocabularyManager
         }
 
         Log.d(LogsManager.TAG, "VocabularyManager: saveToDisk.");
+        LogsManager.addToLogs("VocabularyManager: saveToDisk.");
 
         return true;
     }
