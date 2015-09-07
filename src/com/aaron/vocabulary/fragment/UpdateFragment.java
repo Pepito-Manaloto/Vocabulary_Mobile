@@ -57,7 +57,7 @@ public class UpdateFragment extends DialogFragment
         progressDialog.setIndeterminate(true);
 
         Settings settings = (Settings) getArguments().getSerializable(SettingsFragment.EXTRA_SETTINGS);
-        this.vocabularyManager = new VocabularyManager(getActivity(), settings.getForeignLanguage());
+        this.vocabularyManager = new VocabularyManager(getActivity(), settings);
         this.vocabularyRetrieverThread = new VocabularyRetrieverThread();
 
         Log.d(LogsManager.TAG, "UpdateFragment: onCreateDialog. settings=" + settings);

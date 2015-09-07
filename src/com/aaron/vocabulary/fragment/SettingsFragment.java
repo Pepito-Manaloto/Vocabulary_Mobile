@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.Spinner;
 
 /**
@@ -39,6 +40,8 @@ public class SettingsFragment extends Fragment
     private Spinner fontStyleSpinner;
     private Spinner fontSizeSpinner;
     private Spinner updateIntervalSpinner;
+
+    private EditText serverURLEditText;
 
     /**
      * Returns a new SettingsFragment with the given settings as arguments.
@@ -92,6 +95,7 @@ public class SettingsFragment extends Fragment
         this.fontStyleSpinner = (Spinner) view.findViewById(R.id.spinner_font_style);
         this.fontSizeSpinner = (Spinner) view.findViewById(R.id.spinner_font_size);
         this.updateIntervalSpinner = (Spinner) view.findViewById(R.id.spinner_update_interval);
+        this.serverURLEditText = (EditText) view.findViewById(R.id.edittext_server_url);
 
         this.foreignLanguageSpinner.setSelection(this.settings.getForeignLanguageIndex());
         this.fontNameSpinner.setSelection(this.settings.getFontNameIndex());
@@ -159,12 +163,14 @@ public class SettingsFragment extends Fragment
         FontStyle fontStyle = FontStyle.valueOf(this.fontStyleSpinner.getSelectedItem().toString());
         int fontSize = Integer.parseInt(this.fontSizeSpinner.getSelectedItem().toString());
         UpdateInterval updateInterval = UpdateInterval.valueOf(this.updateIntervalSpinner.getSelectedItem().toString());
+        String serverURL = this.serverURLEditText.getText().toString();
 
         this.settings.setForeignLanguage(foreignLanguage)
                      .setFontName(fontName)
                      .setFontStyle(fontStyle)
                      .setFontSize(fontSize)
-                     .setUpdateInterval(updateInterval);
+                     .setUpdateInterval(updateInterval)
+                     .setServerURL(serverURL);
 
         data.putExtra(EXTRA_SETTINGS, this.settings);
         getActivity().setResult(Activity.RESULT_OK, data);
