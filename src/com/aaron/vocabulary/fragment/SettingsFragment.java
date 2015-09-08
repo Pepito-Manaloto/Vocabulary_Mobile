@@ -103,28 +103,19 @@ public class SettingsFragment extends Fragment
         this.fontSizeSpinner.setSelection(this.settings.getFontSizeIndex());
         this.updateIntervalSpinner.setSelection(this.settings.getUpdateIntervalIndex());
 
+        String serverUrl = this.settings.getServerURL();
+        
+        if(serverUrl.isEmpty())
+        {
+            serverUrl = getActivity().getString(R.string.url_address_default);
+        }
+
+        this.serverURLEditText.setText(serverUrl);
+
         view.setFocusableInTouchMode(true);
         view.requestFocus();
-        view.setOnKeyListener(new View.OnKeyListener()
-            {
-                /**
-                 * Handles back button.
-                 */
-                @Override
-                public boolean onKey(View v, int keyCode, KeyEvent event) 
-                {
-                    // For back button
-                    if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
-                    {
-                        setFragmentAcivityResult();
-                        return true;
-                    } 
-                    else 
-                    {
-                        return false;
-                    }
-                }
-            });
+        view.setOnKeyListener(new BackButtonListener());
+        this.serverURLEditText.setOnKeyListener(new BackButtonListener());
 
         Log.d(LogsManager.TAG, "SettingsFragment: onCreateView");
 
@@ -178,5 +169,26 @@ public class SettingsFragment extends Fragment
 
         Log.d(LogsManager.TAG, "SettingsFragment: setFragmentAcivityResult. New settings -> " + this.settings);
         LogsManager.addToLogs("SettingsFragment: setFragmentAcivityResult. New settings -> " + this.settings);
+    }
+    
+    private class BackButtonListener implements View.OnKeyListener
+    {
+        /**
+         * Handles back button.
+         */
+        @Override
+        public boolean onKey(View v, int keyCode, KeyEvent event) 
+        {
+            // For back button
+            if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
+            {
+                setFragmentAcivityResult();
+                return true;
+            } 
+            else 
+            {
+                return false;
+            }
+        }
     }
 }

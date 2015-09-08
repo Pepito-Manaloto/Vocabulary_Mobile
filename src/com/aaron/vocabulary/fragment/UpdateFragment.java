@@ -73,6 +73,7 @@ public class UpdateFragment extends DialogFragment
     public void onStart()
     {
         super.onStart();
+
         this.vocabularyRetrieverThread.execute();
         Log.d(LogsManager.TAG, "UpdateFragment: onStart");
     }

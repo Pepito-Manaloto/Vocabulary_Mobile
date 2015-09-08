@@ -156,12 +156,19 @@ public class VocabularyManager
             // Closes the connection/ Consume the entity.
             response.getEntity().getContent().close();
         }
-        catch(final IOException | JSONException e)
+        catch(final IOException | IllegalArgumentException | JSONException e)
         {
             Log.e(LogsManager.TAG, "VocabularyManager: getVocabulariesFromWeb. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
             LogsManager.addToLogs("VocabularyManager: getVocabulariesFromWeb. Exception=" + e.getClass().getSimpleName() + " trace=" + e.getStackTrace());
 
-            this.responseText = e.getMessage();
+            if (e instanceof IllegalArgumentException)
+            {
+                this.responseText = this.url + " is not a valid host name.";
+            }
+            else
+            {
+                this.responseText = e.getMessage();
+            }
         }
         finally
         {
