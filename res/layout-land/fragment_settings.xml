@@ -62,4 +62,20 @@
         android:layout_alignLeft="@id/spinner_foreign_language"
         android:entries="@array/update_interval_arrays" />
 
+    <TextView
+        android:id="@+id/textview_server_url"
+        style="@style/TextView_settings"
+        android:layout_below="@id/spinner_update_interval"
+        android:layout_marginTop="5dp"
+        android:text="@string/text_server" />
+
+    <EditText
+        android:id="@+id/edittext_server_url"
+        style="@style/EditText_settings"
+        android:text="@string/url_address_default"
+        android:layout_marginLeft="0dp"
+        android:layout_below="@id/spinner_update_interval"
+        android:layout_toRightOf="@id/textview_server_url"
+        android:layout_alignLeft="@id/spinner_foreign_language" />
+
 </RelativeLayout>

@@ -23,14 +23,15 @@
     <string name="text_build">Build Number</string>
     <string name="text_last_updated">Last Updated</string>
     <string name="text_vocabularies">Vocabularies</string>
+    <string name="text_server">Server URL:</string>
 
     <!-- HINTS -->
     <string name="hint_vocabulary">Search Vocabulary</string>
     <string name="hint_logs">Search Logs</string>
 
     <!-- URL -->
-    <string name="url_address">192.168.1.101</string>
-    <string name="url_resource">/Vocabulary/get.php</string>
+    <string name="url_address_default">192.168.1.101</string>
+    <string name="url_resource">/Vocabulary/get</string>
 
     <!-- COMBO BOX ITEMS -->
     <string-array name="font_name_arrays">

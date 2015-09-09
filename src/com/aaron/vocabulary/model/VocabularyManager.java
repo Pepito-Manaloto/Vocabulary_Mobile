@@ -34,6 +34,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
@@ -52,7 +53,7 @@ public class VocabularyManager
     private ForeignLanguage selectedLanguage;
     private int recentlyAddedCount;
 
-    private final String url;
+    private String url;
     private static final String AUTH_KEY = getAuthKey();
 
     public static final String TAG = "VocabularyManager";
@@ -92,7 +93,7 @@ public class VocabularyManager
      */
     public VocabularyManager(final Activity activity)
     {
-        this.url = "http://" + activity.getString(R.string.url_address) + activity.getString(R.string.url_resource);
+        this.url = "http://" + activity.getString(R.string.url_address_default) + activity.getString(R.string.url_resource);
 
         this.dbHelper = new MySQLiteHelper(activity);
         this.curDate = new Date();
@@ -104,10 +105,15 @@ public class VocabularyManager
      * @param activity the caller activity
      * @param settings the current settings
      */
-    public VocabularyManager(final Activity activity, final ForeignLanguage foreignLanguage)
+    public VocabularyManager(final Activity activity, final Settings settings)
     {
         this(activity);
-        this.selectedLanguage = foreignLanguage;
+        this.selectedLanguage = settings.getForeignLanguage();
+        
+        if (settings.getServerURL() != null && !settings.getServerURL().isEmpty())
+        {
+            this.url = "http://" + settings.getServerURL() + activity.getString(R.string.url_resource);
+        }
     }
 
     /**
@@ -176,12 +182,19 @@ public class VocabularyManager
             // Closes the connection/ Consume the entity.
             response.getEntity().getContent().close();
         }
-        catch(final IOException | JSONException e)
+        catch(final IOException | IllegalArgumentException | JSONException e)
         {
             Log.e(LogsManager.TAG, "VocabularyManager: getVocabulariesFromWeb. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
             LogsManager.addToLogs("VocabularyManager: getVocabulariesFromWeb. Exception=" + e.getClass().getSimpleName() + " trace=" + e.getStackTrace());
 
+            if (e instanceof IllegalArgumentException)
+            {
+                this.responseText = this.url + " is not a valid host name.";
+            }
+            else
+            {
             this.responseText = e.getMessage();
+        }
         }
         finally
         {

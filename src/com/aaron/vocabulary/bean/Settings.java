@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import android.graphics.Typeface;
 
+import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
 /**
@@ -48,7 +49,7 @@ public class Settings implements Serializable
     private FontStyle fontStyle;
     private int fontSize;
     private UpdateInterval updateInterval;
-
+    private String serverURL;
     /**
      * Default constructor, initializes with default values.
      */
@@ -59,6 +60,7 @@ public class Settings implements Serializable
         this.fontStyle = FontStyle.Normal;
         this.fontSize = 14;
         this.updateInterval = UpdateInterval.Never;
+        this.serverURL = "";
     }
 
     /**
@@ -138,7 +140,7 @@ public class Settings implements Serializable
             case 20: 
                 return 6;
             default: 
-                throw new AssertionError();
+                throw new AssertionError("Unknown Font Size");
         }
     }
 
@@ -152,17 +154,27 @@ public class Settings implements Serializable
     }
 
     /**
+     * Getter for Server URL.
+     * @return Server URL
+     */
+    public String getServerURL()
+    {
+        return this.serverURL;
+    }
+
+    /**
      * Returns the content of the Settings object in a formatted String.
      * @return String
      */
     @Override
     public String toString()
     {
-        return "Foreign language: " + this.foreignLanguage  +
+        return "Foreign language: " + this.foreignLanguage +
                " Font name: " + this.fontName +
                " Font style: " + this.fontStyle +
                " Font size: " + this.fontSize +
-               " Update interval: " + this.updateInterval;
+               " Update interval: " + this.updateInterval +
+               " Server URL: " + this.serverURL;
     }
 
     /**
@@ -240,6 +252,17 @@ public class Settings implements Serializable
     public Settings setUpdateInterval(final UpdateInterval updateInterval)
     {
         this.updateInterval = updateInterval;
+        return this;
+    }
+
+    /**
+     * Sets the serverURL new value.
+     * @param Server URL
+     * @return the settings object being updated
+     */
+    public Settings setServerURL(final String serverURL)
+    {
+        this.serverURL = serverURL;
         return this;
     }
 }
