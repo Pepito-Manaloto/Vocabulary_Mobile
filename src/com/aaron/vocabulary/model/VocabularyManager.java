@@ -1,11 +1,15 @@
 package com.aaron.vocabulary.model;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -49,7 +53,7 @@ public class VocabularyManager
     private int recentlyAddedCount;
 
     private final String url;
-    private static final String AUTH_KEY = "449a36b6689d841d7d27f31b4b7cc73a";
+    private static final String AUTH_KEY = getAuthKey();
 
     public static final String TAG = "VocabularyManager";
 
@@ -59,6 +63,28 @@ public class VocabularyManager
 
     private MySQLiteHelper dbHelper;
     private Date curDate;
+
+    /**
+     * Returns the auth key derived from md5 of the given plain text.
+     * @return String
+     */
+    private static String getAuthKey()
+    {
+        String result = "";
+
+        try
+        {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] digest = md.digest("aaron".getBytes("UTF-8"));
+            result = new String(digest, "UTF-8");
+        }
+        catch (NoSuchAlgorithmException | UnsupportedEncodingException e)
+        {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
 
     /**
      * Constructor initializes the url.
@@ -124,7 +150,7 @@ public class VocabularyManager
 
                 JSONObject jsonObject = new JSONObject(responseString); // Response body in JSON object
 
-                HashMap<ForeignLanguage, ArrayList<Vocabulary>> map = this.parseJsonObject(jsonObject);
+                EnumMap<ForeignLanguage, ArrayList<Vocabulary>> map = this.parseJsonObject(jsonObject);
 
                 if(this.recentlyAddedCount <= 0) // No need to save to disk, because there are no new data entries.
                 {
@@ -174,10 +200,10 @@ public class VocabularyManager
      * @throws JSONException
      * @return jsonObject converted into a hashmap
      */
-    private HashMap<ForeignLanguage, ArrayList<Vocabulary>> parseJsonObject(final JSONObject jsonObject) throws JSONException
+    private EnumMap<ForeignLanguage, ArrayList<Vocabulary>> parseJsonObject(final JSONObject jsonObject) throws JSONException
     {
         Vocabulary vocabulary;
-        HashMap<ForeignLanguage, ArrayList<Vocabulary>> map = new HashMap<>(); // Map containing the parsed result
+        EnumMap<ForeignLanguage, ArrayList<Vocabulary>> map = new EnumMap<>(ForeignLanguage.class); // Map containing the parsed result
 
         // Loop each language
         for(ForeignLanguage foreignLanguage: FOREIGN_LANGUAGE_ARRAY)
@@ -212,7 +238,7 @@ public class VocabularyManager
      * @param vocabularyMap the vocabulary map to be stored
      * @return true on success, else false
      */
-    private boolean saveToDisk(final HashMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap)
+    private boolean saveToDisk(final EnumMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap)
     {
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
         ArrayList<Vocabulary> listTemp;
