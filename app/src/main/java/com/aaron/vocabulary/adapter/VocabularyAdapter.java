@@ -20,16 +20,19 @@ import android.widget.TextView;
  */
 public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 {
-    public static final String TAG = "VocabularyAdapter";
+    public static final String CLASS_NAME = VocabularyAdapter.class.getSimpleName();
     private Activity activity;
     private ArrayList<Vocabulary> vocabularyList;
-    private ArrayList<Vocabulary> vocabularyListTemporaryholder;
+    private ArrayList<Vocabulary> vocabularyListTemp;
     private Settings settings;
 
     /**
      * Default constructor. 0 is passed to the resource id, because we will be creating our own custom layout.
-     * @param context the current context
-     * @param vocabularyList the vocabulary list
+     * 
+     * @param context
+     *            the current context
+     * @param vocabularyList
+     *            the vocabulary list
      */
     public VocabularyAdapter(final Activity context, final ArrayList<Vocabulary> vocabularyList, final Settings settings)
     {
@@ -37,7 +40,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 
         this.activity = context;
         this.vocabularyList = vocabularyList;
-        this.vocabularyListTemporaryholder = new ArrayList<>(vocabularyList);
+        this.vocabularyListTemp = new ArrayList<>(vocabularyList);
         this.settings = settings;
     }
 
@@ -52,11 +55,11 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
         if(convertView == null)
         {
             convertView = this.activity.getLayoutInflater().inflate(R.layout.fragment_vocabulary_list_row, parent, false);
-            
+
             holder = new ViewHolder();
             holder.englishText = (TextView) convertView.findViewById(R.id.text_english_language);
             holder.foreignText = (TextView) convertView.findViewById(R.id.text_foreign_language);
-            
+
             convertView.setTag(holder);
         }
         else
@@ -65,21 +68,16 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
         }
 
         Vocabulary vocabulary = getItem(position);
-
-        holder.englishText.setText(vocabulary.getEnglishWord());
-        holder.englishText.setTextSize(TypedValue.COMPLEX_UNIT_SP, this.settings.getFontSize());
-        holder.englishText.setTypeface(this.settings.getTypeface());
-
-        holder.foreignText.setText(vocabulary.getForeignWord());
-        holder.foreignText.setTextSize(TypedValue.COMPLEX_UNIT_SP, this.settings.getFontSize());
-        holder.foreignText.setTypeface(this.settings.getTypeface());
+        holder.setVocabularyView(vocabulary, this.settings);
 
         return convertView;
     }
 
     /**
      * Filters the vocabulary list in the adapter with the given searched text. Only shows english vocabularies that starts with the searched text.
-     * @param searched the searched word
+     * 
+     * @param searched
+     *            the searched word
      */
     public void filter(final String searched)
     {
@@ -89,15 +87,15 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 
         if(searchedText.length() == 0)
         {
-            this.vocabularyList.addAll(this.vocabularyListTemporaryholder);
+            this.vocabularyList.addAll(this.vocabularyListTemp);
         }
         else
         {
-            for(Vocabulary vocab: this.vocabularyListTemporaryholder)
+            for(Vocabulary vocab : this.vocabularyListTemp)
             {
                 englishWord = vocab.getEnglishWord();
 
-                for(String word: englishWord.split(" / "))
+                for(String word : englishWord.split(" / "))
                 {
                     if(word.startsWith(searchedText))
                     {
@@ -107,8 +105,8 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
             }
         }
 
-        Log.d(LogsManager.TAG, "VocabularyAdapter: filter. New list -> " + this.vocabularyList);
-        LogsManager.addToLogs("VocabularyAdapter: filter. New list size -> " + this.vocabularyList.size());
+        Log.d(LogsManager.TAG, CLASS_NAME + ": filter. New list -> " + this.vocabularyList);
+        LogsManager.addToLogs(CLASS_NAME + ": filter. New list size -> " + this.vocabularyList.size());
     }
 
     /**
@@ -118,5 +116,16 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     {
         public TextView englishText;
         public TextView foreignText;
+
+        public void setVocabularyView(Vocabulary vocabulary, Settings settings)
+        {
+            this.englishText.setText(vocabulary.getEnglishWord());
+            this.englishText.setTextSize(TypedValue.COMPLEX_UNIT_SP, settings.getFontSize());
+            this.englishText.setTypeface(settings.getTypeface());
+            this.foreignText.setText(vocabulary.getForeignWord());
+            this.foreignText.setTextSize(TypedValue.COMPLEX_UNIT_SP, settings.getFontSize());
+            this.foreignText.setTypeface(settings.getTypeface());
+
+        }
     }
 }

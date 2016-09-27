@@ -10,6 +10,7 @@ import com.aaron.vocabulary.model.LogsManager;
 
 import static com.aaron.vocabulary.bean.Vocabulary.*;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
@@ -24,17 +25,19 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * The application settings fragment.
  */
 public class SettingsFragment extends Fragment
 {
-    public static final String TAG = "SettingsFragment";
+    public static final String CLASS_NAME = SettingsFragment.class.getSimpleName();
     public static final String EXTRA_SETTINGS = "com.aaron.vocabulary.fragment.settings";
     private Settings settings;
-    
+
     private ArrayAdapter<ForeignLanguage> languageAdapter;
-    
+
     private Spinner foreignLanguageSpinner;
     private Spinner fontNameSpinner;
     private Spinner fontStyleSpinner;
@@ -50,11 +53,11 @@ public class SettingsFragment extends Fragment
     {
         Bundle args = new Bundle();
         args.putSerializable(EXTRA_SETTINGS, settings);
-        
+
         SettingsFragment fragment = new SettingsFragment();
         fragment.setArguments(args);
 
-        Log.d(LogsManager.TAG, "SettingsFragment: newInstance. settings=" + settings);
+        Log.d(LogsManager.TAG, CLASS_NAME + ": newInstance. settings=" + settings);
 
         return fragment;
     }
@@ -71,13 +74,18 @@ public class SettingsFragment extends Fragment
 
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.menu_settings);
-        getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+
+        ActionBar actionBar = getActivity().getActionBar();
+        if(actionBar != null)
+        {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
         this.languageAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, FOREIGN_LANGUAGE_ARRAY);
         this.languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        Log.d(LogsManager.TAG, "SettingsFragment: onCreate. settings=" + this.settings);
-        LogsManager.addToLogs("SettingsFragment: onCreate. settings=" + this.settings);
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate. settings=" + this.settings);
+        LogsManager.addToLogs(CLASS_NAME + ": onCreate. settings=" + this.settings);
     }
 
     /**
@@ -104,8 +112,8 @@ public class SettingsFragment extends Fragment
         this.updateIntervalSpinner.setSelection(this.settings.getUpdateIntervalIndex());
 
         String serverUrl = this.settings.getServerURL();
-        
-        if(serverUrl.isEmpty())
+
+        if(StringUtils.isBlank(serverUrl))
         {
             serverUrl = getActivity().getString(R.string.url_address_default);
         }
@@ -117,7 +125,7 @@ public class SettingsFragment extends Fragment
         view.setOnKeyListener(new BackButtonListener());
         this.serverURLEditText.setOnKeyListener(new BackButtonListener());
 
-        Log.d(LogsManager.TAG, "SettingsFragment: onCreateView");
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateView");
 
         return view;
     }
@@ -132,7 +140,7 @@ public class SettingsFragment extends Fragment
         {
             case android.R.id.home:
             {
-                this.setFragmentAcivityResult();
+                this.setFragmentActivityResult();
                 return true;
             }
             default:
@@ -145,7 +153,7 @@ public class SettingsFragment extends Fragment
     /**
      * Sets the new settings and sends it to the main activity fragment.
      */
-    private void setFragmentAcivityResult()
+    private void setFragmentActivityResult()
     {
         Intent data = new Intent();
 
@@ -156,36 +164,31 @@ public class SettingsFragment extends Fragment
         UpdateInterval updateInterval = UpdateInterval.valueOf(this.updateIntervalSpinner.getSelectedItem().toString());
         String serverURL = this.serverURLEditText.getText().toString();
 
-        this.settings.setForeignLanguage(foreignLanguage)
-                     .setFontName(fontName)
-                     .setFontStyle(fontStyle)
-                     .setFontSize(fontSize)
-                     .setUpdateInterval(updateInterval)
-                     .setServerURL(serverURL);
+        this.settings.setForeignLanguage(foreignLanguage).setFontName(fontName).setFontStyle(fontStyle).setFontSize(fontSize).setUpdateInterval(updateInterval).setServerURL(serverURL);
 
         data.putExtra(EXTRA_SETTINGS, this.settings);
         getActivity().setResult(Activity.RESULT_OK, data);
         getActivity().finish();
 
-        Log.d(LogsManager.TAG, "SettingsFragment: setFragmentAcivityResult. New settings -> " + this.settings);
-        LogsManager.addToLogs("SettingsFragment: setFragmentAcivityResult. New settings -> " + this.settings);
+        Log.d(LogsManager.TAG, CLASS_NAME + ": setFragmentActivityResult. New settings -> " + this.settings);
+        LogsManager.addToLogs(CLASS_NAME + ": setFragmentActivityResult. New settings -> " + this.settings);
     }
-    
+
     private class BackButtonListener implements View.OnKeyListener
     {
         /**
          * Handles back button.
          */
         @Override
-        public boolean onKey(View v, int keyCode, KeyEvent event) 
+        public boolean onKey(View v, int keyCode, KeyEvent event)
         {
             // For back button
             if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
             {
-                setFragmentAcivityResult();
+                setFragmentActivityResult();
                 return true;
-            } 
-            else 
+            }
+            else
             {
                 return false;
             }

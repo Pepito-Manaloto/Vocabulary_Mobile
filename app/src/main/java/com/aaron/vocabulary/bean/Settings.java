@@ -50,6 +50,7 @@ public class Settings implements Serializable
     private int fontSize;
     private UpdateInterval updateInterval;
     private String serverURL;
+
     /**
      * Default constructor, initializes with default values.
      */
@@ -65,6 +66,7 @@ public class Settings implements Serializable
 
     /**
      * Getter for ForeignLanguage.
+     *
      * @return ForeignLanguage
      */
     public ForeignLanguage getForeignLanguage()
@@ -74,6 +76,7 @@ public class Settings implements Serializable
 
     /**
      * Getter for fontSize.
+     *
      * @return int
      */
     public int getFontSize()
@@ -83,6 +86,7 @@ public class Settings implements Serializable
 
     /**
      * Getter for UpdateInterval.
+     *
      * @return UpdateInterval
      */
     public UpdateInterval getUpdateInterval()
@@ -92,6 +96,7 @@ public class Settings implements Serializable
 
     /**
      * Getter for ForeignLanguage's index.
+     *
      * @return ForeignLanguage index
      */
     public int getForeignLanguageIndex()
@@ -101,6 +106,7 @@ public class Settings implements Serializable
 
     /**
      * Getter for FontName's index.
+     *
      * @return FontName index
      */
     public int getFontNameIndex()
@@ -110,6 +116,7 @@ public class Settings implements Serializable
 
     /**
      * Getter for FontStyle's index.
+     *
      * @return FontStyle index
      */
     public int getFontStyleIndex()
@@ -119,33 +126,35 @@ public class Settings implements Serializable
 
     /**
      * Getter for fontSize's index.
+     *
      * @return FontSize index
      */
     public int getFontSizeIndex()
     {
         switch(this.fontSize)
         {
-            case 14: 
+            case 14:
                 return 0;
-            case 15: 
+            case 15:
                 return 1;
-            case 16: 
+            case 16:
                 return 2;
             case 17:
                 return 3;
             case 18:
                 return 4;
-            case 19: 
+            case 19:
                 return 5;
-            case 20: 
+            case 20:
                 return 6;
-            default: 
+            default:
                 throw new AssertionError("Unknown Font Size");
         }
     }
 
     /**
      * Getter for UpdateInterval's index.
+     *
      * @return UpdateInterval index
      */
     public int getUpdateIntervalIndex()
@@ -155,6 +164,7 @@ public class Settings implements Serializable
 
     /**
      * Getter for Server URL.
+     *
      * @return Server URL
      */
     public String getServerURL()
@@ -164,21 +174,23 @@ public class Settings implements Serializable
 
     /**
      * Returns the content of the Settings object in a formatted String.
+     *
      * @return String
      */
     @Override
     public String toString()
     {
         return "Foreign language: " + this.foreignLanguage +
-               " Font name: " + this.fontName +
-               " Font style: " + this.fontStyle +
-               " Font size: " + this.fontSize +
-               " Update interval: " + this.updateInterval +
-               " Server URL: " + this.serverURL;
+                " Font name: " + this.fontName +
+                " Font style: " + this.fontStyle +
+                " Font size: " + this.fontSize +
+                " Update interval: " + this.updateInterval +
+                " Server URL: " + this.serverURL;
     }
 
     /**
      * Returns the typeface of this vocabulary.
+     *
      * @return Typeface
      */
     public Typeface getTypeface()
@@ -187,22 +199,27 @@ public class Settings implements Serializable
 
         switch(this.fontName)
         {
-            case Serif:      family = Typeface.SERIF; 
-                             break;
-            case Sans_Serif: family = Typeface.SANS_SERIF; 
-                             break;
-            case Monospace:  family = Typeface.MONOSPACE; 
-                             break;
+            case Serif:
+                family = Typeface.SERIF;
+                break;
+            case Sans_Serif:
+                family = Typeface.SANS_SERIF;
+                break;
+            case Monospace:
+                family = Typeface.MONOSPACE;
+                break;
 
-            default: family = Typeface.DEFAULT;
+            default:
+                family = Typeface.DEFAULT;
         }
-        
+
         return Typeface.create(family, this.getFontStyleIndex());
     }
-    
+
     /**
      * Sets the foreignLanguage new value.
-     * @param ForeignLanguage
+     *
+     * @param foreignLanguage
      * @return the settings object being updated
      */
     public Settings setForeignLanguage(final ForeignLanguage foreignLanguage)
@@ -213,7 +230,8 @@ public class Settings implements Serializable
 
     /**
      * Sets the fontName new value.
-     * @param FontName
+     *
+     * @param fontName
      * @return the settings object being updated
      */
     public Settings setFontName(final FontName fontName)
@@ -224,7 +242,8 @@ public class Settings implements Serializable
 
     /**
      * Sets the fontStyle new value.
-     * @param FontStyle
+     *
+     * @param fontStyle
      * @return the settings object being updated
      */
     public Settings setFontStyle(final FontStyle fontStyle)
@@ -235,6 +254,7 @@ public class Settings implements Serializable
 
     /**
      * Sets the fontSize new value.
+     *
      * @param fontSize
      * @return the settings object being updated
      */
@@ -246,7 +266,8 @@ public class Settings implements Serializable
 
     /**
      * Sets the updateInterval new value.
-     * @param UpdateInterval
+     *
+     * @param updateInterval
      * @return the settings object being updated
      */
     public Settings setUpdateInterval(final UpdateInterval updateInterval)
@@ -257,7 +278,8 @@ public class Settings implements Serializable
 
     /**
      * Sets the serverURL new value.
-     * @param Server URL
+     *
+     * @param serverURL
      * @return the settings object being updated
      */
     public Settings setServerURL(final String serverURL)

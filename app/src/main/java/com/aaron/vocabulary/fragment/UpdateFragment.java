@@ -1,6 +1,8 @@
 package com.aaron.vocabulary.fragment;
 
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
+import java.util.EnumMap;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -14,23 +16,27 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.bean.ResponseVocabulary;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
 /**
- * The update dialog fragment that retrieves vocabulary list from the server. 
+ * The update dialog fragment that retrieves vocabulary list from the server.
  */
 public class UpdateFragment extends DialogFragment
 {
-    public static final String TAG = "UpdateFragment";
-    public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.vocabulary_list";
+    public static final String CLASS_NAME = UpdateFragment.class.getSimpleName();
+    public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.update.list";
     private VocabularyManager vocabularyManager;
+    private Settings settings;
+    private String url;
     private VocabularyRetrieverThread vocabularyRetrieverThread;
 
     /**
      * Creates a new UpdateFragment and sets its arguments.
+     *
      * @return UpdateFragment
      */
     public static UpdateFragment newInstance(final Settings settings)
@@ -40,7 +46,7 @@ public class UpdateFragment extends DialogFragment
         UpdateFragment fragment = new UpdateFragment();
         fragment.setArguments(args);
 
-        Log.d(LogsManager.TAG, "UpdateFragment: newInstance. settings=" + settings);
+        Log.d(LogsManager.TAG, CLASS_NAME + ": newInstance. settings=" + settings);
 
         return fragment;
     }
@@ -51,17 +57,27 @@ public class UpdateFragment extends DialogFragment
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState)
     {
-        ProgressDialog progressDialog = new ProgressDialog(getActivity());
+        Activity activity = getActivity();
+        ProgressDialog progressDialog = new ProgressDialog(activity);
         progressDialog.setTitle(getString(R.string.dialog_update_title));
         progressDialog.setMessage(getString(R.string.dialog_update_message));
         progressDialog.setIndeterminate(true);
 
-        Settings settings = (Settings) getArguments().getSerializable(SettingsFragment.EXTRA_SETTINGS);
-        this.vocabularyManager = new VocabularyManager(getActivity(), settings);
+        this.settings = (Settings) getArguments().getSerializable(SettingsFragment.EXTRA_SETTINGS);
+        if(settings != null && settings.getServerURL() != null && !settings.getServerURL().isEmpty())
+        {
+            this.url = "http://" + settings.getServerURL() + activity.getString(R.string.url_resource);
+        }
+        else
+        {
+            this.url = "http://" + activity.getString(R.string.url_address_default) + activity.getString(R.string.url_resource);
+        }
+
+        this.vocabularyManager = new VocabularyManager(activity);
         this.vocabularyRetrieverThread = new VocabularyRetrieverThread();
 
-        Log.d(LogsManager.TAG, "UpdateFragment: onCreateDialog. settings=" + settings);
-        LogsManager.addToLogs("UpdateFragment: onCreateDialog. settings=" + settings);
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateDialog. settings=" + settings);
+        LogsManager.addToLogs(CLASS_NAME + ": onCreateDialog. settings=" + settings);
 
         return progressDialog;
     }
@@ -75,7 +91,7 @@ public class UpdateFragment extends DialogFragment
         super.onStart();
 
         this.vocabularyRetrieverThread.execute();
-        Log.d(LogsManager.TAG, "UpdateFragment: onStart");
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onStart");
     }
 
     /**
@@ -94,8 +110,8 @@ public class UpdateFragment extends DialogFragment
     {
         /**
          * Encapsulates the vocabulary list and response to an intent and sends the intent + resultCode to VocaublaryListFragment.
-         * @param vocabList the retrieved vocabulary list
-         * @param response the response of the web call
+         *
+         * @param vocabList  the retrieved vocabulary list
          * @param resultCode the result of the operation
          */
         private void sendResult(final ArrayList<Vocabulary> vocabList, final int resultCode)
@@ -109,8 +125,8 @@ public class UpdateFragment extends DialogFragment
             data.putExtra(EXTRA_VOCABULARY_LIST, vocabList);
             getTargetFragment().onActivityResult(getTargetRequestCode(), resultCode, data);
 
-            Log.d(LogsManager.TAG, "UpdateFragment(VocabularyRetrieverThread): sendResult. list=" + vocabList);
-            LogsManager.addToLogs("UpdateFragment(VocabularyRetrieverThread): sendResult. list_size=" + vocabList.size());
+            Log.d(LogsManager.TAG, CLASS_NAME + "(VocabularyRetrieverThread): sendResult. list=" + vocabList);
+            LogsManager.addToLogs(CLASS_NAME + "(VocabularyRetrieverThread): sendResult. list_size=" + vocabList.size());
         }
 
         /**
@@ -119,41 +135,47 @@ public class UpdateFragment extends DialogFragment
         @Override
         protected String doInBackground(Void... arg0)
         {
-            ArrayList<Vocabulary> list = new ArrayList<>();
+            ResponseVocabulary response = vocabularyManager.getVocabulariesFromWeb(url);
+            String message;
 
-            list = vocabularyManager.getVocabulariesFromWeb();
-            String responseCode = vocabularyManager.getStatusText();
-            String responseText = vocabularyManager.getResponseText();
-
-            this.sendResult(list, Activity.RESULT_OK);
-
-            int newCount = vocabularyManager.getRecentlyAddedCount();
-            String message = "";
-
-            if("Ok".equals(responseCode))
+            if(response.getStatusCode() == HttpURLConnection.HTTP_OK)
             {
-                if(!"Success".equals(responseText))
+                EnumMap<Vocabulary.ForeignLanguage, ArrayList<Vocabulary>> map = response.getVocabularyMap();
+                if(map == null || map.isEmpty())
                 {
-                    message = responseText;
-                }
-                else if(newCount > 1)
-                {
-                    message = newCount + " new vocabularies added.";
-                }
-                else if(newCount == 1)
-                {
-                    message = newCount + " new vocabulary added.";
+                    message = "No new vocabularies available.";
                 }
                 else
                 {
-                    message = "No new vocabularies available.";
+                    boolean saveToDiskSuccess = vocabularyManager.saveRecipesToDisk(map.values());
+                    if(saveToDiskSuccess)
+                    {
+                        int newCount = response.getRecentlyAddedCount();
+                        if(newCount > 1)
+                        {
+                            message = newCount + " new vocabularies added.";
+                        }
+                        else
+                        {
+                            message = newCount + " new vocabulary added.";
+                        }
+
+                        // Get recipes to be returned to VocabularyListFragment
+                        ArrayList<Vocabulary> list = vocabularyManager.getVocabulariesFromMap(map, settings.getForeignLanguage());
+                        this.sendResult(list, Activity.RESULT_OK);
+                    }
+                    else
+                    {
+                        message = "Failed saving to disk.";
+                    }
                 }
             }
             else
             {
-                message = responseCode + ". " + responseText;
+                message = response.getStatusCode() + ". " + response.getText();
             }
 
+            this.sendResult(new ArrayList<Vocabulary>(0), Activity.RESULT_OK);
             return message;
         }
 

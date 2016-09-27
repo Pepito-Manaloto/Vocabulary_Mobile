@@ -11,6 +11,7 @@ public class VocabularyListActivity extends SingleFragmentActivity
 {
     /**
      * Returns a vocabulary list fragment.
+     * 
      * @return a fragment to be added.
      */
     @Override

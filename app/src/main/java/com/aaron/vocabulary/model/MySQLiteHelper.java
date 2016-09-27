@@ -15,7 +15,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper
     private static final int DATABASE_VERSION = 1;
 
     public static final String TABLE_VOCABULARY = "vocabulary";
-    public static final String[] COLUMN_COUNT = new String[]{"COUNT(*)",};
+    public static final String[] COLUMN_COUNT = new String[] {"COUNT(*)",};
 
     /**
      * The database's column names.
@@ -30,18 +30,18 @@ public class MySQLiteHelper extends SQLiteOpenHelper
     }
 
     private static final String CREATE_TABLE_VOCABULARY = "CREATE TABLE " + TABLE_VOCABULARY +
-                                               "(" + 
-                                               Column.id.name() + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                               Column.english_word.name() + " TEXT NOT NULL, " +
-                                               Column.foreign_word.name() + " TEXT NOT NULL, " +
-                                               Column.foreign_language.name() + " TEXT NOT NULL, " +
-                                               Column.date_in.name() + " TEXT NOT NULL, " +
-                                               "UNIQUE(" + Column.english_word.name() + ", " + Column.foreign_word.name() + ")" +
-                                               ");";
+            "(" +
+            Column.id.name() + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            Column.english_word.name() + " TEXT NOT NULL, " +
+            Column.foreign_word.name() + " TEXT NOT NULL, " +
+            Column.foreign_language.name() + " TEXT NOT NULL, " +
+            Column.date_in.name() + " TEXT NOT NULL, " +
+            "UNIQUE(" + Column.english_word.name() + ", " + Column.foreign_word.name() + ")" +
+            ");";
 
     /**
      * Default constructor.
-     */     
+     */
     public MySQLiteHelper(Context context)
     {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -69,7 +69,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper
          *      (2) drop db --- IMPLEMENTED
          *      (3) create new db --- IMPLEMENTED 
          *      (4) insert temp data in new db --- NOT YET
-         */ 
+         */
         database.execSQL("DROP IF TABLE EXISTS " + TABLE_VOCABULARY);
         this.onCreate(database);
     }

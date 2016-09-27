@@ -15,8 +15,8 @@ public class Vocabulary implements Serializable
      */
     public enum ForeignLanguage
     {
-        Hokkien, 
-        Japanese, 
+        Hokkien,
+        Japanese,
         Mandarin,
     }
 
@@ -25,7 +25,7 @@ public class Vocabulary implements Serializable
      */
     public enum JsonKey
     {
-        english_word, 
+        english_word,
         foreign_word,
         recently_added_count,
     }
@@ -33,7 +33,7 @@ public class Vocabulary implements Serializable
     private final String englishWord;
     private final String foreignWord;
     private final ForeignLanguage foreignLanguage;
-    
+
     /**
      * Constructor with three arguments.
      */
@@ -61,6 +61,7 @@ public class Vocabulary implements Serializable
 
     /**
      * Checks all attribute for equality.
+     *
      * @param o Vocabulary to compare
      * @return true if equals, else false
      */
@@ -74,15 +75,16 @@ public class Vocabulary implements Serializable
         else
         {
             Vocabulary that = (Vocabulary) o;
-            
-            return this.englishWord.equals(that.getEnglishWord()) && 
-                   this.foreignWord.equals(that.getForeignWord()) &&
-                   this.foreignLanguage.equals(that.getForeignLanguage());
+
+            return this.englishWord.equals(that.getEnglishWord()) &&
+                    this.foreignWord.equals(that.getForeignWord()) &&
+                    this.foreignLanguage.equals(that.getForeignLanguage());
         }
     }
 
     /**
      * Returns a unique hash code of the Vocabulary object.
+     *
      * @return int
      */
     @Override
@@ -95,9 +97,10 @@ public class Vocabulary implements Serializable
 
         return hash;
     }
-    
+
     /**
      * Returns the content of the Vocabulary object in a formatted String.
+     *
      * @return String
      */
     @Override
