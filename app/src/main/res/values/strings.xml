@@ -3,7 +3,7 @@
 
     <string name="app_name">Vocabulary (%1$s)</string>
     <!-- &#8211; is the unicode html_entity of "-" -->
-    <string name="build_num">master&#8211;46&#8211;a7ffea3</string>
+    <string name="build_num">develop&#8211;52&#8211;9ab2f35</string>
 
     <!-- MENU LABELS -->
     <string name="menu_update">Update</string>
