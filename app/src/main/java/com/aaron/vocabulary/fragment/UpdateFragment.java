@@ -1,14 +1,10 @@
 package com.aaron.vocabulary.fragment;
 
-import java.net.HttpURLConnection;
-import java.util.ArrayList;
-import java.util.EnumMap;
-
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,6 +18,11 @@ import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
+import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * The update dialog fragment that retrieves vocabulary list from the server.
  */
@@ -32,7 +33,7 @@ public class UpdateFragment extends DialogFragment
     private VocabularyManager vocabularyManager;
     private Settings settings;
     private String url;
-    private VocabularyRetrieverThread vocabularyRetrieverThread;
+    private static final AtomicBoolean isUpdating = new AtomicBoolean(false);
 
     /**
      * Creates a new UpdateFragment and sets its arguments.
@@ -74,7 +75,6 @@ public class UpdateFragment extends DialogFragment
         }
 
         this.vocabularyManager = new VocabularyManager(activity);
-        this.vocabularyRetrieverThread = new VocabularyRetrieverThread();
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateDialog. settings=" + settings);
         LogsManager.addToLogs(CLASS_NAME + ": onCreateDialog. settings=" + settings);
@@ -90,24 +90,39 @@ public class UpdateFragment extends DialogFragment
     {
         super.onStart();
 
-        this.vocabularyRetrieverThread.execute();
+        if(!isUpdating())
+        {
+            VocabularyRetrieverThread vocabularyRetrieverThread = new VocabularyRetrieverThread(getActivity());
+            vocabularyRetrieverThread.execute();
+            isUpdating.set(true);
+        }
+
         Log.d(LogsManager.TAG, CLASS_NAME + ": onStart");
     }
 
     /**
-     * Called when dialog is cancelled before finishing its task. Stops the retriever thread.
+     * Returns true if VocabularyRetrieverThread is already executing update.
+     *
+     * @return boolean
      */
-    @Override
-    public void onDismiss(DialogInterface dialog)
+    public boolean isUpdating()
     {
-        this.vocabularyRetrieverThread.cancel(true);
+        return isUpdating.get();
     }
+
 
     /**
      * Helper thread class that does the retrieval of the vocabulary list from the server.
      */
     private class VocabularyRetrieverThread extends AsyncTask<Void, Void, String>
     {
+        private Context context;
+
+        VocabularyRetrieverThread(Activity activity)
+        {
+            this.context = activity;
+        }
+
         /**
          * Encapsulates the vocabulary list and response to an intent and sends the intent + resultCode to VocaublaryListFragment.
          *
@@ -180,13 +195,24 @@ public class UpdateFragment extends DialogFragment
         }
 
         /**
-         * Removes the dialog from screen, and shows the result of the operation on toast.
+         * Removes the dialog from screen, shows the result of the operation on toast, and sets the isUpdating flag to false..
          */
         @Override
         public void onPostExecute(String message)
         {
             UpdateFragment.this.dismiss();
-            Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
+            Toast.makeText(this.context, message, Toast.LENGTH_LONG).show();
+            isUpdating.set(false);
+        }
+
+        /**
+         * Sets the isUpdating flag to false.
+         */
+        @Override
+        protected void onCancelled(String message)
+        {
+            super.onCancelled();
+            isUpdating.set(false);
         }
     }
 }

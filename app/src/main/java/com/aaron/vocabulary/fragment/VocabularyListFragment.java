@@ -31,6 +31,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
 
@@ -258,8 +259,16 @@ public class VocabularyListFragment extends ListFragment
             case R.id.menu_update:
             {
                 UpdateFragment updateDialog = UpdateFragment.newInstance(this.settings);
-                updateDialog.setTargetFragment(this, REQUEST_UPDATE);
-                updateDialog.show(fm, DIALOG_UPDATE);
+
+                if(updateDialog.isUpdating())
+                {
+                    Toast.makeText(getActivity(), getActivity().getString(R.string.dialog_already_updating_message), Toast.LENGTH_LONG).show();
+                }
+                else
+                {
+                    updateDialog.setTargetFragment(this, REQUEST_UPDATE);
+                    updateDialog.show(fm, DIALOG_UPDATE);
+                }
 
                 return true;
             }
