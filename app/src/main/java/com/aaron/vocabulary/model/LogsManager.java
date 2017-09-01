@@ -64,9 +64,7 @@ public class LogsManager
      */
     public boolean saveToDisk()
     {
-        /**
-         * TODO: Implements functionalities
-         */
+        // TODO: Implements functionalities
         return false;
     }
 }

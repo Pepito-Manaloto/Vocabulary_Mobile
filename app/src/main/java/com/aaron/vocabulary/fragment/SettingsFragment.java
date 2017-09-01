@@ -96,14 +96,14 @@ public class SettingsFragment extends Fragment
     {
         View view = inflater.inflate(R.layout.fragment_settings, parent, false);
 
-        this.foreignLanguageSpinner = (Spinner) view.findViewById(R.id.spinner_foreign_language);
+        this.foreignLanguageSpinner = view.findViewById(R.id.spinner_foreign_language);
         this.foreignLanguageSpinner.setAdapter(this.languageAdapter);
 
-        this.fontNameSpinner = (Spinner) view.findViewById(R.id.spinner_font_name);
-        this.fontStyleSpinner = (Spinner) view.findViewById(R.id.spinner_font_style);
-        this.fontSizeSpinner = (Spinner) view.findViewById(R.id.spinner_font_size);
-        this.updateIntervalSpinner = (Spinner) view.findViewById(R.id.spinner_update_interval);
-        this.serverURLEditText = (EditText) view.findViewById(R.id.edittext_server_url);
+        this.fontNameSpinner = view.findViewById(R.id.spinner_font_name);
+        this.fontStyleSpinner = view.findViewById(R.id.spinner_font_style);
+        this.fontSizeSpinner = view.findViewById(R.id.spinner_font_size);
+        this.updateIntervalSpinner = view.findViewById(R.id.spinner_update_interval);
+        this.serverURLEditText = view.findViewById(R.id.edittext_server_url);
 
         this.foreignLanguageSpinner.setSelection(this.settings.getForeignLanguageIndex());
         this.fontNameSpinner.setSelection(this.settings.getFontNameIndex());

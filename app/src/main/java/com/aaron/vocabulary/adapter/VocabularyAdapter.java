@@ -8,6 +8,7 @@ import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.model.LogsManager;
 
 import android.app.Activity;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -20,7 +21,7 @@ import android.widget.TextView;
  */
 public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 {
-    public static final String CLASS_NAME = VocabularyAdapter.class.getSimpleName();
+    private static final String CLASS_NAME = VocabularyAdapter.class.getSimpleName();
     private Activity activity;
     private ArrayList<Vocabulary> vocabularyList;
     private ArrayList<Vocabulary> vocabularyListTemp;
@@ -47,8 +48,9 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     /**
      * Populates the ListView.
      */
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent)
+    public View getView(int position, View convertView, @NonNull ViewGroup parent)
     {
         ViewHolder holder;
 
@@ -57,8 +59,8 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
             convertView = this.activity.getLayoutInflater().inflate(R.layout.fragment_vocabulary_list_row, parent, false);
 
             holder = new ViewHolder();
-            holder.englishText = (TextView) convertView.findViewById(R.id.text_english_language);
-            holder.foreignText = (TextView) convertView.findViewById(R.id.text_foreign_language);
+            holder.englishText = convertView.findViewById(R.id.text_english_language);
+            holder.foreignText = convertView.findViewById(R.id.text_foreign_language);
 
             convertView.setTag(holder);
         }
@@ -114,10 +116,10 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
      */
     private static class ViewHolder
     {
-        public TextView englishText;
-        public TextView foreignText;
+        TextView englishText;
+        TextView foreignText;
 
-        public void setVocabularyView(Vocabulary vocabulary, Settings settings)
+        void setVocabularyView(Vocabulary vocabulary, Settings settings)
         {
             this.englishText.setText(vocabulary.getEnglishWord());
             this.englishText.setTextSize(TypedValue.COMPLEX_UNIT_SP, settings.getFontSize());

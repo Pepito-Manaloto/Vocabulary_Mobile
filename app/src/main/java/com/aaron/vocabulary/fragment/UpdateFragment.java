@@ -59,6 +59,7 @@ public class UpdateFragment extends DialogFragment
     public Dialog onCreateDialog(Bundle savedInstanceState)
     {
         Activity activity = getActivity();
+        // TODO: Replace with ProgressBar
         ProgressDialog progressDialog = new ProgressDialog(activity);
         progressDialog.setTitle(getString(R.string.dialog_update_title));
         progressDialog.setMessage(getString(R.string.dialog_update_message));

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 
 /**
- * Created by Aaron on 9/26/2016.
+ * Bean that represents the http response from Vocabulary request.
  */
 public class ResponseVocabulary
 {

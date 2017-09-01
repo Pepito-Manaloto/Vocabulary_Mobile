@@ -12,15 +12,12 @@ import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.text.ParseException;
@@ -41,12 +38,11 @@ import static com.aaron.vocabulary.model.MySQLiteHelper.Column;
 import static com.aaron.vocabulary.model.MySQLiteHelper.TABLE_VOCABULARY;
 
 /**
- * Handles the web call to retrieve vocabularies in JSON object representation.
- * Handles the data storage of vocabularies.
+ * Handles the web call to retrieve vocabularies in JSON object representation. Handles the data storage of vocabularies.
  */
 public class VocabularyManager
 {
-    public static final String CLASS_NAME = VocabularyManager.class.getSimpleName();
+    private static final String CLASS_NAME = VocabularyManager.class.getSimpleName();
 
     public static final String DATE_FORMAT_LONG = "MMMM d, yyyy hh:mm:ss a";
     public static final String DATE_FORMAT_SHORT_24 = "yyyy-MM-dd HH:mm:ss";
@@ -66,7 +62,8 @@ public class VocabularyManager
     /**
      * Constructor initializes the url.
      *
-     * @param activity the caller activity
+     * @param activity
+     *            the caller activity
      */
     public VocabularyManager(final Activity activity)
     {
@@ -76,11 +73,10 @@ public class VocabularyManager
     }
 
     /**
-     * Does the following logic.
-     * (1) Retrieves the vocabularies from the server.
-     * (2) Saves the vocabularies in local disk.
+     * Does the following logic. (1) Retrieves the vocabularies from the server. (2) Saves the vocabularies in local disk.
      *
-     * @param url the url of the vocabulary web service
+     * @param url
+     *            the url of the vocabulary web service
      * @return ResponseVocabulary
      */
     public ResponseVocabulary getVocabulariesFromWeb(String url)
@@ -158,9 +154,11 @@ public class VocabularyManager
     /**
      * Parse the given jsonObject and returns the recently added count.
      *
-     * @param jsonObject the jsonObject to be parsed
+     * @param jsonObject
+     *            the jsonObject to be parsed
      * @return int
      * @throws NumberFormatException
+     *             the recently added count is not an integer
      */
     private int parseRecentlyAddedCountFromJsonObject(final JSONObject jsonObject) throws NumberFormatException
     {
@@ -170,9 +168,11 @@ public class VocabularyManager
     /**
      * Parse the given jsonObject containing the list of vocabularies retrieved from the web call.
      *
-     * @param jsonObject the jsonObject to be parsed
+     * @param jsonObject
+     *            the jsonObject to be parsed
      * @return jsonObject converted into an EnumMap, wherein the key is the foreign language and values are list of vocabularies
      * @throws JSONException
+     *             the vocabulary json response is not in valid json format
      */
     private EnumMap<ForeignLanguage, ArrayList<Vocabulary>> parseVocabulariesFromJsonObject(final JSONObject jsonObject) throws JSONException
     {
@@ -212,7 +212,8 @@ public class VocabularyManager
     /**
      * Saves the given lists of vocabularies to the local database.
      *
-     * @param vocabularyLists the recipe lists to be stored
+     * @param vocabularyLists
+     *            the recipe lists to be stored
      * @return true on success, else false
      */
     public boolean saveRecipesToDisk(final Collection<ArrayList<Vocabulary>> vocabularyLists)
@@ -268,9 +269,9 @@ public class VocabularyManager
 
         try(SQLiteDatabase db = this.dbHelper.getReadableDatabase())
         {
-            String[] columns = new String[] {Column.english_word.name(), Column.foreign_word.name(), Column.foreign_language.name()};
+            String[] columns = new String[] { Column.english_word.name(), Column.foreign_word.name(), Column.foreign_language.name() };
             String whereClause = "foreign_language = ?";
-            String[] whereArgs = new String[] {selectedLanguage.name()};
+            String[] whereArgs = new String[] { selectedLanguage.name() };
 
             Cursor cursor = db.query(TABLE_VOCABULARY, columns, whereClause, whereArgs, null, null, null);
             list = new ArrayList<>(cursor.getCount());
@@ -293,7 +294,8 @@ public class VocabularyManager
     /**
      * Retrieves the vocabulary from the cursor.
      *
-     * @param cursor the cursor resulting from a query
+     * @param cursor
+     *            the cursor resulting from a query
      * @return Vocabulary
      */
     private Vocabulary cursorToVocabulary(final Cursor cursor)
@@ -315,15 +317,15 @@ public class VocabularyManager
         EnumMap<ForeignLanguage, Integer> map = new EnumMap<>(ForeignLanguage.class);
         SQLiteDatabase db = this.dbHelper.getReadableDatabase();
         String whereClause = "foreign_language = ?";
-        Cursor cursor;
 
         for(ForeignLanguage language : FOREIGN_LANGUAGE_ARRAY)
         {
-            cursor = db.query(TABLE_VOCABULARY, COLUMN_COUNT, whereClause, new String[] {language.name()}, null, null, null);
-
-            if(cursor.moveToFirst())
+            try(Cursor cursor = db.query(TABLE_VOCABULARY, COLUMN_COUNT, whereClause, new String[] { language.name() }, null, null, null))
             {
-                map.put(language, cursor.getInt(0));
+                if(cursor.moveToFirst())
+                {
+                    map.put(language, cursor.getInt(0));
+                }
             }
         }
 
@@ -336,26 +338,28 @@ public class VocabularyManager
     /**
      * Gets the latest date_in of the vocabularies.
      *
-     * @param format the date format used in formatting the last_updated date
+     * @param format
+     *            the date format used in formatting the last_updated date
      * @return String
      */
     public String getLastUpdated(final String format)
     {
         String lastUpdatedDate = "1950-01-01 00:00:00";
         SQLiteDatabase db = this.dbHelper.getReadableDatabase();
-        String[] columns = new String[] {Column.date_in.name(),};
+        String[] columns = new String[] { Column.date_in.name(), };
         String orderBy = "date_in DESC";
         String limit = "1";
 
-        Cursor cursor = db.query(TABLE_VOCABULARY, columns, null, null, null, null, orderBy, limit);
-
-        if(cursor.moveToFirst())
+        try(Cursor cursor = db.query(TABLE_VOCABULARY, columns, null, null, null, null, orderBy, limit))
         {
-            lastUpdatedDate = cursor.getString(0);
-        }
-        else
-        {
-            return lastUpdatedDate;
+            if(cursor.moveToFirst())
+            {
+                lastUpdatedDate = cursor.getString(0);
+            }
+            else
+            {
+                return lastUpdatedDate;
+            }
         }
 
         try

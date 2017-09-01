@@ -13,7 +13,7 @@ import java.net.URL;
 import java.util.List;
 
 /**
- * Created by Aaron on 9/24/2016.
+ * The model class for making http requests.
  */
 public class HttpClient
 {
@@ -23,7 +23,7 @@ public class HttpClient
     /**
      * Performs a GET request.
      *
-     * @param url
+     * @param url the url to make http request
      * @return ResponseVocabulary
      */
     public ResponseVocabulary get(String url) throws IOException
@@ -34,8 +34,8 @@ public class HttpClient
     /**
      * Performs a GET request with query.
      *
-     * @param url
-     * @param query
+     * @param url the url to make http request
+     * @param query the query parameters
      * @return ResponseVocabulary
      */
     public ResponseVocabulary get(String url, String query) throws IOException
@@ -46,8 +46,8 @@ public class HttpClient
     /**
      * Performs a GET request with specific headers.
      *
-     * @param url
-     * @param headers
+     * @param url the url to make http request
+     * @param headers the request headers
      * @return ResponseVocabulary
      */
     public ResponseVocabulary get(String url, List<Header> headers) throws IOException
@@ -58,9 +58,9 @@ public class HttpClient
     /**
      * Performs a GET request with query and specific headers.
      *
-     * @param url
-     * @param query
-     * @param headers
+     * @param url the url to make http request
+     * @param query the query parameters
+     * @param headers the request headers
      * @return ResponseVocabulary
      */
     public ResponseVocabulary get(String url, String query, List<Header> headers) throws IOException
@@ -106,7 +106,7 @@ public class HttpClient
      * @param inputStream HttpURLConnection response
      * @return String
      */
-    protected String getResponseVocabularyBodyFromStream(final InputStream inputStream) throws IOException
+    private String getResponseVocabularyBodyFromStream(final InputStream inputStream) throws IOException
     {
         String response = IOUtils.toString(inputStream, Charsets.UTF_8);
         IOUtils.closeQuietly(inputStream);

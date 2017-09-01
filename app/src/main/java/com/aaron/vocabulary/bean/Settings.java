@@ -1,11 +1,10 @@
 package com.aaron.vocabulary.bean;
 
-import java.io.Serializable;
-
 import android.graphics.Typeface;
 
-import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+
+import java.io.Serializable;
 
 /**
  * Java bean for the application settings.
@@ -219,7 +218,7 @@ public class Settings implements Serializable
     /**
      * Sets the foreignLanguage new value.
      *
-     * @param foreignLanguage
+     * @param foreignLanguage the foreign language to set
      * @return the settings object being updated
      */
     public Settings setForeignLanguage(final ForeignLanguage foreignLanguage)
@@ -231,7 +230,7 @@ public class Settings implements Serializable
     /**
      * Sets the fontName new value.
      *
-     * @param fontName
+     * @param fontName the font name to set
      * @return the settings object being updated
      */
     public Settings setFontName(final FontName fontName)
@@ -243,7 +242,7 @@ public class Settings implements Serializable
     /**
      * Sets the fontStyle new value.
      *
-     * @param fontStyle
+     * @param fontStyle the font style to set
      * @return the settings object being updated
      */
     public Settings setFontStyle(final FontStyle fontStyle)
@@ -255,7 +254,7 @@ public class Settings implements Serializable
     /**
      * Sets the fontSize new value.
      *
-     * @param fontSize
+     * @param fontSize the font size to set
      * @return the settings object being updated
      */
     public Settings setFontSize(final int fontSize)
@@ -267,7 +266,7 @@ public class Settings implements Serializable
     /**
      * Sets the updateInterval new value.
      *
-     * @param updateInterval
+     * @param updateInterval the update interval
      * @return the settings object being updated
      */
     public Settings setUpdateInterval(final UpdateInterval updateInterval)
@@ -279,7 +278,7 @@ public class Settings implements Serializable
     /**
      * Sets the serverURL new value.
      *
-     * @param serverURL
+     * @param serverURL the server url
      * @return the settings object being updated
      */
     public Settings setServerURL(final String serverURL)

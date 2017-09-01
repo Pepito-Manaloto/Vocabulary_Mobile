@@ -1,24 +1,13 @@
 package com.aaron.vocabulary.fragment;
 
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import com.aaron.vocabulary.R;
-import com.aaron.vocabulary.bean.Settings;
-import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
-import com.aaron.vocabulary.model.LogsManager;
-import com.aaron.vocabulary.model.VocabularyManager;
-
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.widget.TextViewCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -29,8 +18,18 @@ import android.view.ViewGroup;
 import android.widget.GridLayout;
 import android.widget.TextView;
 
-import static com.aaron.vocabulary.model.VocabularyManager.*;
+import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.bean.Settings;
+import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+import com.aaron.vocabulary.model.LogsManager;
+import com.aaron.vocabulary.model.VocabularyManager;
+
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Set;
+
 import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
+import static com.aaron.vocabulary.model.VocabularyManager.DATE_FORMAT_LONG;
 
 /**
  * The application about fragment.
@@ -109,18 +108,17 @@ public class AboutFragment extends Fragment
             }
         });
 
-        final TextView buildNumberTextView = (TextView) view.findViewById(R.id.text_build_number);
-        TextView lastUpdatedTextView = (TextView) view.findViewById(R.id.text_last_updated);
+        final TextView buildNumberTextView = view.findViewById(R.id.text_build_number);
+        TextView lastUpdatedTextView = view.findViewById(R.id.text_last_updated);
 
         String buildNumber = getActivity().getString(R.string.build_num);
         String lastUpdated = this.vocabularyManager.getLastUpdated(DATE_FORMAT_LONG);
-
 
         buildNumberTextView.setText(buildNumber);
         lastUpdatedTextView.setText(lastUpdated);
 
         // Create layout and UI for foreign languages count.
-        GridLayout grid = (GridLayout) view.findViewById(R.id.gridlayout_count);
+        GridLayout grid = view.findViewById(R.id.gridlayout_count);
         grid.setColumnCount(2);
 
         EnumMap<ForeignLanguage, Integer> vocabularyCount = this.vocabularyManager.getVocabulariesCount();
@@ -135,29 +133,14 @@ public class AboutFragment extends Fragment
 
             TextView label = new TextView(getActivity());
             label.setText(entry.getKey().name());
-
-            if(Build.VERSION.SDK_INT < 23)
-            {
-                label.setTextAppearance(getActivity(), R.style.TextView_sub_about);
-            }
-            else
-            {
-                label.setTextAppearance(R.style.TextView_sub_about);
-            }
+            TextViewCompat.setTextAppearance(label, R.style.TextView_sub_about);
 
             // Count
             GridLayout.LayoutParams layoutParamCount = new GridLayout.LayoutParams(GridLayout.spec(ctr, GridLayout.LEFT), GridLayout.spec(1, GridLayout.LEFT));
             layoutParamCount.setMargins(75, 0, 0, 0);
             TextView count = new TextView(getActivity());
             count.setText(String.valueOf(entry.getValue()));
-            if(Build.VERSION.SDK_INT < 23)
-            {
-                count.setTextAppearance(getActivity(), R.style.TextView_sub_about);
-            }
-            else
-            {
-                count.setTextAppearance(R.style.TextView_sub_about);
-            }
+            TextViewCompat.setTextAppearance(count, R.style.TextView_sub_about);
 
             grid.addView(label, layoutParamLabel);
             grid.addView(count, layoutParamCount);
@@ -191,8 +174,7 @@ public class AboutFragment extends Fragment
     }
 
     /**
-     * Pops-up a prompt dialog with 'yes' or 'no' button.
-     * Selecting 'yes' will delete all vocabularies from disk.
+     * Pops-up a prompt dialog with 'yes' or 'no' button. Selecting 'yes' will delete all vocabularies from disk.
      */
     private void promptUserOnDelete()
     {
