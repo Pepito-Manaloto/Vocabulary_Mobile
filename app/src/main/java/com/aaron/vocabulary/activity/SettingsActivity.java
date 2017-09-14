@@ -9,6 +9,8 @@ import android.app.Fragment;
  */
 public class SettingsActivity extends SingleFragmentActivity
 {
+    private SettingsFragment fragment;
+
     /**
      * Returns a settings fragment.
      * 
@@ -18,8 +20,8 @@ public class SettingsActivity extends SingleFragmentActivity
     protected Fragment createFragment()
     {
         Settings settings = (Settings) this.getIntent().getSerializableExtra(SettingsFragment.EXTRA_SETTINGS);
-
-        return SettingsFragment.newInstance(settings);
+        this.fragment = SettingsFragment.newInstance(this.fragment, settings);
+        return this.fragment;
     }
 
 }

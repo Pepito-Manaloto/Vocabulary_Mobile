@@ -1,18 +1,5 @@
 package com.aaron.vocabulary.fragment;
 
-import java.util.ArrayList;
-
-import com.aaron.vocabulary.R;
-import com.aaron.vocabulary.activity.AboutActivity;
-import com.aaron.vocabulary.activity.LogsActivity;
-import com.aaron.vocabulary.activity.SettingsActivity;
-import com.aaron.vocabulary.adapter.VocabularyAdapter;
-import com.aaron.vocabulary.bean.Settings;
-import com.aaron.vocabulary.bean.Vocabulary;
-import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
-import com.aaron.vocabulary.model.LogsManager;
-import com.aaron.vocabulary.model.VocabularyManager;
-
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.ListFragment;
@@ -32,6 +19,20 @@ import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.activity.AboutActivity;
+import com.aaron.vocabulary.activity.LogsActivity;
+import com.aaron.vocabulary.activity.SettingsActivity;
+import com.aaron.vocabulary.adapter.VocabularyAdapter;
+import com.aaron.vocabulary.bean.Settings;
+import com.aaron.vocabulary.bean.Vocabulary;
+import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+import com.aaron.vocabulary.model.LogsManager;
+import com.aaron.vocabulary.model.VocabularyManager;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 
 import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
 
@@ -75,7 +76,7 @@ public class VocabularyListFragment extends ListFragment
             this.settings = new Settings();
         }
 
-        this.vocabularyManager = new VocabularyManager(getActivity());
+        this.vocabularyManager = new VocabularyManager(getActivity().getApplicationContext());
 
         if(this.list == null)
         {
@@ -210,32 +211,7 @@ public class VocabularyListFragment extends ListFragment
         final EditText searchTextfield = view.findViewById(R.id.edittext_search_field);
         searchTextfield.setHint(R.string.hint_vocabulary);
 
-        searchTextfield.addTextChangedListener(new TextWatcher()
-        {
-            /**
-             * Handles search on text update.
-             */
-            @Override
-            public void afterTextChanged(Editable arg0)
-            {
-                String searched = searchTextfield.getText().toString();
-                VocabularyAdapter vocabularyAdapter = (VocabularyAdapter) getListAdapter();
-                vocabularyAdapter.filter(searched);
-                vocabularyAdapter.notifyDataSetChanged();
-
-                Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateOptionsMenu(afterTextChanged). searched=" + searched);
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
-            {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
-            {
-            }
-        });
+        searchTextfield.addTextChangedListener(new SearchListener((VocabularyAdapter) getListAdapter()));
     }
 
     /**
@@ -302,44 +278,35 @@ public class VocabularyListFragment extends ListFragment
     /**
      * Updates the list view on UI thread.
      *
-     * @param list
-     *            the new list
      */
-    private void updateListOnUiThread(final ArrayList<Vocabulary> list)
+    private void updateListOnUiThread(ArrayList<Vocabulary> list)
     {
-        this.getActivity().runOnUiThread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(getActivity(), list, settings);
-                setListAdapter(vocabularyAdapter);
+        this.getActivity().runOnUiThread(new UpdateAdapterRunnable(this, list));
+    }
 
-                Log.d(LogsManager.TAG, CLASS_NAME + ": updateListOnUiThread(run). settings=" + settings + " list=" + list);
-                LogsManager.addToLogs(CLASS_NAME + ": updateListOnUiThread(run). settings=" + settings + " list_size=" + list.size());
-            }
-        });
+    public Settings getSettings()
+    {
+        return this.settings;
     }
 
     /**
      * Helper class for ListView's scroll listener.
      */
-    private static class ShowHideFastScrollListener implements OnScrollListener
+    private static class ShowHideFastScrollListener implements OnScrollListener, Runnable
     {
         private static final int DELAY = 1000;
         private AbsListView view;
+        private final Handler handler = new Handler();
 
-        private Handler handler = new Handler();
-        // Runnable for handler object.
-        private Runnable runnable = new Runnable()
+        /**
+         * Runnable for handler object.
+         */
+        @Override
+        public void run()
         {
-            @Override
-            public void run()
-            {
-                view.setFastScrollAlwaysVisible(false);
-                view = null;
-            }
-        };
+            this.view.setFastScrollAlwaysVisible(false);
+            this.view = null;
+        }
 
         /**
          * Show fast-scroll thumb if scrolling, and hides fast-scroll thumb if not scrolling.
@@ -353,7 +320,7 @@ public class VocabularyListFragment extends ListFragment
 
                 // Removes the runnable from the message queue.
                 // Stops the handler from hiding the fast-scroll.
-                this.handler.removeCallbacks(this.runnable);
+                this.handler.removeCallbacks(this);
             }
             else
             {
@@ -361,7 +328,7 @@ public class VocabularyListFragment extends ListFragment
 
                 // Adds the runnable to the message queue, will run after the DELAY.
                 // Hides the fast-scroll after two seconds of no scrolling.
-                this.handler.postDelayed(this.runnable, DELAY);
+                this.handler.postDelayed(this, DELAY);
             }
         }
 
@@ -369,5 +336,69 @@ public class VocabularyListFragment extends ListFragment
         public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount)
         {
         }
+    }
+
+    private static class SearchListener implements TextWatcher
+    {
+        private VocabularyAdapter adapter;
+
+        SearchListener(VocabularyAdapter adapter)
+        {
+            this.adapter = adapter;
+        }
+
+        /**
+         * Handles search on text update.
+         */
+        @Override
+        public void afterTextChanged(Editable textField)
+        {
+            String searched = textField.toString();
+            this.adapter.filter(searched);
+            this.adapter.notifyDataSetChanged();
+
+            Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateOptionsMenu(afterTextChanged). searched=" + searched);
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
+        {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
+        {
+        }
+    }
+
+    private static class UpdateAdapterRunnable implements Runnable
+    {
+        private WeakReference<VocabularyListFragment> fragmentRef;
+        private final ArrayList<Vocabulary> list;
+
+        UpdateAdapterRunnable(VocabularyListFragment fragment, ArrayList<Vocabulary> list)
+        {
+            this.fragmentRef = new WeakReference<>(fragment);
+            this.list = list;
+        }
+
+        @Override
+        public void run()
+        {
+            VocabularyListFragment fragment = this.fragmentRef.get();
+
+            if(fragment != null)
+            {
+                Settings settings = fragment.getSettings();
+
+                VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(fragment.getActivity(), list, settings);
+                fragment.setListAdapter(vocabularyAdapter);
+
+                Log.d(LogsManager.TAG, CLASS_NAME + ": updateListOnUiThread(run). settings=" + settings + " list=" + list);
+                LogsManager.addToLogs(CLASS_NAME + ": updateListOnUiThread(run). settings=" + settings + " list_size=" + list.size());
+            }
+
+        }
+
     }
 }

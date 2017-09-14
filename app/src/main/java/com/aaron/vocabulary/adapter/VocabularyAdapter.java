@@ -30,16 +30,16 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     /**
      * Default constructor. 0 is passed to the resource id, because we will be creating our own custom layout.
      * 
-     * @param context
-     *            the current context
+     * @param activity
+     *            the current activity
      * @param vocabularyList
      *            the vocabulary list
      */
-    public VocabularyAdapter(final Activity context, final ArrayList<Vocabulary> vocabularyList, final Settings settings)
+    public VocabularyAdapter(final Activity activity, final ArrayList<Vocabulary> vocabularyList, final Settings settings)
     {
-        super(context, 0, vocabularyList);
+        super(activity, 0, vocabularyList);
 
-        this.activity = context;
+        this.activity = activity;
         this.vocabularyList = vocabularyList;
         this.vocabularyListTemp = new ArrayList<>(vocabularyList);
         this.settings = settings;
@@ -127,7 +127,6 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
             this.foreignText.setText(vocabulary.getForeignWord());
             this.foreignText.setTextSize(TypedValue.COMPLEX_UNIT_SP, settings.getFontSize());
             this.foreignText.setTypeface(settings.getTypeface());
-
         }
     }
 }

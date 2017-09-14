@@ -3,8 +3,8 @@ package com.aaron.vocabulary.fragment;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.Fragment;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -18,6 +18,7 @@ import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -75,7 +76,7 @@ public class UpdateFragment extends DialogFragment
             this.url = "http://" + activity.getString(R.string.url_address_default) + activity.getString(R.string.url_resource);
         }
 
-        this.vocabularyManager = new VocabularyManager(activity);
+        this.vocabularyManager = new VocabularyManager(activity.getApplicationContext());
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateDialog. settings=" + settings);
         LogsManager.addToLogs(CLASS_NAME + ": onCreateDialog. settings=" + settings);
@@ -93,7 +94,7 @@ public class UpdateFragment extends DialogFragment
 
         if(!isUpdating())
         {
-            VocabularyRetrieverThread vocabularyRetrieverThread = new VocabularyRetrieverThread(getActivity());
+            VocabularyRetrieverThread vocabularyRetrieverThread = new VocabularyRetrieverThread(this);
             vocabularyRetrieverThread.execute();
             isUpdating.set(true);
         }
@@ -111,38 +112,61 @@ public class UpdateFragment extends DialogFragment
         return isUpdating.get();
     }
 
+    public VocabularyManager getVocabularyManager()
+    {
+        return this.vocabularyManager;
+    }
+
+    public String getUrl()
+    {
+        return this.url;
+    }
+
+    public Settings getSettings()
+    {
+        return this.settings;
+    }
 
     /**
      * Helper thread class that does the retrieval of the vocabulary list from the server.
      */
-    private class VocabularyRetrieverThread extends AsyncTask<Void, Void, String>
+    private static class VocabularyRetrieverThread extends AsyncTask<Void, Void, String>
     {
-        private Context context;
+        private WeakReference<UpdateFragment> fragmentRef;
+        private static final ArrayList<Vocabulary> EMPTY_LIST = new ArrayList<>(0);
 
-        VocabularyRetrieverThread(Activity activity)
+        VocabularyRetrieverThread(UpdateFragment fragment)
         {
-            this.context = activity;
+            this.fragmentRef = new WeakReference<>(fragment);
         }
 
         /**
          * Encapsulates the vocabulary list and response to an intent and sends the intent + resultCode to VocaublaryListFragment.
          *
-         * @param vocabList  the retrieved vocabulary list
-         * @param resultCode the result of the operation
+         * @param vocabList
+         *            the retrieved vocabulary list
+         * @param resultCode
+         *            the result of the operation
          */
         private void sendResult(final ArrayList<Vocabulary> vocabList, final int resultCode)
         {
-            if(getTargetFragment() == null)
+            UpdateFragment fragment = this.fragmentRef.get();
+            if(fragment != null)
             {
-                return;
+                Fragment targetFragment = fragment.getTargetFragment();
+                if(targetFragment == null)
+                {
+                    return;
+                }
+
+                Intent data = new Intent();
+                data.putExtra(EXTRA_VOCABULARY_LIST, vocabList);
+                targetFragment.onActivityResult(fragment.getTargetRequestCode(), resultCode, data);
+
+                Log.d(LogsManager.TAG, CLASS_NAME + "(VocabularyRetrieverThread): sendResult. list=" + vocabList);
+                LogsManager.addToLogs(CLASS_NAME + "(VocabularyRetrieverThread): sendResult. list_size=" + vocabList.size());
             }
 
-            Intent data = new Intent();
-            data.putExtra(EXTRA_VOCABULARY_LIST, vocabList);
-            getTargetFragment().onActivityResult(getTargetRequestCode(), resultCode, data);
-
-            Log.d(LogsManager.TAG, CLASS_NAME + "(VocabularyRetrieverThread): sendResult. list=" + vocabList);
-            LogsManager.addToLogs(CLASS_NAME + "(VocabularyRetrieverThread): sendResult. list_size=" + vocabList.size());
         }
 
         /**
@@ -151,47 +175,57 @@ public class UpdateFragment extends DialogFragment
         @Override
         protected String doInBackground(Void... arg0)
         {
-            ResponseVocabulary response = vocabularyManager.getVocabulariesFromWeb(url);
-            String message;
+            String message = "Fragment no longer exists.";
 
-            if(response.getStatusCode() == HttpURLConnection.HTTP_OK)
+            UpdateFragment fragment = this.fragmentRef.get();
+            if(fragment != null)
             {
-                EnumMap<Vocabulary.ForeignLanguage, ArrayList<Vocabulary>> map = response.getVocabularyMap();
-                if(map == null || map.isEmpty())
-                {
-                    message = "No new vocabularies available.";
-                }
-                else
-                {
-                    boolean saveToDiskSuccess = vocabularyManager.saveRecipesToDisk(map.values());
-                    if(saveToDiskSuccess)
-                    {
-                        int newCount = response.getRecentlyAddedCount();
-                        if(newCount > 1)
-                        {
-                            message = newCount + " new vocabularies added.";
-                        }
-                        else
-                        {
-                            message = newCount + " new vocabulary added.";
-                        }
+                VocabularyManager vocabularyManager = fragment.getVocabularyManager();
+                String url = fragment.getUrl();
+                Settings settings = fragment.getSettings();
 
-                        // Get recipes to be returned to VocabularyListFragment
-                        ArrayList<Vocabulary> list = vocabularyManager.getVocabulariesFromMap(map, settings.getForeignLanguage());
-                        this.sendResult(list, Activity.RESULT_OK);
+                ResponseVocabulary response = vocabularyManager.getVocabulariesFromWeb(url);
+
+                if(response.getStatusCode() == HttpURLConnection.HTTP_OK)
+                {
+                    EnumMap<Vocabulary.ForeignLanguage, ArrayList<Vocabulary>> map = response.getVocabularyMap();
+                    if(map == null || map.isEmpty())
+                    {
+                        message = "No new vocabularies available.";
                     }
                     else
                     {
-                        message = "Failed saving to disk.";
+                        boolean saveToDiskSuccess = vocabularyManager.saveRecipesToDisk(map.values());
+                        if(saveToDiskSuccess)
+                        {
+                            int newCount = response.getRecentlyAddedCount();
+                            if(newCount > 1)
+                            {
+                                message = newCount + " new vocabularies added.";
+                            }
+                            else
+                            {
+                                message = newCount + " new vocabulary added.";
+                            }
+
+                            // Get recipes to be returned to VocabularyListFragment
+                            ArrayList<Vocabulary> list = vocabularyManager.getVocabulariesFromMap(map, settings.getForeignLanguage());
+                            this.sendResult(list, Activity.RESULT_OK);
+                        }
+                        else
+                        {
+                            message = "Failed saving to disk.";
+                        }
                     }
                 }
-            }
-            else
-            {
-                message = response.getStatusCode() + ". " + response.getText();
+                else
+                {
+                    message = response.getStatusCode() + ". " + response.getText();
+                }
+
+                this.sendResult(EMPTY_LIST, Activity.RESULT_OK);
             }
 
-            this.sendResult(new ArrayList<Vocabulary>(0), Activity.RESULT_OK);
             return message;
         }
 
@@ -201,9 +235,18 @@ public class UpdateFragment extends DialogFragment
         @Override
         public void onPostExecute(String message)
         {
-            UpdateFragment.this.dismiss();
-            Toast.makeText(this.context, message, Toast.LENGTH_LONG).show();
-            isUpdating.set(false);
+            UpdateFragment fragment = this.fragmentRef.get();
+            if(fragment != null)
+            {
+                fragment.dismiss();
+                isUpdating.set(false);
+
+                Activity activity = fragment.getActivity();
+                if(activity != null)
+                {
+                    Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
+                }
+            }
         }
 
         /**

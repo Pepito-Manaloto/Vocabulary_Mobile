@@ -27,6 +27,8 @@ import android.widget.Spinner;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.lang.ref.WeakReference;
+
 /**
  * The application settings fragment.
  */
@@ -49,17 +51,26 @@ public class SettingsFragment extends Fragment
     /**
      * Returns a new SettingsFragment with the given settings as arguments.
      */
-    public static SettingsFragment newInstance(final Settings settings)
+    public static SettingsFragment newInstance(SettingsFragment fragment, final Settings settings)
     {
         Bundle args = new Bundle();
         args.putSerializable(EXTRA_SETTINGS, settings);
 
-        SettingsFragment fragment = new SettingsFragment();
-        fragment.setArguments(args);
+        SettingsFragment settingsFragment;
+        if(fragment != null)
+        {
+            settingsFragment = fragment;
+        }
+        else
+        {
+            settingsFragment = new SettingsFragment();
+        }
+
+        settingsFragment.setArguments(args);
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": newInstance. settings=" + settings);
 
-        return fragment;
+        return settingsFragment;
     }
 
     /**
@@ -122,8 +133,10 @@ public class SettingsFragment extends Fragment
 
         view.setFocusableInTouchMode(true);
         view.requestFocus();
-        view.setOnKeyListener(new BackButtonListener());
-        this.serverURLEditText.setOnKeyListener(new BackButtonListener());
+
+        BackButtonListener backButtonListener = new BackButtonListener(this);
+        view.setOnKeyListener(backButtonListener);
+        this.serverURLEditText.setOnKeyListener(backButtonListener);
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateView");
 
@@ -174,8 +187,15 @@ public class SettingsFragment extends Fragment
         LogsManager.addToLogs(CLASS_NAME + ": setFragmentActivityResult. New settings -> " + this.settings);
     }
 
-    private class BackButtonListener implements View.OnKeyListener
+    private static class BackButtonListener implements View.OnKeyListener
     {
+        private WeakReference<SettingsFragment> fragmentRef;
+
+        BackButtonListener(final SettingsFragment fragment)
+        {
+            this.fragmentRef = new WeakReference<>(fragment);
+        }
+
         /**
          * Handles back button.
          */
@@ -185,7 +205,12 @@ public class SettingsFragment extends Fragment
             // For back button
             if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
             {
-                setFragmentActivityResult();
+                SettingsFragment fragment = this.fragmentRef.get();
+                if(fragment != null)
+                {
+                    fragment.setFragmentActivityResult();
+                }
+
                 return true;
             }
             else

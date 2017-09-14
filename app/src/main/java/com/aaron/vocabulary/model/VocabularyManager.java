@@ -1,7 +1,7 @@
 package com.aaron.vocabulary.model;
 
-import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
@@ -60,14 +60,13 @@ public class VocabularyManager
     }
 
     /**
-     * Constructor initializes the url.
+     * Default constructor
      *
-     * @param activity
-     *            the caller activity
+     * @param context  the current context
      */
-    public VocabularyManager(final Activity activity)
+    public VocabularyManager(Context context)
     {
-        this.dbHelper = new MySQLiteHelper(activity);
+        this.dbHelper = new MySQLiteHelper(context);
         this.curDate = new Date();
         this.httpClient = new HttpClient();
     }

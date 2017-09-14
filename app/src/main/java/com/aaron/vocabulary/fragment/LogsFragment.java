@@ -1,9 +1,5 @@
 package com.aaron.vocabulary.fragment;
 
-import com.aaron.vocabulary.R;
-import com.aaron.vocabulary.bean.Settings;
-import com.aaron.vocabulary.model.LogsManager;
-
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
@@ -22,6 +18,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.bean.Settings;
+import com.aaron.vocabulary.model.LogsManager;
+
+import java.lang.ref.WeakReference;
 
 import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
 
@@ -69,26 +71,7 @@ public class LogsFragment extends Fragment
 
         view.setFocusableInTouchMode(true);
         view.requestFocus();
-        view.setOnKeyListener(new View.OnKeyListener()
-        {
-            /**
-             * Handles back button.
-             */
-            @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event)
-            {
-                // For back button
-                if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
-                {
-                    setFragmentActivityResult();
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        });
+        view.setOnKeyListener(new BackButtonListener(this));
 
         this.textarea = view.findViewById(R.id.textarea_logs);
         this.textarea.setText(this.logsManager.getLogs());
@@ -135,38 +118,7 @@ public class LogsFragment extends Fragment
         final EditText searchTextfield = view.findViewById(R.id.edittext_search_field);
         searchTextfield.setHint(R.string.hint_logs);
 
-        searchTextfield.addTextChangedListener(new TextWatcher()
-        {
-            /**
-             * Handles search on text update.
-             */
-            @Override
-            public void afterTextChanged(Editable arg0)
-            {
-                String searched = searchTextfield.getText().toString();
-
-                if(searched.length() <= 0)
-                {
-                    textarea.setText(logsManager.getLogs());
-                }
-                else
-                {
-                    textarea.setText(logsManager.getLogs(searched));
-                }
-
-                Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateOptionsMenu(afterTextChanged). searched=" + searched);
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
-            {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
-            {
-            }
-        });
+        searchTextfield.addTextChangedListener(new SearchListener(this, this.logsManager));
     }
 
     /**
@@ -183,4 +135,88 @@ public class LogsFragment extends Fragment
         Log.d(LogsManager.TAG, CLASS_NAME + ": setFragmentActivityResult. Current settings -> " + this.settings);
         LogsManager.addToLogs(CLASS_NAME + ": setFragmentActivityResult. Current settings -> " + this.settings);
     }
+
+    private void setTextAreaText(final String text)
+    {
+        this.textarea.setText(text);
+    }
+
+    private static class BackButtonListener implements View.OnKeyListener
+    {
+        private WeakReference<LogsFragment> fragmentRef;
+
+        BackButtonListener(LogsFragment fragment)
+        {
+            this.fragmentRef = new WeakReference<>(fragment);
+        }
+
+        /**
+         * Handles back button.
+         */
+        @Override
+        public boolean onKey(android.view.View v, int keyCode, KeyEvent event)
+        {
+            // For back button
+            if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
+            {
+                LogsFragment fragment = this.fragmentRef.get();
+
+                if(fragment != null)
+                {
+                    fragment.setFragmentActivityResult();
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    private static class SearchListener implements TextWatcher
+    {
+        private WeakReference<LogsFragment> fragmentRef;
+        private LogsManager logsManager;
+
+        SearchListener(LogsFragment fragment, LogsManager logsManager)
+        {
+            this.fragmentRef = new WeakReference<>(fragment);
+            this.logsManager = logsManager;
+        }
+
+        /**
+         * Handles search on text update.
+         */
+        @Override
+        public void afterTextChanged(Editable textField)
+        {
+            String searched = textField.toString();
+
+            LogsFragment fragment = this.fragmentRef.get();
+
+            if(searched.length() <= 0)
+            {
+                fragment.setTextAreaText(this.logsManager.getLogs());
+            }
+            else
+            {
+                fragment.setTextAreaText(this.logsManager.getLogs(searched));
+            }
+
+            Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateOptionsMenu(afterTextChanged). searched=" + searched);
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
+        {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
+        {
+        }
+    }
+
 }

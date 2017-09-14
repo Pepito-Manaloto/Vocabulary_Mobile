@@ -9,6 +9,8 @@ import android.app.Fragment;
  */
 public class VocabularyListActivity extends SingleFragmentActivity
 {
+    private VocabularyListFragment fragment;
+
     /**
      * Returns a vocabulary list fragment.
      * 
@@ -17,6 +19,11 @@ public class VocabularyListActivity extends SingleFragmentActivity
     @Override
     protected Fragment createFragment()
     {
-        return new VocabularyListFragment();
+        if(this.fragment == null)
+        {
+            this.fragment = new VocabularyListFragment();
+        }
+
+        return this.fragment;
     }
 }

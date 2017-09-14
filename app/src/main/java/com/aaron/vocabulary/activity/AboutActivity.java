@@ -9,6 +9,8 @@ import android.app.Fragment;
  */
 public class AboutActivity extends SingleFragmentActivity
 {
+    private AboutFragment fragment;
+
     /**
      * Returns a about fragment.
      * 
@@ -17,7 +19,12 @@ public class AboutActivity extends SingleFragmentActivity
     @Override
     protected Fragment createFragment()
     {
-        return new AboutFragment();
+        if(this.fragment == null)
+        {
+            this.fragment = new AboutFragment();
+        }
+
+        return this.fragment;
     }
 
 }

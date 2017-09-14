@@ -24,6 +24,7 @@ import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
+import java.lang.ref.WeakReference;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +33,7 @@ import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
 import static com.aaron.vocabulary.model.VocabularyManager.DATE_FORMAT_LONG;
 
 /**
- * The application about fragment.
+ * The application about fragmentRef.
  */
 public class AboutFragment extends Fragment
 {
@@ -41,7 +42,7 @@ public class AboutFragment extends Fragment
     private Settings settings;
 
     /**
-     * Initializes non-fragment user interface.
+     * Initializes non-fragmentRef user interface.
      */
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -59,13 +60,13 @@ public class AboutFragment extends Fragment
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        this.vocabularyManager = new VocabularyManager(getActivity());
+        this.vocabularyManager = new VocabularyManager(getActivity().getApplicationContext());
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate.");
     }
 
     /**
-     * Initializes about fragment user interface.
+     * Initializes about fragmentRef user interface.
      */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState)
@@ -74,39 +75,9 @@ public class AboutFragment extends Fragment
 
         view.setFocusableInTouchMode(true);
         view.requestFocus();
-        view.setOnKeyListener(new View.OnKeyListener()
-        {
-            /**
-             * Handles back button.
-             */
-            @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event)
-            {
-                // For back button
-                if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
-                {
-                    setFragmentActivityResult();
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        });
+        view.setOnKeyListener(new BackButtonListener(this));
 
-        view.setOnLongClickListener(new OnLongClickListener()
-        {
-            /**
-             * If yes is selected, vocabularies on disk will be deleted.
-             */
-            @Override
-            public boolean onLongClick(View arg0)
-            {
-                promptUserOnDelete();
-                return true;
-            }
-        });
+        view.setOnLongClickListener(new DeleteLongClickListener(this, this.vocabularyManager));
 
         final TextView buildNumberTextView = view.findViewById(R.id.text_build_number);
         TextView lastUpdatedTextView = view.findViewById(R.id.text_last_updated);
@@ -173,44 +144,14 @@ public class AboutFragment extends Fragment
         }
     }
 
-    /**
-     * Pops-up a prompt dialog with 'yes' or 'no' button. Selecting 'yes' will delete all vocabularies from disk.
-     */
-    private void promptUserOnDelete()
+    @Override
+    public void onDestroy()
     {
-        Log.d(LogsManager.TAG, CLASS_NAME + ": promptUserOnDelete.");
-        LogsManager.addToLogs(CLASS_NAME + ": promptUserOnDelete.");
-
-        AlertDialog.Builder prompt = new AlertDialog.Builder(getActivity());
-        prompt.setMessage("Delete vocabularies from disk?");
-
-        prompt.setPositiveButton("Yes", new DialogInterface.OnClickListener()
-        {
-            public void onClick(DialogInterface dialog, int id)
-            {
-                Log.d(LogsManager.TAG, CLASS_NAME + ": promptUserOnDelete. Yes selected.");
-                LogsManager.addToLogs(CLASS_NAME + ": promptUserOnDelete. Yes selected.");
-
-                vocabularyManager.deleteVocabulariesFromDisk();
-                setFragmentActivityResult();
-            }
-        });
-        prompt.setNegativeButton("No", new DialogInterface.OnClickListener()
-        {
-            public void onClick(DialogInterface dialog, int id)
-            {
-                Log.d(LogsManager.TAG, CLASS_NAME + ": promptUserOnDelete. No selected.");
-                LogsManager.addToLogs(CLASS_NAME + ": promptUserOnDelete. No selected.");
-
-                dialog.cancel();
-            }
-        });
-
-        prompt.create().show();
+        super.onDestroy();
     }
 
     /**
-     * Sets the current settings and sends it to the main activity fragment.
+     * Sets the current settings and sends it to the main activity fragmentRef.
      */
     private void setFragmentActivityResult()
     {
@@ -222,5 +163,95 @@ public class AboutFragment extends Fragment
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": setFragmentAcivityResult. Current settings -> " + this.settings);
         LogsManager.addToLogs(CLASS_NAME + ": setFragmentAcivityResult. Current settings -> " + this.settings);
+    }
+
+    private static class BackButtonListener implements View.OnKeyListener
+    {
+        private WeakReference<AboutFragment> fragmentRef;
+
+        BackButtonListener(final AboutFragment fragmentRef)
+        {
+            this.fragmentRef = new WeakReference<>(fragmentRef);
+        }
+
+        /**
+         * Handles back button.
+         */
+        @Override
+        public boolean onKey(View v, int keyCode, KeyEvent event)
+        {
+            // For back button
+            if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
+            {
+                AboutFragment fragment = this.fragmentRef.get();
+
+                if(fragment != null)
+                {
+                    fragment.setFragmentActivityResult();
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    private static class DeleteLongClickListener implements OnLongClickListener
+    {
+        private VocabularyManager vocabularyManager;
+        private WeakReference<AboutFragment> fragmentRef;
+
+        DeleteLongClickListener(final AboutFragment fragmentRef, VocabularyManager vocabularyManager)
+        {
+            this.fragmentRef = new WeakReference<>(fragmentRef);
+            this.vocabularyManager = vocabularyManager;
+        }
+
+        /**
+         * Pops-up a prompt dialog with 'yes' or 'no' button. Selecting 'yes' will delete all vocabularies from disk.
+         */
+        @Override
+        public boolean onLongClick(View arg0)
+        {
+            Log.d(LogsManager.TAG, CLASS_NAME + ": promptUserOnDelete.");
+            LogsManager.addToLogs(CLASS_NAME + ": promptUserOnDelete.");
+
+            final AboutFragment fragment = this.fragmentRef.get();
+
+            if(fragment != null)
+            {
+                AlertDialog.Builder prompt = new AlertDialog.Builder(fragment.getActivity());
+                prompt.setMessage("Delete vocabularies from disk?");
+
+                prompt.setPositiveButton("Yes", new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int id)
+                    {
+                        Log.d(LogsManager.TAG, CLASS_NAME + ": promptUserOnDelete. Yes selected.");
+                        LogsManager.addToLogs(CLASS_NAME + ": promptUserOnDelete. Yes selected.");
+
+                        vocabularyManager.deleteVocabulariesFromDisk();
+                        fragment.setFragmentActivityResult();
+                    }
+                });
+                prompt.setNegativeButton("No", new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int id)
+                    {
+                        Log.d(LogsManager.TAG, CLASS_NAME + ": promptUserOnDelete. No selected.");
+                        LogsManager.addToLogs(CLASS_NAME + ": promptUserOnDelete. No selected.");
+
+                        dialog.cancel();
+                    }
+                });
+
+                prompt.create().show();
+            }
+
+            return true;
+        }
     }
 }
