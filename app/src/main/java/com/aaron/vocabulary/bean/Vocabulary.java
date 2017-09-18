@@ -1,23 +1,19 @@
 package com.aaron.vocabulary.bean;
 
-import java.io.Serializable;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Java bean for a vocabulary.
  */
-public class Vocabulary implements Serializable
+public class Vocabulary implements Parcelable
 {
-    private static final long serialVersionUID = 6591616622682725968L;
-    public static final ForeignLanguage[] FOREIGN_LANGUAGE_ARRAY = ForeignLanguage.values();
-
     /**
      * Enum for the list of available foreign languages.
      */
     public enum ForeignLanguage
     {
-        Hokkien,
-        Japanese,
-        Mandarin,
+        Hokkien, Japanese, Mandarin,
     }
 
     /**
@@ -25,9 +21,7 @@ public class Vocabulary implements Serializable
      */
     public enum JsonKey
     {
-        english_word,
-        foreign_word,
-        recently_added_count,
+        english_word, foreign_word, recently_added_count,
     }
 
     private final String englishWord;
@@ -62,7 +56,8 @@ public class Vocabulary implements Serializable
     /**
      * Checks all attribute for equality.
      *
-     * @param o Vocabulary to compare
+     * @param o
+     *            Vocabulary to compare
      * @return true if equals, else false
      */
     @Override
@@ -108,4 +103,52 @@ public class Vocabulary implements Serializable
     {
         return "English: " + this.englishWord + " " + this.foreignLanguage.name() + ": " + this.foreignWord;
     }
+
+    /**
+     * Constructor that will be called in creating the parcel. Note: Reading the parcel should be the same order as writing the parcel!
+     */
+    private Vocabulary(Parcel in)
+    {
+        this.englishWord = in.readString();
+        this.foreignWord = in.readString();
+        this.foreignLanguage = ForeignLanguage.values()[in.readInt()];
+    }
+
+    /**
+     * Flatten this object in to a Parcel.
+     */
+    @Override
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeString(this.englishWord);
+        dest.writeString(this.foreignWord);
+        dest.writeInt(this.foreignLanguage != null ? this.foreignLanguage.ordinal() : 0);
+    }
+
+    /**
+     * Describe the kinds of special objects contained in this Parcelable instance's marshaled representation.
+     */
+    @Override
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    /**
+     * Generates instances of your Parcelable class from a Parcel.
+     */
+    public static final Creator<Vocabulary> CREATOR = new Creator<Vocabulary>()
+    {
+        @Override
+        public Vocabulary createFromParcel(Parcel in)
+        {
+            return new Vocabulary(in);
+        }
+
+        @Override
+        public Vocabulary[] newArray(int size)
+        {
+            return new Vocabulary[size];
+        }
+    };
 }

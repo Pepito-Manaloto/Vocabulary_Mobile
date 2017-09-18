@@ -65,10 +65,10 @@ public class VocabularyListFragment extends ListFragment
 
         if(savedInstanceState != null)
         {
-            this.settings = (Settings) savedInstanceState.getSerializable(EXTRA_SETTINGS);
+            this.settings = savedInstanceState.getParcelable(EXTRA_SETTINGS);
 
             // But we are sure of its type
-            this.list = (ArrayList<Vocabulary>) savedInstanceState.getSerializable(EXTRA_VOCABULARY_LIST);
+            this.list = savedInstanceState.getParcelableArrayList(EXTRA_VOCABULARY_LIST);
         }
 
         if(this.settings == null)
@@ -141,8 +141,8 @@ public class VocabularyListFragment extends ListFragment
     {
         super.onSaveInstanceState(outState);
 
-        outState.putSerializable(EXTRA_SETTINGS, this.settings);
-        outState.putSerializable(EXTRA_VOCABULARY_LIST, this.list);
+        outState.putParcelable(EXTRA_SETTINGS, this.settings);
+        outState.putParcelableArrayList(EXTRA_VOCABULARY_LIST, this.list);
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onSaveInstanceState");
     }
@@ -166,7 +166,7 @@ public class VocabularyListFragment extends ListFragment
         {
             // But we are sure of its type
             @SuppressWarnings("unchecked")
-            ArrayList<Vocabulary> list = (ArrayList<Vocabulary>) data.getSerializableExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
+            ArrayList<Vocabulary> list = data.getParcelableArrayListExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
 
             // Handles occasional NullPointerException.
             if(list != null && list.size() > 0)
@@ -182,7 +182,7 @@ public class VocabularyListFragment extends ListFragment
         }
         else if((requestCode == REQUEST_SETTINGS || requestCode == REQUEST_ABOUT || requestCode == REQUEST_LOGS) && (data != null && data.hasExtra(EXTRA_SETTINGS)))
         {
-            this.settings = (Settings) data.getSerializableExtra(EXTRA_SETTINGS);
+            this.settings = data.getParcelableExtra(EXTRA_SETTINGS);
 
             ForeignLanguage language = ForeignLanguage.Hokkien;
             if(this.settings != null)

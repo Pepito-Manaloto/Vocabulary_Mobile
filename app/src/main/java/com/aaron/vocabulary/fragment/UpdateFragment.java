@@ -44,7 +44,7 @@ public class UpdateFragment extends DialogFragment
     public static UpdateFragment newInstance(final Settings settings)
     {
         Bundle args = new Bundle();
-        args.putSerializable(SettingsFragment.EXTRA_SETTINGS, settings);
+        args.putParcelable(SettingsFragment.EXTRA_SETTINGS, settings);
         UpdateFragment fragment = new UpdateFragment();
         fragment.setArguments(args);
 
@@ -66,7 +66,7 @@ public class UpdateFragment extends DialogFragment
         progressDialog.setMessage(getString(R.string.dialog_update_message));
         progressDialog.setIndeterminate(true);
 
-        this.settings = (Settings) getArguments().getSerializable(SettingsFragment.EXTRA_SETTINGS);
+        this.settings = getArguments().getParcelable(SettingsFragment.EXTRA_SETTINGS);
         if(settings != null && settings.getServerURL() != null && !settings.getServerURL().isEmpty())
         {
             this.url = "http://" + settings.getServerURL() + activity.getString(R.string.url_resource);

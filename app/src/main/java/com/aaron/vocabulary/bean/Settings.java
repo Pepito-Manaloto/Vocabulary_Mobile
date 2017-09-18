@@ -1,27 +1,22 @@
 package com.aaron.vocabulary.bean;
 
 import android.graphics.Typeface;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
-
-import java.io.Serializable;
 
 /**
  * Java bean for the application settings.
  */
-public class Settings implements Serializable
+public class Settings implements Parcelable
 {
-    private static final long serialVersionUID = -2294411296821808604L;
-
     /**
      * Enum for the list of default font name.
      */
     public enum FontName
     {
-        Default,
-        Serif,
-        Sans_Serif,
-        Monospace,
+        Default, Serif, Sans_Serif, Monospace
     }
 
     /**
@@ -29,10 +24,7 @@ public class Settings implements Serializable
      */
     public enum FontStyle
     {
-        Normal,
-        Bold,
-        Italic,
-        Bold_Italic,
+        Normal, Bold, Italic, Bold_Italic,
     }
 
     /**
@@ -218,7 +210,8 @@ public class Settings implements Serializable
     /**
      * Sets the foreignLanguage new value.
      *
-     * @param foreignLanguage the foreign language to set
+     * @param foreignLanguage
+     *            the foreign language to set
      * @return the settings object being updated
      */
     public Settings setForeignLanguage(final ForeignLanguage foreignLanguage)
@@ -230,7 +223,8 @@ public class Settings implements Serializable
     /**
      * Sets the fontName new value.
      *
-     * @param fontName the font name to set
+     * @param fontName
+     *            the font name to set
      * @return the settings object being updated
      */
     public Settings setFontName(final FontName fontName)
@@ -242,7 +236,8 @@ public class Settings implements Serializable
     /**
      * Sets the fontStyle new value.
      *
-     * @param fontStyle the font style to set
+     * @param fontStyle
+     *            the font style to set
      * @return the settings object being updated
      */
     public Settings setFontStyle(final FontStyle fontStyle)
@@ -254,7 +249,8 @@ public class Settings implements Serializable
     /**
      * Sets the fontSize new value.
      *
-     * @param fontSize the font size to set
+     * @param fontSize
+     *            the font size to set
      * @return the settings object being updated
      */
     public Settings setFontSize(final int fontSize)
@@ -266,7 +262,8 @@ public class Settings implements Serializable
     /**
      * Sets the updateInterval new value.
      *
-     * @param updateInterval the update interval
+     * @param updateInterval
+     *            the update interval
      * @return the settings object being updated
      */
     public Settings setUpdateInterval(final UpdateInterval updateInterval)
@@ -278,7 +275,8 @@ public class Settings implements Serializable
     /**
      * Sets the serverURL new value.
      *
-     * @param serverURL the server url
+     * @param serverURL
+     *            the server url
      * @return the settings object being updated
      */
     public Settings setServerURL(final String serverURL)
@@ -286,4 +284,58 @@ public class Settings implements Serializable
         this.serverURL = serverURL;
         return this;
     }
+
+    /**
+     * Constructor that will be called in creating the parcel. Note: Reading the parcel should be the same order as writing the parcel!
+     */
+    private Settings(Parcel in)
+    {
+        this.foreignLanguage = ForeignLanguage.values()[in.readInt()];
+        this.fontName = FontName.values()[in.readInt()];
+        this.fontStyle = FontStyle.values()[in.readInt()];
+        this.fontSize = in.readInt();
+        this.updateInterval = UpdateInterval.values()[in.readInt()];
+        this.serverURL = in.readString();
+    }
+
+    /**
+     * Flatten this object in to a Parcel.
+     */
+    @Override
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeInt(this.foreignLanguage != null ? this.foreignLanguage.ordinal() : 0);
+        dest.writeInt(this.fontName != null ? this.fontName.ordinal() : 0);
+        dest.writeInt(this.fontStyle != null ? this.fontStyle.ordinal() : 0);
+        dest.writeInt(this.fontSize);
+        dest.writeInt(this.updateInterval != null ? this.updateInterval.ordinal() : 0);
+        dest.writeString(this.serverURL);
+    }
+
+    /**
+     * Describe the kinds of special objects contained in this Parcelable instance's marshaled representation.
+     */
+    @Override
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    /**
+     * Generates instances of your Parcelable class from a Parcel.
+     */
+    public static final Creator<Settings> CREATOR = new Creator<Settings>()
+    {
+        @Override
+        public Settings createFromParcel(Parcel in)
+        {
+            return new Settings(in);
+        }
+
+        @Override
+        public Settings[] newArray(int size)
+        {
+            return new Settings[size];
+        }
+    };
 }

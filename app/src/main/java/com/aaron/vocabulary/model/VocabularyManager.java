@@ -29,7 +29,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 
-import static com.aaron.vocabulary.bean.Vocabulary.FOREIGN_LANGUAGE_ARRAY;
 import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.english_word;
 import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.foreign_word;
 import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.recently_added_count;
@@ -184,7 +183,7 @@ public class VocabularyManager
         EnumMap<ForeignLanguage, ArrayList<Vocabulary>> map = new EnumMap<>(ForeignLanguage.class); // Map containing the parsed result
 
         // Loop each language
-        for(ForeignLanguage foreignLanguage : FOREIGN_LANGUAGE_ARRAY)
+        for(ForeignLanguage foreignLanguage : ForeignLanguage.values())
         {
             JSONArray jsonLangArray = jsonObject.getJSONArray(foreignLanguage.name()); // JSON array, for each language
             JSONObject jsonLangValues; // JSON items of the array of each language
@@ -317,7 +316,7 @@ public class VocabularyManager
         SQLiteDatabase db = this.dbHelper.getReadableDatabase();
         String whereClause = "foreign_language = ?";
 
-        for(ForeignLanguage language : FOREIGN_LANGUAGE_ARRAY)
+        for(ForeignLanguage language : ForeignLanguage.values())
         {
             try(Cursor cursor = db.query(TABLE_VOCABULARY, COLUMN_COUNT, whereClause, new String[] { language.name() }, null, null, null))
             {

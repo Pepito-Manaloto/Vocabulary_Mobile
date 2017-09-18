@@ -54,7 +54,7 @@ public class SettingsFragment extends Fragment
     public static SettingsFragment newInstance(SettingsFragment fragment, final Settings settings)
     {
         Bundle args = new Bundle();
-        args.putSerializable(EXTRA_SETTINGS, settings);
+        args.putParcelable(EXTRA_SETTINGS, settings);
 
         SettingsFragment settingsFragment;
         if(fragment != null)
@@ -81,7 +81,7 @@ public class SettingsFragment extends Fragment
     {
         super.onCreate(savedInstanceState);
 
-        this.settings = (Settings) getArguments().getSerializable(SettingsFragment.EXTRA_SETTINGS);
+        this.settings = getArguments().getParcelable(SettingsFragment.EXTRA_SETTINGS);
 
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.menu_settings);
@@ -92,7 +92,7 @@ public class SettingsFragment extends Fragment
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        this.languageAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, FOREIGN_LANGUAGE_ARRAY);
+        this.languageAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, ForeignLanguage.values());
         this.languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate. settings=" + this.settings);

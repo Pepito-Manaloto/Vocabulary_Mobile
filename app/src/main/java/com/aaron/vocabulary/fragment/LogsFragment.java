@@ -45,7 +45,7 @@ public class LogsFragment extends Fragment
     {
         super.onCreate(savedInstanceState);
 
-        this.settings = (Settings) getActivity().getIntent().getSerializableExtra(EXTRA_SETTINGS);
+        this.settings = getActivity().getIntent().getParcelableExtra(EXTRA_SETTINGS);
 
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.menu_logs);
