@@ -1,18 +1,5 @@
 package com.aaron.vocabulary.fragment;
 
-import java.util.ArrayList;
-
-import com.aaron.vocabulary.R;
-import com.aaron.vocabulary.activity.AboutActivity;
-import com.aaron.vocabulary.activity.LogsActivity;
-import com.aaron.vocabulary.activity.SettingsActivity;
-import com.aaron.vocabulary.adapter.VocabularyAdapter;
-import com.aaron.vocabulary.bean.Settings;
-import com.aaron.vocabulary.bean.Vocabulary;
-import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
-import com.aaron.vocabulary.model.LogsManager;
-import com.aaron.vocabulary.model.VocabularyManager;
-
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.ListFragment;
@@ -31,28 +18,41 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import com.aaron.vocabulary.R;
+import com.aaron.vocabulary.activity.AboutActivity;
+import com.aaron.vocabulary.activity.LogsActivity;
+import com.aaron.vocabulary.activity.SettingsActivity;
+import com.aaron.vocabulary.adapter.VocabularyAdapter;
+import com.aaron.vocabulary.bean.Settings;
+import com.aaron.vocabulary.bean.Vocabulary;
+import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+import com.aaron.vocabulary.model.LogsManager;
+import com.aaron.vocabulary.model.VocabularyManager;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 
 import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
-import static com.aaron.vocabulary.fragment.UpdateFragment.EXTRA_VOCABULARY_LIST;
 
 /**
  * Main view fragment containing the vocabulary list with main menu bar.
  */
 public class VocabularyListFragment extends ListFragment
 {
-    public static final String TAG = "VocabularyListFragment";
+    public static final String CLASS_NAME = VocabularyListFragment.class.getSimpleName();
     private static final String DIALOG_UPDATE = "update";
-
     private static final int REQUEST_UPDATE = 0;
     private static final int REQUEST_SETTINGS = 1;
     private static final int REQUEST_ABOUT = 2;
     private static final int REQUEST_LOGS = 3;
 
-    public static final String EXTRA_LIST = "com.aaron.vocabulary.fragment.list";
-
     private ArrayList<Vocabulary> list;
     private Settings settings;
     private VocabularyManager vocabularyManager;
+
+    public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.vocabulary_list.list";
 
     /**
      * Initializes non-fragment user interface.
@@ -65,10 +65,10 @@ public class VocabularyListFragment extends ListFragment
 
         if(savedInstanceState != null)
         {
-            this.settings = (Settings) savedInstanceState.getSerializable(EXTRA_SETTINGS);
+            this.settings = savedInstanceState.getParcelable(EXTRA_SETTINGS);
 
             // But we are sure of its type
-            this.list = (ArrayList<Vocabulary>) savedInstanceState.getSerializable(EXTRA_LIST);
+            this.list = savedInstanceState.getParcelableArrayList(EXTRA_VOCABULARY_LIST);
         }
 
         if(this.settings == null)
@@ -76,19 +76,19 @@ public class VocabularyListFragment extends ListFragment
             this.settings = new Settings();
         }
 
-        this.vocabularyManager = new VocabularyManager(getActivity(), this.settings);
+        this.vocabularyManager = new VocabularyManager(getActivity().getApplicationContext());
 
         if(this.list == null)
         {
-            this.list = this.vocabularyManager.getVocabulariesFromDisk();
+            this.list = this.vocabularyManager.getVocabulariesFromDisk(this.settings.getForeignLanguage());
         }
 
         this.updateListOnUiThread(this.list);
 
         setHasOptionsMenu(true);
 
-        Log.d(LogsManager.TAG, "VocabularyListFragment: onCreate. settings=" + this.settings + " list=" + this.list);
-        LogsManager.addToLogs("VocabularyListFragment: onCreate. settings=" + this.settings + " list_size=" + this.list.size());
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate. settings=" + this.settings + " list=" + this.list);
+        LogsManager.addToLogs(CLASS_NAME + ": onCreate. settings=" + this.settings + " list_size=" + this.list.size());
     }
 
     /**
@@ -99,7 +99,7 @@ public class VocabularyListFragment extends ListFragment
     {
         View view = inflater.inflate(R.layout.fragment_vocabulary_list, parent, false);
 
-        Log.d(LogsManager.TAG, "VocabularyListFragment: onCreateView.");
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateView.");
 
         return view;
     }
@@ -112,7 +112,7 @@ public class VocabularyListFragment extends ListFragment
     {
         super.onActivityCreated(savedInstanceState);
 
-        Log.d(LogsManager.TAG, "VocabularyListFragment: onActivityCreated.");
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onActivityCreated.");
 
         getListView().setOnScrollListener(new ShowHideFastScrollListener());
     }
@@ -130,7 +130,7 @@ public class VocabularyListFragment extends ListFragment
 
         ((VocabularyAdapter) this.getListAdapter()).notifyDataSetChanged();
 
-        Log.d(LogsManager.TAG, "VocabularyListFragment: onResume");
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onResume");
     }
 
     /**
@@ -141,15 +141,14 @@ public class VocabularyListFragment extends ListFragment
     {
         super.onSaveInstanceState(outState);
 
-        outState.putSerializable(EXTRA_SETTINGS, this.settings);
-        outState.putSerializable(EXTRA_LIST, this.list);
+        outState.putParcelable(EXTRA_SETTINGS, this.settings);
+        outState.putParcelableArrayList(EXTRA_VOCABULARY_LIST, this.list);
 
-        Log.d(LogsManager.TAG, "VocabularyListFragment: onSaveInstanceState");
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onSaveInstanceState");
     }
 
     /**
-     * Receives the result data from the previous fragment. Updates the
-     * application's state depending on the data received.
+     * Receives the result data from the previous fragment. Updates the application's state depending on the data received.
      */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data)
@@ -159,15 +158,15 @@ public class VocabularyListFragment extends ListFragment
             return;
         }
 
-        Log.d(LogsManager.TAG, "VocabularyListFragment: onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
-        LogsManager.addToLogs("VocabularyListFragment: onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
+        LogsManager.addToLogs(CLASS_NAME + ": onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
 
         // Update action bar menu processing result
-        if(requestCode == REQUEST_UPDATE && data != null && data.hasExtra(EXTRA_VOCABULARY_LIST))
+        if(requestCode == REQUEST_UPDATE && data != null && data.hasExtra(UpdateFragment.EXTRA_VOCABULARY_LIST))
         {
             // But we are sure of its type
             @SuppressWarnings("unchecked")
-            ArrayList<Vocabulary> list = (ArrayList<Vocabulary>) data.getSerializableExtra(EXTRA_VOCABULARY_LIST);
+            ArrayList<Vocabulary> list = data.getParcelableArrayListExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
 
             // Handles occasional NullPointerException.
             if(list != null && list.size() > 0)
@@ -176,30 +175,22 @@ public class VocabularyListFragment extends ListFragment
             }
             else
             {
-                this.list = this.vocabularyManager.getVocabulariesFromDisk();
+                this.list = this.vocabularyManager.getVocabulariesFromDisk(this.settings.getForeignLanguage());
             }
 
             this.updateListOnUiThread(this.list);
         }
-        else if((requestCode == REQUEST_SETTINGS || requestCode == REQUEST_ABOUT || requestCode == REQUEST_LOGS) &&
-                (data != null && data.hasExtra(EXTRA_SETTINGS)))
+        else if((requestCode == REQUEST_SETTINGS || requestCode == REQUEST_ABOUT || requestCode == REQUEST_LOGS) && (data != null && data.hasExtra(EXTRA_SETTINGS)))
         {
-            this.settings = (Settings) data.getSerializableExtra(EXTRA_SETTINGS);
-            
+            this.settings = data.getParcelableExtra(EXTRA_SETTINGS);
+
             ForeignLanguage language = ForeignLanguage.Hokkien;
             if(this.settings != null)
             {
                 language = this.settings.getForeignLanguage();
             }
 
-            this.vocabularyManager.setSelectedLanguage(language);
-
-            this.list = this.vocabularyManager.getVocabulariesFromDisk();
-            this.updateListOnUiThread(this.list);
-        }
-        else if(requestCode == REQUEST_ABOUT)
-        {
-            this.list = this.vocabularyManager.getVocabulariesFromDisk();
+            this.list = this.vocabularyManager.getVocabulariesFromDisk(language);
             this.updateListOnUiThread(this.list);
         }
     }
@@ -213,47 +204,18 @@ public class VocabularyListFragment extends ListFragment
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.vocabulary, menu);
 
-        /**
-         * Get the action view of the menu item whose id is
-         * edittext_search_field
-         */
-        View view = (View) menu.findItem(R.id.menu_search).getActionView();
+        // Get the action view of the menu item whose id is edittext_search_field
+        View view = menu.findItem(R.id.menu_search).getActionView();
 
-        /** Get the edit text from the action view */
-        final EditText searchTextfield = (EditText) view.findViewById(R.id.edittext_search_field);
+        // Get the edit text from the action view
+        final EditText searchTextfield = view.findViewById(R.id.edittext_search_field);
         searchTextfield.setHint(R.string.hint_vocabulary);
 
-        searchTextfield.addTextChangedListener(new TextWatcher()
-            {
-                /**
-                 * Handles search on text update.
-                 */
-                @Override
-                public void afterTextChanged(Editable arg0)
-                {
-                    String searched = searchTextfield.getText().toString();
-                    VocabularyAdapter vocabularyAdapter = (VocabularyAdapter) getListAdapter();
-                    vocabularyAdapter.filter(searched);
-                    vocabularyAdapter.notifyDataSetChanged();
-
-                    Log.d(LogsManager.TAG, "VocabularyListFragment: onCreateOptionsMenu(afterTextChanged). searched=" + searched);
-                }
-
-                @Override
-                public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
-                {
-                }
-
-                @Override
-                public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
-                {
-                }
-            });
+        searchTextfield.addTextChangedListener(new SearchListener((VocabularyAdapter) getListAdapter()));
     }
 
     /**
-     * This method is called when a user selects an item in the menu bar. Opens
-     * the fragment of selected item.
+     * This method is called when a user selects an item in the menu bar. Opens the fragment of selected item.
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
@@ -269,8 +231,16 @@ public class VocabularyListFragment extends ListFragment
             case R.id.menu_update:
             {
                 UpdateFragment updateDialog = UpdateFragment.newInstance(this.settings);
-                updateDialog.setTargetFragment(this, REQUEST_UPDATE);
-                updateDialog.show(fm, DIALOG_UPDATE);
+
+                if(updateDialog.isUpdating())
+                {
+                    Toast.makeText(getActivity(), getActivity().getString(R.string.dialog_already_updating_message), Toast.LENGTH_LONG).show();
+                }
+                else
+                {
+                    updateDialog.setTargetFragment(this, REQUEST_UPDATE);
+                    updateDialog.show(fm, DIALOG_UPDATE);
+                }
 
                 return true;
             }
@@ -307,43 +277,36 @@ public class VocabularyListFragment extends ListFragment
 
     /**
      * Updates the list view on UI thread.
-     * @param list the new list
+     *
      */
-    private void updateListOnUiThread(final ArrayList<Vocabulary> list)
+    private void updateListOnUiThread(ArrayList<Vocabulary> list)
     {
-        this.getActivity().runOnUiThread(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(getActivity(), list, settings);
-                    setListAdapter(vocabularyAdapter);
-    
-                    Log.d(LogsManager.TAG, "VocabularyListFragment: updateListOnUiThread(run). settings=" + settings + " list=" + list);
-                    LogsManager.addToLogs("VocabularyListFragment: updateListOnUiThread(run). settings=" + settings + " list_size=" + list.size());
-                }
-            });
+        this.getActivity().runOnUiThread(new UpdateAdapterRunnable(this, list));
+    }
+
+    public Settings getSettings()
+    {
+        return this.settings;
     }
 
     /**
      * Helper class for ListView's scroll listener.
      */
-    private static class ShowHideFastScrollListener implements OnScrollListener
+    private static class ShowHideFastScrollListener implements OnScrollListener, Runnable
     {
         private static final int DELAY = 1000;
         private AbsListView view;
+        private final Handler handler = new Handler();
 
-        private Handler handler = new Handler();
-        // Runnable for handler object.
-        private Runnable runnable = new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    view.setFastScrollAlwaysVisible(false);
-                    view = null;
-                }
-            };
+        /**
+         * Runnable for handler object.
+         */
+        @Override
+        public void run()
+        {
+            this.view.setFastScrollAlwaysVisible(false);
+            this.view = null;
+        }
 
         /**
          * Show fast-scroll thumb if scrolling, and hides fast-scroll thumb if not scrolling.
@@ -354,10 +317,10 @@ public class VocabularyListFragment extends ListFragment
             if(scrollState != SCROLL_STATE_IDLE)
             {
                 view.setFastScrollAlwaysVisible(true);
-                
+
                 // Removes the runnable from the message queue.
                 // Stops the handler from hiding the fast-scroll.
-                this.handler.removeCallbacks(this.runnable);
+                this.handler.removeCallbacks(this);
             }
             else
             {
@@ -365,7 +328,7 @@ public class VocabularyListFragment extends ListFragment
 
                 // Adds the runnable to the message queue, will run after the DELAY.
                 // Hides the fast-scroll after two seconds of no scrolling.
-                this.handler.postDelayed(this.runnable, DELAY); 
+                this.handler.postDelayed(this, DELAY);
             }
         }
 
@@ -373,5 +336,69 @@ public class VocabularyListFragment extends ListFragment
         public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount)
         {
         }
+    }
+
+    private static class SearchListener implements TextWatcher
+    {
+        private VocabularyAdapter adapter;
+
+        SearchListener(VocabularyAdapter adapter)
+        {
+            this.adapter = adapter;
+        }
+
+        /**
+         * Handles search on text update.
+         */
+        @Override
+        public void afterTextChanged(Editable textField)
+        {
+            String searched = textField.toString();
+            this.adapter.filter(searched);
+            this.adapter.notifyDataSetChanged();
+
+            Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateOptionsMenu(afterTextChanged). searched=" + searched);
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
+        {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
+        {
+        }
+    }
+
+    private static class UpdateAdapterRunnable implements Runnable
+    {
+        private WeakReference<VocabularyListFragment> fragmentRef;
+        private final ArrayList<Vocabulary> list;
+
+        UpdateAdapterRunnable(VocabularyListFragment fragment, ArrayList<Vocabulary> list)
+        {
+            this.fragmentRef = new WeakReference<>(fragment);
+            this.list = list;
+        }
+
+        @Override
+        public void run()
+        {
+            VocabularyListFragment fragment = this.fragmentRef.get();
+
+            if(fragment != null)
+            {
+                Settings settings = fragment.getSettings();
+
+                VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(fragment.getActivity(), list, settings);
+                fragment.setListAdapter(vocabularyAdapter);
+
+                Log.d(LogsManager.TAG, CLASS_NAME + ": updateListOnUiThread(run). settings=" + settings + " list=" + list);
+                LogsManager.addToLogs(CLASS_NAME + ": updateListOnUiThread(run). settings=" + settings + " list_size=" + list.size());
+            }
+
+        }
+
     }
 }

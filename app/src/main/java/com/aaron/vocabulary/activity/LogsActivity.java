@@ -9,14 +9,22 @@ import android.app.Fragment;
  */
 public class LogsActivity extends SingleFragmentActivity
 {
+    private LogsFragment fragment;
+
     /**
      * Returns a logs fragment.
+     * 
      * @return a fragment to be added.
      */
     @Override
     protected Fragment createFragment()
     {
-        return new LogsFragment();
+        if(this.fragment == null)
+        {
+            this.fragment = new LogsFragment();
+        }
+
+        return this.fragment;
     }
 
 }

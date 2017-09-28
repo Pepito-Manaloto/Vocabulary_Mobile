@@ -1,42 +1,34 @@
 package com.aaron.vocabulary.model;
 
-import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
-import com.aaron.vocabulary.R;
-import com.aaron.vocabulary.bean.Settings;
+import com.aaron.vocabulary.bean.ResponseVocabulary;
 import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.EnumMap;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 
-import static com.aaron.vocabulary.bean.Vocabulary.FOREIGN_LANGUAGE_ARRAY;
 import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.english_word;
 import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.foreign_word;
 import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.recently_added_count;
@@ -49,175 +41,149 @@ import static com.aaron.vocabulary.model.MySQLiteHelper.TABLE_VOCABULARY;
  */
 public class VocabularyManager
 {
-    private int responseCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
-    private String responseText = "Success";
-    private ForeignLanguage selectedLanguage;
-    private int recentlyAddedCount;
-
-    private String url;
-    private static final String AUTH_KEY = new String(Hex.encodeHex(DigestUtils.md5("aaron")));
-
-    public static final String TAG = "VocabularyManager";
+    private static final String CLASS_NAME = VocabularyManager.class.getSimpleName();
 
     public static final String DATE_FORMAT_LONG = "MMMM d, yyyy hh:mm:ss a";
     public static final String DATE_FORMAT_SHORT_24 = "yyyy-MM-dd HH:mm:ss";
     private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMAT_LONG, Locale.getDefault());
+    private static final List<HttpClient.Header> HEADERS;
 
     private MySQLiteHelper dbHelper;
     private Date curDate;
+    private HttpClient httpClient;
+
+    static
+    {
+        HEADERS = new ArrayList<>(0);
+        HEADERS.add(new HttpClient.Header("Authorization", new String(Hex.encodeHex(DigestUtils.md5("aaron")))));
+    }
 
     /**
-     * Constructor initializes the url.
-     * 
-     * @param activity
-     *            the caller activity
+     * Default constructor
+     *
+     * @param context  the current context
      */
-    public VocabularyManager(final Activity activity)
+    public VocabularyManager(Context context)
     {
-        this.url = "http://" + activity.getString(R.string.url_address_default) + activity.getString(R.string.url_resource);
-
-        this.dbHelper = new MySQLiteHelper(activity);
+        this.dbHelper = new MySQLiteHelper(context);
         this.curDate = new Date();
-        this.selectedLanguage = ForeignLanguage.Hokkien;
+        this.httpClient = new HttpClient();
     }
 
     /**
-     * Constructor initializes the url and the current application settings.
-     * 
-     * @param activity
-     *            the caller activity
-     * @param settings
-     *            the current settings
+     * Does the following logic. (1) Retrieves the vocabularies from the server. (2) Saves the vocabularies in local disk.
+     *
+     * @param url
+     *            the url of the vocabulary web service
+     * @return ResponseVocabulary
      */
-    public VocabularyManager(final Activity activity, final Settings settings)
+    public ResponseVocabulary getVocabulariesFromWeb(String url)
     {
-        this(activity);
-        this.selectedLanguage = settings.getForeignLanguage();
-
-        if(settings.getServerURL() != null && !settings.getServerURL().isEmpty())
-        {
-            this.url = "http://" + settings.getServerURL() + activity.getString(R.string.url_resource);
-        }
-    }
-
-    /**
-     * Does the following logic. (1) Retrieves the vocabularies from the server. (2) Saves the vocabularies in local disk. (3) Returns the vocabulary
-     * list of the current selected language.
-     * 
-     * @return ArrayList<Vocabulary>
-     */
-    public ArrayList<Vocabulary> getVocabulariesFromWeb()
-    {
-        HttpURLConnection con = null;
+        ResponseVocabulary response = new ResponseVocabulary();
+        Exception ex = null;
 
         try
         {
-            String params = "?last_updated=" + URLEncoder.encode(this.getLastUpdated(DATE_FORMAT_SHORT_24), "UTF-8");
+            String query = "?last_updated=" + URLEncoder.encode(this.getLastUpdated(DATE_FORMAT_SHORT_24), "UTF-8");
 
-            Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesFromWeb. params=" + params);
-            LogsManager.addToLogs("VocabularyManager: getVocabulariesFromWeb. params=" + params);
+            Log.d(LogsManager.TAG, CLASS_NAME + ": getVocabulariesFromWeb. url=" + url + query);
+            LogsManager.addToLogs(CLASS_NAME + ": getVocabulariesFromWeb. url=" + url + query);
 
-            URL getURL = new URL(this.url + params);
-            con = (HttpURLConnection) getURL.openConnection();
-            con.setConnectTimeout(10_000);
-            con.setReadTimeout(10_000);
-            con.addRequestProperty("Authorization", AUTH_KEY);
+            response = this.httpClient.get(url, query, HEADERS);
 
-            this.responseCode = con.getResponseCode();
-
-            if(this.responseCode == HttpURLConnection.HTTP_OK)
+            if(response.getStatusCode() == HttpURLConnection.HTTP_OK)
             {
-                String responseString = getResponseRecipeBodyFromStream(con.getInputStream());// Response body
-
-                if(StringUtils.isBlank(responseString)) // Response is empty
+                if(StringUtils.isBlank(response.getBody())) // Response body empty
                 {
-                    return new ArrayList<>(0);
+                    return response;
                 }
 
-                JSONObject jsonObject = new JSONObject(responseString); // Response body in JSON object
+                JSONObject jsonObject = new JSONObject(response.getBody()); // Response body in JSON object
 
-                EnumMap<ForeignLanguage, ArrayList<Vocabulary>> map = this.parseJsonObject(jsonObject);
-
-                if(this.recentlyAddedCount <= 0) // No need to save to disk, because there are no new data entries.
+                int recentlyAddedCount = this.parseRecentlyAddedCountFromJsonObject(jsonObject);
+                response.setRecentlyAddedCount(recentlyAddedCount);
+                if(recentlyAddedCount <= 0) // No need to save to disk, because there are no new data entries.
                 {
-
-                    return new ArrayList<>(0);
+                    return response;
                 }
 
-                boolean saveToDiskSuccess = this.saveToDisk(map);
-
-                if(!saveToDiskSuccess)
-                {
-                    this.responseCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
-                    this.responseText = "Failed saving to disk.";
-
-                    return new ArrayList<>(0);
-                }
-
-                // Entity is already consumed by EntityUtils; thus is already closed.
-
-                return map.get(this.selectedLanguage);
+                response.setVocabularyMap(this.parseVocabulariesFromJsonObject(jsonObject));
+                response.setText("Success");
+                return response;
             }
         }
-        catch(final IOException | IllegalArgumentException | JSONException e)
+        catch(final IOException | JSONException e)
         {
-            Log.e(LogsManager.TAG, "VocabularyManager: getVocabulariesFromWeb. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
-            LogsManager.addToLogs("VocabularyManager: getVocabulariesFromWeb. Exception=" + e.getClass().getSimpleName() + " trace=" + e.getStackTrace());
-
-            if(e instanceof IllegalArgumentException)
-            {
-                this.responseText = this.url + " is not a valid host name.";
-            }
-            else
-            {
-                this.responseText = e.getMessage();
-            }
+            response.setStatusCode(HttpURLConnection.HTTP_INTERNAL_ERROR);
+            response.setText(e.getMessage());
+            ex = e;
+        }
+        catch(final NumberFormatException e)
+        {
+            response.setStatusCode(HttpURLConnection.HTTP_INTERNAL_ERROR);
+            response.setText("Error parsing json response: recently_added_count is not a number.");
+            ex = e;
+        }
+        catch(final IllegalArgumentException e)
+        {
+            response.setStatusCode(HttpURLConnection.HTTP_INTERNAL_ERROR);
+            response.setText(url + " is not a valid host name.");
+            ex = e;
         }
         finally
         {
-            if(con != null)
+            if(ex == null)
             {
-                con.disconnect();
+                Log.d(LogsManager.TAG, CLASS_NAME + ": getVocabulariesFromWeb. responseText=" + response.getText() +
+                        " responseCode=" + response.getStatusCode());
+                LogsManager.addToLogs(CLASS_NAME + ": getVocabulariesFromWeb. responseText=" + response.getText() +
+                        " responseCode=" + response.getStatusCode());
             }
-
-            Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesFromWeb. responseText=" + this.responseText +
-                    " responseCode=" + this.responseCode + " SelectedLanguage=" + this.selectedLanguage);
-            LogsManager.addToLogs("VocabularyManager: getVocabulariesFromWeb. responseText=" + this.responseText +
-                    " responseCode=" + this.responseCode + " SelectedLanguage=" + this.selectedLanguage);
+            else
+            {
+                Log.e(LogsManager.TAG, CLASS_NAME + ": getVocabulariesFromWeb. " + ex.getClass().getSimpleName() + ": " + ex.getMessage(), ex);
+                LogsManager.addToLogs(CLASS_NAME + ": getVocabulariesFromWeb. Exception=" + ex.getClass().getSimpleName() + " trace=" + ex.getStackTrace());
+            }
         }
-
-        return new ArrayList<>(0);
-    }
-
-    /**
-     * Converts the inputStream to String.
-     *
-     * @param inputStream HttpURLConnection response
-     * @return String
-     */
-    protected String getResponseRecipeBodyFromStream(final InputStream inputStream) throws IOException
-    {
-        String response = IOUtils.toString(inputStream, Charsets.UTF_8);
-        IOUtils.closeQuietly(inputStream);
 
         return response;
     }
 
     /**
-     * Parse the given jsonObject containing the list of vocabularies retrieved from the web call.
-     * 
+     * Parse the given jsonObject and returns the recently added count.
+     *
      * @param jsonObject
      *            the jsonObject to be parsed
-     * @throws JSONException
-     * @return jsonObject converted into a hashmap
+     * @return int
+     * @throws NumberFormatException
+     *             the recently added count is not an integer
      */
-    private EnumMap<ForeignLanguage, ArrayList<Vocabulary>> parseJsonObject(final JSONObject jsonObject) throws JSONException
+    private int parseRecentlyAddedCountFromJsonObject(final JSONObject jsonObject) throws NumberFormatException
     {
-        Vocabulary vocabulary;
+        return Integer.parseInt(String.valueOf(jsonObject.remove(recently_added_count.name())));
+    }
+
+    /**
+     * Parse the given jsonObject containing the list of vocabularies retrieved from the web call.
+     *
+     * @param jsonObject
+     *            the jsonObject to be parsed
+     * @return jsonObject converted into an EnumMap, wherein the key is the foreign language and values are list of vocabularies
+     * @throws JSONException
+     *             the vocabulary json response is not in valid json format
+     */
+    private EnumMap<ForeignLanguage, ArrayList<Vocabulary>> parseVocabulariesFromJsonObject(final JSONObject jsonObject) throws JSONException
+    {
+        // Ensure the json string only contains recipes
+        if(jsonObject.has(recently_added_count.name()))
+        {
+            jsonObject.remove(recently_added_count.name());
+        }
+
         EnumMap<ForeignLanguage, ArrayList<Vocabulary>> map = new EnumMap<>(ForeignLanguage.class); // Map containing the parsed result
 
         // Loop each language
-        for(ForeignLanguage foreignLanguage : FOREIGN_LANGUAGE_ARRAY)
+        for(ForeignLanguage foreignLanguage : ForeignLanguage.values())
         {
             JSONArray jsonLangArray = jsonObject.getJSONArray(foreignLanguage.name()); // JSON array, for each language
             JSONObject jsonLangValues; // JSON items of the array of each language
@@ -229,53 +195,46 @@ public class VocabularyManager
             for(int i = 0; i < jsonLangArrayLength; i++)
             {
                 jsonLangValues = jsonLangArray.getJSONObject(i);
-                vocabulary = new Vocabulary(jsonLangValues.getString(english_word.name()), jsonLangValues.getString(foreign_word.name()), foreignLanguage);
-                listTemp.add(vocabulary);
+                listTemp.add(new Vocabulary(jsonLangValues.getString(english_word.name()), jsonLangValues.getString(foreign_word.name()), foreignLanguage));
             }
 
             map.put(foreignLanguage, listTemp);
         }
 
-        this.recentlyAddedCount = jsonObject.getInt(recently_added_count.name());
-
-        Log.d(LogsManager.TAG, "VocabularyManager: parseJsonObject. json=" + jsonObject);
-        LogsManager.addToLogs("VocabularyManager: parseJsonObject. json_length=" + jsonObject.length());
+        Log.d(LogsManager.TAG, CLASS_NAME + ": parseVocabulariesFromJsonObject. map=" + map);
+        LogsManager.addToLogs(CLASS_NAME + ": parseVocabulariesFromJsonObject. json_length=" + jsonObject.length());
 
         return map;
     }
 
     /**
-     * Saves the given vocabulary map to the local database.
-     * 
-     * @param vocabularyMap
-     *            the vocabulary map to be stored
+     * Saves the given lists of vocabularies to the local database.
+     *
+     * @param vocabularyLists
+     *            the recipe lists to be stored
      * @return true on success, else false
      */
-    private boolean saveToDisk(final EnumMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap)
+    public boolean saveRecipesToDisk(final Collection<ArrayList<Vocabulary>> vocabularyLists)
     {
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
-        ArrayList<Vocabulary> listTemp;
         ContentValues values = new ContentValues();
-
         dateFormatter.applyPattern(DATE_FORMAT_LONG);
-        db.beginTransaction();
 
         try
         {
+            db.beginTransaction();
             // Delete vocabularies. To ensure no duplicates, if existing vocabularies are modified in the server.
-            db.delete(TABLE_VOCABULARY, "1", null);
+            db.delete(TABLE_VOCABULARY, null, null);
 
             // Loop each language
-            for(ForeignLanguage foreignLanguage : vocabularyMap.keySet())
+            for(ArrayList<Vocabulary> vocabularyList : vocabularyLists)
             {
-                listTemp = vocabularyMap.get(foreignLanguage);
-
                 // Loop contents of the language
-                for(Vocabulary vocabulary : listTemp)
+                for(Vocabulary vocabulary : vocabularyList)
                 {
                     values.put(Column.english_word.name(), vocabulary.getEnglishWord());
                     values.put(Column.foreign_word.name(), vocabulary.getForeignWord());
-                    values.put(Column.foreign_language.name(), foreignLanguage.name());
+                    values.put(Column.foreign_language.name(), vocabulary.getForeignLanguage().name());
                     values.put(Column.date_in.name(), dateFormatter.format(this.curDate));
 
                     db.insert(TABLE_VOCABULARY, null, values);
@@ -291,93 +250,48 @@ public class VocabularyManager
             this.dbHelper.close();
         }
 
-        Log.d(LogsManager.TAG, "VocabularyManager: saveToDisk.");
-        LogsManager.addToLogs("VocabularyManager: saveToDisk.");
+        Log.d(LogsManager.TAG, CLASS_NAME + ": saveToDisk.");
+        LogsManager.addToLogs(CLASS_NAME + ": saveToDisk.");
 
         return true;
     }
 
     /**
-     * Returns the string representation of the status code returned by the last web call. Internal Server Error is returned if the class does not
-     * have a previous web call.
-     * 
-     * @return String
-     */
-    public String getStatusText()
-    {
-        switch(this.responseCode)
-        {
-            case 200:
-                return "Ok";
-            case 400:
-                return "Bad Request";
-            case 401:
-                return "Unauthorized Access";
-            case 500:
-                return "Internal Server Error";
-            default:
-                return "Status Code Unknown";
-        }
-    }
-
-    /**
-     * Returns the response text by the last web call. Empty text is returned if the class does not have a previous web call.
-     * 
-     * @return String
-     */
-    public String getResponseText()
-    {
-        return this.responseText;
-    }
-
-    /**
-     * Returns the number of vocabularies that are new.
-     * 
-     * @return int
-     */
-    public int getRecentlyAddedCount()
-    {
-        return this.recentlyAddedCount;
-    }
-
-    /**
      * Does the following logic. (1) Retrieves the vocabularies from the local disk. (2) Returns the vocabulary list of the selected language.
-     * 
+     *
      * @return ArrayList<Vocabulary>
      */
-    public ArrayList<Vocabulary> getVocabulariesFromDisk()
+    public ArrayList<Vocabulary> getVocabulariesFromDisk(final ForeignLanguage selectedLanguage)
     {
-        SQLiteDatabase db = this.dbHelper.getReadableDatabase();
+        ArrayList<Vocabulary> list;
 
-        String[] columns = new String[] { Column.english_word.name(),
-                Column.foreign_word.name(),
-                Column.foreign_language.name() };
-        String whereClause = "foreign_language = ?";
-        String[] whereArgs = new String[] { this.selectedLanguage.name() };
-
-        Cursor cursor = db.query(TABLE_VOCABULARY, columns, whereClause, whereArgs, null, null, null);
-        ArrayList<Vocabulary> list = new ArrayList<>(cursor.getCount());
-
-        if(cursor.moveToFirst())
+        try(SQLiteDatabase db = this.dbHelper.getReadableDatabase())
         {
-            do
+            String[] columns = new String[] { Column.english_word.name(), Column.foreign_word.name(), Column.foreign_language.name() };
+            String whereClause = "foreign_language = ?";
+            String[] whereArgs = new String[] { selectedLanguage.name() };
+
+            Cursor cursor = db.query(TABLE_VOCABULARY, columns, whereClause, whereArgs, null, null, null);
+            list = new ArrayList<>(cursor.getCount());
+
+            if(cursor.moveToFirst())
             {
-                list.add(this.cursorToVocabulary(cursor));
-            } while(cursor.moveToNext());
+                do
+                {
+                    list.add(this.cursorToVocabulary(cursor));
+                } while(cursor.moveToNext());
+            }
         }
 
-        db.close();
-        this.dbHelper.close();
-
-        Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesFromDisk. list=" + list);
-        LogsManager.addToLogs("VocabularyManager: getVocabulariesFromDisk. list_size=" + list.size());
+        Log.d(LogsManager.TAG, CLASS_NAME + ": getVocabulariesFromDisk. list=" + list);
+        LogsManager.addToLogs(CLASS_NAME + ": getVocabulariesFromDisk. list_size=" + list.size());
 
         return list;
     }
 
     /**
      * Retrieves the vocabulary from the cursor.
-     * 
+     *
      * @param cursor
      *            the cursor resulting from a query
      * @return Vocabulary
@@ -392,47 +306,36 @@ public class VocabularyManager
     }
 
     /**
-     * Sets the language selected.
-     * 
-     * @param language
-     *            the language selected
+     * Gets the current vocabulary count per foreign languages, and returns them as an EnumMap.
+     *
+     * @return {@code EnumMap<ForeignLanguage, Integer>}
      */
-    public void setSelectedLanguage(final ForeignLanguage language)
+    public EnumMap<ForeignLanguage, Integer> getVocabulariesCount()
     {
-        this.selectedLanguage = language;
-    }
-
-    /**
-     * Gets the current vocabulary count per foreign languages, and returns them as a hashmap.
-     * 
-     * @return HashMap<ForeignLanguage, Integer>
-     */
-    public HashMap<ForeignLanguage, Integer> getVocabulariesCount()
-    {
-        HashMap<ForeignLanguage, Integer> map = new HashMap<>();
+        EnumMap<ForeignLanguage, Integer> map = new EnumMap<>(ForeignLanguage.class);
         SQLiteDatabase db = this.dbHelper.getReadableDatabase();
         String whereClause = "foreign_language = ?";
-        Cursor cursor;
 
-        for(ForeignLanguage language : FOREIGN_LANGUAGE_ARRAY)
+        for(ForeignLanguage language : ForeignLanguage.values())
         {
-            cursor = db.query(TABLE_VOCABULARY, COLUMN_COUNT, whereClause, new String[] { language.name() }, null, null, null);
-
-            if(cursor.moveToFirst())
+            try(Cursor cursor = db.query(TABLE_VOCABULARY, COLUMN_COUNT, whereClause, new String[] { language.name() }, null, null, null))
             {
-                map.put(language, cursor.getInt(0));
+                if(cursor.moveToFirst())
+                {
+                    map.put(language, cursor.getInt(0));
+                }
             }
         }
 
-        Log.d(LogsManager.TAG, "VocabularyManager: getVocabulariesCount. keys=" + map.keySet() + " values=" + map.values());
-        LogsManager.addToLogs("VocabularyManager: getVocabulariesCount. keys=" + map.keySet() + " values_size=" + map.values().size());
+        Log.d(LogsManager.TAG, CLASS_NAME + ": getVocabulariesCount. keys=" + map.keySet() + " values=" + map.values());
+        LogsManager.addToLogs(CLASS_NAME + ": getVocabulariesCount. keys=" + map.keySet() + " values_size=" + map.values().size());
 
         return map;
     }
 
     /**
      * Gets the latest date_in of the vocabularies.
-     * 
+     *
      * @param format
      *            the date format used in formatting the last_updated date
      * @return String
@@ -445,15 +348,16 @@ public class VocabularyManager
         String orderBy = "date_in DESC";
         String limit = "1";
 
-        Cursor cursor = db.query(TABLE_VOCABULARY, columns, null, null, null, null, orderBy, limit);
-
-        if(cursor.moveToFirst())
+        try(Cursor cursor = db.query(TABLE_VOCABULARY, columns, null, null, null, null, orderBy, limit))
         {
-            lastUpdatedDate = cursor.getString(0);
-        }
-        else
-        {
-            return lastUpdatedDate;
+            if(cursor.moveToFirst())
+            {
+                lastUpdatedDate = cursor.getString(0);
+            }
+            else
+            {
+                return lastUpdatedDate;
+            }
         }
 
         try
@@ -466,12 +370,12 @@ public class VocabularyManager
         }
         catch(ParseException e)
         {
-            Log.e(LogsManager.TAG, "VocabularyManager: getLastUpdated. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
-            LogsManager.addToLogs("VocabularyManager: getLastUpdated. Exception=" + e.getClass().getSimpleName() + " trace=" + e.getStackTrace());
+            Log.e(LogsManager.TAG, CLASS_NAME + ": getLastUpdated. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+            LogsManager.addToLogs(CLASS_NAME + ": getLastUpdated. Exception=" + e.getClass().getSimpleName() + " trace=" + e.getStackTrace());
         }
 
-        Log.d(LogsManager.TAG, "VocabularyManager: getLastUpdated. lastUpdatedDate=" + lastUpdatedDate);
-        LogsManager.addToLogs("VocabularyManager: getLastUpdated. lastUpdatedDate=" + lastUpdatedDate);
+        Log.d(LogsManager.TAG, CLASS_NAME + ": getLastUpdated. lastUpdatedDate=" + lastUpdatedDate);
+        LogsManager.addToLogs(CLASS_NAME + ": getLastUpdated. lastUpdatedDate=" + lastUpdatedDate);
 
         return lastUpdatedDate;
     }
@@ -481,16 +385,15 @@ public class VocabularyManager
      */
     public void deleteVocabulariesFromDisk()
     {
-        SQLiteDatabase db = this.dbHelper.getWritableDatabase();
-        String whereClause = "1";
-        String[] whereArgs = null;
-
-        int result = db.delete(TABLE_VOCABULARY, whereClause, whereArgs);
-
-        db.close();
-        this.dbHelper.close();
-
-        Log.d(LogsManager.TAG, "VocabularyManager: deleteVocabularyFromDisk. affected=" + result);
+        try(SQLiteDatabase db = this.dbHelper.getWritableDatabase())
+        {
+            int result = db.delete(TABLE_VOCABULARY, null, null);
+            Log.d(LogsManager.TAG, CLASS_NAME + ": deleteVocabularyFromDisk. affected=" + result);
+        }
     }
 
+    public ArrayList<Vocabulary> getVocabulariesFromMap(EnumMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap, ForeignLanguage foreignLanguage)
+    {
+        return vocabularyMap.get(foreignLanguage);
+    }
 }

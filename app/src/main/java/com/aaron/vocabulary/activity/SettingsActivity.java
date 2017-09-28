@@ -9,16 +9,19 @@ import android.app.Fragment;
  */
 public class SettingsActivity extends SingleFragmentActivity
 {
+    private SettingsFragment fragment;
+
     /**
      * Returns a settings fragment.
+     * 
      * @return a fragment to be added.
      */
     @Override
     protected Fragment createFragment()
     {
-        Settings settings = (Settings) this.getIntent().getSerializableExtra(SettingsFragment.EXTRA_SETTINGS);
-
-        return SettingsFragment.newInstance(settings);
+        Settings settings = this.getIntent().getParcelableExtra(SettingsFragment.EXTRA_SETTINGS);
+        this.fragment = SettingsFragment.newInstance(this.fragment, settings);
+        return this.fragment;
     }
 
 }
