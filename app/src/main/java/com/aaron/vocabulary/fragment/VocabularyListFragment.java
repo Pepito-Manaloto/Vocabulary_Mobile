@@ -16,7 +16,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.AbsListView.OnScrollListener;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -25,6 +24,7 @@ import com.aaron.vocabulary.activity.AboutActivity;
 import com.aaron.vocabulary.activity.LogsActivity;
 import com.aaron.vocabulary.activity.SettingsActivity;
 import com.aaron.vocabulary.adapter.VocabularyAdapter;
+import com.aaron.vocabulary.bean.SearchType;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
@@ -42,6 +42,8 @@ import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
 public class VocabularyListFragment extends ListFragment
 {
     public static final String CLASS_NAME = VocabularyListFragment.class.getSimpleName();
+    public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.vocabulary_list.list";
+
     private static final String DIALOG_UPDATE = "update";
     private static final int REQUEST_UPDATE = 0;
     private static final int REQUEST_SETTINGS = 1;
@@ -49,10 +51,13 @@ public class VocabularyListFragment extends ListFragment
     private static final int REQUEST_LOGS = 3;
 
     private ArrayList<Vocabulary> list;
+    private VocabularyAdapter vocabularyAdapter;
+
     private Settings settings;
     private VocabularyManager vocabularyManager;
-
-    public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.vocabulary_list.list";
+    private EditText searchTextfield;
+    private SearchListener searchListener;
+    private SearchType selectedSearchType;
 
     /**
      * Initializes non-fragment user interface.
@@ -83,9 +88,12 @@ public class VocabularyListFragment extends ListFragment
             this.list = this.vocabularyManager.getVocabulariesFromDisk(this.settings.getForeignLanguage());
         }
 
-        this.updateListOnUiThread(this.list);
-
+        this.vocabularyAdapter = new VocabularyAdapter(getActivity(), this.list, this.settings);
+        this.setListAdapter(this.vocabularyAdapter);
+        // this.updateListOnUiThread(this.list);
         setHasOptionsMenu(true);
+        this.selectedSearchType = SearchType.ENGLISH;
+        this.searchListener = new SearchListener(this.vocabularyAdapter, this.selectedSearchType);
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate. settings=" + this.settings + " list=" + this.list);
         LogsManager.addToLogs(CLASS_NAME + ": onCreate. settings=" + this.settings + " list_size=" + this.list.size());
@@ -128,7 +136,7 @@ public class VocabularyListFragment extends ListFragment
         String language = getString(R.string.app_name, this.settings.getForeignLanguage().name());
         getActivity().setTitle(language);
 
-        ((VocabularyAdapter) this.getListAdapter()).notifyDataSetChanged();
+        this.vocabularyAdapter.notifyDataSetChanged();
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onResume");
     }
@@ -169,7 +177,7 @@ public class VocabularyListFragment extends ListFragment
             ArrayList<Vocabulary> list = data.getParcelableArrayListExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
 
             // Handles occasional NullPointerException.
-            if(list != null && list.size() > 0)
+            if(list != null && !list.isEmpty())
             {
                 this.list = list;
             }
@@ -208,10 +216,9 @@ public class VocabularyListFragment extends ListFragment
         View view = menu.findItem(R.id.menu_search).getActionView();
 
         // Get the edit text from the action view
-        final EditText searchTextfield = view.findViewById(R.id.edittext_search_field);
-        searchTextfield.setHint(R.string.hint_vocabulary);
-
-        searchTextfield.addTextChangedListener(new SearchListener((VocabularyAdapter) getListAdapter()));
+        this.searchTextfield = view.findViewById(R.id.edittext_search_field);
+        this.searchTextfield.setHint(R.string.hint_vocabulary);
+        this.searchTextfield.addTextChangedListener(this.searchListener);
     }
 
     /**
@@ -252,6 +259,12 @@ public class VocabularyListFragment extends ListFragment
 
                 return true;
             }
+            case R.id.menu_search_type:
+            {
+                this.toggleSearchTypeMenuItem(item);
+
+                return true;
+            }
             case R.id.menu_about:
             {
                 Intent intent = new Intent(getActivity(), AboutActivity.class);
@@ -276,23 +289,48 @@ public class VocabularyListFragment extends ListFragment
     }
 
     /**
-     * Updates the list view on UI thread.
+     * Toggles the search type menu item between 'english' and 'foreign'.
      *
+     * @param item
+     *            the search type menu item
      */
-    private void updateListOnUiThread(ArrayList<Vocabulary> list)
+    private void toggleSearchTypeMenuItem(MenuItem item)
     {
-        this.getActivity().runOnUiThread(new UpdateAdapterRunnable(this, list));
+        if(SearchType.FOREIGN.equals(this.selectedSearchType))
+        {
+            this.selectedSearchType = SearchType.ENGLISH;
+            item.setTitle(getString(R.string.menu_search_english));
+        }
+        else
+        {
+            this.selectedSearchType = SearchType.FOREIGN;
+            item.setTitle(getString(R.string.menu_search_foreign));
+        }
+
+        this.searchListener.setSearchType(this.selectedSearchType);
+
+        String searched = this.searchTextfield.getText().toString();
+        if(searched.length() > 0)
+        {
+            this.vocabularyAdapter.filter(searched, this.selectedSearchType);
+        }
     }
 
-    public Settings getSettings()
+    /**
+     * Updates the list view on UI thread.
+     */
+    private void updateListOnUiThread(final ArrayList<Vocabulary> list)
     {
-        return this.settings;
+        if(list != null)
+        {
+            this.getActivity().runOnUiThread(new UpdateAdapterRunnable(this.vocabularyAdapter, this.list));
+        }
     }
 
     /**
      * Helper class for ListView's scroll listener.
      */
-    private static class ShowHideFastScrollListener implements OnScrollListener, Runnable
+    private static class ShowHideFastScrollListener implements AbsListView.OnScrollListener, Runnable
     {
         private static final int DELAY = 1000;
         private AbsListView view;
@@ -338,13 +376,18 @@ public class VocabularyListFragment extends ListFragment
         }
     }
 
+    /**
+     * Helper class for search listener.
+     */
     private static class SearchListener implements TextWatcher
     {
         private VocabularyAdapter adapter;
+        private SearchType searchType;
 
-        SearchListener(VocabularyAdapter adapter)
+        SearchListener(VocabularyAdapter adapter, SearchType searchType)
         {
             this.adapter = adapter;
+            this.searchType = searchType;
         }
 
         /**
@@ -354,8 +397,7 @@ public class VocabularyListFragment extends ListFragment
         public void afterTextChanged(Editable textField)
         {
             String searched = textField.toString();
-            this.adapter.filter(searched);
-            this.adapter.notifyDataSetChanged();
+            this.adapter.filter(searched, this.searchType);
 
             Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateOptionsMenu(afterTextChanged). searched=" + searched);
         }
@@ -369,36 +411,40 @@ public class VocabularyListFragment extends ListFragment
         public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
         {
         }
+
+        private void setSearchType(SearchType searchType)
+        {
+            this.searchType = searchType;
+        }
+
+        private void setVocabularyAdapter(VocabularyAdapter vocabularyAdapter)
+        {
+            this.adapter = vocabularyAdapter;
+        }
     }
 
+    /**
+     * Helper class that updates the list on UI thread.
+     */
     private static class UpdateAdapterRunnable implements Runnable
     {
-        private WeakReference<VocabularyListFragment> fragmentRef;
+        private WeakReference<VocabularyAdapter> vocabularyAdapterRef;
         private final ArrayList<Vocabulary> list;
 
-        UpdateAdapterRunnable(VocabularyListFragment fragment, ArrayList<Vocabulary> list)
+        UpdateAdapterRunnable(VocabularyAdapter adapter, ArrayList<Vocabulary> list)
         {
-            this.fragmentRef = new WeakReference<>(fragment);
+            this.vocabularyAdapterRef = new WeakReference<>(adapter);
             this.list = list;
         }
 
         @Override
         public void run()
         {
-            VocabularyListFragment fragment = this.fragmentRef.get();
-
-            if(fragment != null)
+            VocabularyAdapter adapter = this.vocabularyAdapterRef.get();
+            if(adapter != null)
             {
-                Settings settings = fragment.getSettings();
-
-                VocabularyAdapter vocabularyAdapter = new VocabularyAdapter(fragment.getActivity(), list, settings);
-                fragment.setListAdapter(vocabularyAdapter);
-
-                Log.d(LogsManager.TAG, CLASS_NAME + ": updateListOnUiThread(run). settings=" + settings + " list=" + list);
-                LogsManager.addToLogs(CLASS_NAME + ": updateListOnUiThread(run). settings=" + settings + " list_size=" + list.size());
+                adapter.update(this.list);
             }
-
         }
-
     }
 }
