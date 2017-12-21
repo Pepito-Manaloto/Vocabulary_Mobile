@@ -90,7 +90,7 @@ public class VocabularyListFragment extends ListFragment
 
         this.vocabularyAdapter = new VocabularyAdapter(getActivity(), this.list, this.settings);
         this.setListAdapter(this.vocabularyAdapter);
-        // this.updateListOnUiThread(this.list);
+
         setHasOptionsMenu(true);
         this.selectedSearchType = SearchType.ENGLISH;
         this.searchListener = new SearchListener(this.vocabularyAdapter, this.selectedSearchType);
@@ -415,11 +415,6 @@ public class VocabularyListFragment extends ListFragment
         private void setSearchType(SearchType searchType)
         {
             this.searchType = searchType;
-        }
-
-        private void setVocabularyAdapter(VocabularyAdapter vocabularyAdapter)
-        {
-            this.adapter = vocabularyAdapter;
         }
     }
 
