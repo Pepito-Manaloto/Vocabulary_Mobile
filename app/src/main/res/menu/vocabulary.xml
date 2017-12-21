@@ -16,6 +16,11 @@
         android:title="@string/menu_settings"/>
 
     <item
+        android:id="@+id/menu_search_type"
+        android:showAsAction="never"
+        android:title="@string/menu_search_english"/>
+
+    <item
         android:id="@+id/menu_about"
         android:showAsAction="never"
         android:title="@string/menu_about"/>

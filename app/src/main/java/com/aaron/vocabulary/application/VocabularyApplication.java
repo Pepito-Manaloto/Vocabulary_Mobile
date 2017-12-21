@@ -2,6 +2,7 @@ package com.aaron.vocabulary.application;
 
 import android.app.Application;
 
+import com.facebook.stetho.Stetho;
 import com.squareup.leakcanary.LeakCanary;
 
 /**
@@ -21,6 +22,10 @@ public class VocabularyApplication extends Application
             return;
         }
         LeakCanary.install(this);
+
+        // Access in Google Chrome url via -> chrome://inspect
+        Stetho.initializeWithDefaults(this);
+
         // Normal app init code...
     }
 }
