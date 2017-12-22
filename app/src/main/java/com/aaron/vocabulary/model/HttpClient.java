@@ -65,13 +65,14 @@ public class HttpClient
      */
     public ResponseVocabulary get(String url, String query, List<Header> headers) throws IOException
     {
+        String urlStr = url;
         if(StringUtils.isNotBlank(query))
         {
-            url += query;
+            urlStr += query;
         }
         HttpURLConnection con = null;
 
-        URL getURL = new URL(url);
+        URL getURL = new URL(urlStr);
         ResponseVocabulary response = new ResponseVocabulary(HttpURLConnection.HTTP_INTERNAL_ERROR);
 
         try

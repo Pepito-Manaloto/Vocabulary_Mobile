@@ -373,6 +373,7 @@ public class VocabularyListFragment extends ListFragment
         @Override
         public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount)
         {
+            // No action
         }
     }
 
@@ -405,11 +406,13 @@ public class VocabularyListFragment extends ListFragment
         @Override
         public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
         {
+            // No action
         }
 
         @Override
         public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
         {
+            // No action
         }
 
         private void setSearchType(SearchType searchType)

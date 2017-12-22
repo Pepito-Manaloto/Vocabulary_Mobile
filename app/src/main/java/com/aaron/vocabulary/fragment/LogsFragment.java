@@ -154,7 +154,7 @@ public class LogsFragment extends Fragment
          * Handles back button.
          */
         @Override
-        public boolean onKey(android.view.View v, int keyCode, KeyEvent event)
+        public boolean onKey(View v, int keyCode, KeyEvent event)
         {
             // For back button
             if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
@@ -211,6 +211,7 @@ public class LogsFragment extends Fragment
         @Override
         public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
         {
+            // No action
         }
 
         @Override

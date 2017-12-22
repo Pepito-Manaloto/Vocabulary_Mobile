@@ -55,26 +55,28 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     public View getView(int position, View convertView, @NonNull ViewGroup parent)
     {
         ViewHolder holder;
+        View listRowView;
 
         if(convertView == null)
         {
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.fragment_vocabulary_list_row, parent, false);
+            listRowView = LayoutInflater.from(getContext()).inflate(R.layout.fragment_vocabulary_list_row, parent, false);
 
             holder = new ViewHolder();
-            holder.englishText = convertView.findViewById(R.id.text_english_language);
-            holder.foreignText = convertView.findViewById(R.id.text_foreign_language);
+            holder.englishText = listRowView.findViewById(R.id.text_english_language);
+            holder.foreignText = listRowView.findViewById(R.id.text_foreign_language);
 
-            convertView.setTag(holder);
+            listRowView.setTag(holder);
         }
         else
         {
+            listRowView = convertView;
             holder = (ViewHolder) convertView.getTag();
         }
 
         Vocabulary vocabulary = getItem(position);
         holder.setVocabularyView(vocabulary, this.settings);
 
-        return convertView;
+        return listRowView;
     }
 
     /**
@@ -155,10 +157,10 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
      */
     private static class ViewHolder
     {
-        TextView englishText;
-        TextView foreignText;
+        private TextView englishText;
+        private TextView foreignText;
 
-        void setVocabularyView(Vocabulary vocabulary, Settings settings)
+        private void setVocabularyView(Vocabulary vocabulary, Settings settings)
         {
             this.englishText.setText(vocabulary.getEnglishWord());
             this.englishText.setTextSize(TypedValue.COMPLEX_UNIT_SP, settings.getFontSize());
