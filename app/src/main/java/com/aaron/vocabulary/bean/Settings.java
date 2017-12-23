@@ -6,8 +6,6 @@ import android.os.Parcelable;
 
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
-import java.util.Optional;
-
 /**
  * Java bean for the application settings.
  */

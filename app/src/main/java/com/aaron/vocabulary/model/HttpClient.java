@@ -81,9 +81,12 @@ public class HttpClient
             con.setConnectTimeout(CONNECTION_TIMEOUT);
             con.setReadTimeout(READ_TIMEOUT);
 
-            for(Header header : headers)
+            if(headers != null)
             {
-                con.addRequestProperty(header.getField(), header.getValue());
+                for(Header header : headers)
+                {
+                    con.addRequestProperty(header.getField(), header.getValue());
+                }
             }
 
             response.setStatusCode(con.getResponseCode());
@@ -116,8 +119,8 @@ public class HttpClient
     }
 
     /**
-     * Returns the string representation of the status code returned by the last web call.
-     * Internal Server Error is returned if the class does not have a previous web call.
+     * Returns the string representation of the status code returned by the last web call. Internal Server Error is returned if the class does not have a
+     * previous web call.
      *
      * @return String
      */
