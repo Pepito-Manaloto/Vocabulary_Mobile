@@ -42,7 +42,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     {
         super(context, 0, vocabularyList);
 
-        this.vocabularyList = vocabularyList;
+        this.vocabularyList = new ArrayList<>(vocabularyList);
         this.vocabularyListTemp = new ArrayList<>(vocabularyList);
         this.settings = settings;
     }
