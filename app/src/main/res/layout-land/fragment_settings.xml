@@ -64,6 +64,7 @@
 
     <TextView
         android:id="@+id/textview_server_url"
+        android:labelFor="@id/edittext_server_url"
         style="@style/TextView_settings"
         android:layout_below="@id/spinner_update_interval"
         android:layout_marginTop="5dp"
@@ -76,6 +77,7 @@
         android:layout_below="@id/spinner_update_interval"
         android:layout_marginStart="0dp"
         android:layout_toEndOf="@id/textview_server_url"
-        android:text="@string/url_address_default"/>
+        android:text="@string/url_address_default"
+        android:inputType="textUri"/>
 
 </RelativeLayout>
