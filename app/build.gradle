@@ -49,13 +49,15 @@ android {
 def LEAKCANARY_VERSION = "1.5.4"
 
 dependencies {
-    testCompile 'junit:junit:4.12'
-    debugCompile "com.squareup.leakcanary:leakcanary-android:$LEAKCANARY_VERSION"
-    releaseCompile "com.squareup.leakcanary:leakcanary-android-no-op:$LEAKCANARY_VERSION"
+    implementation "com.android.support:support-fragment:$ANDROID_VERSION"
+    implementation 'commons-io:commons-io:2.5'
+    implementation 'org.apache.commons:commons-lang3:3.7'
+    implementation 'commons-codec:commons-codec:1.10'
+    implementation 'com.facebook.stetho:stetho:1.5.0'
 
-    compile "com.android.support:support-fragment:$ANDROID_VERSION"
-    compile 'commons-io:commons-io:2.5'
-    compile 'org.apache.commons:commons-lang3:3.7'
-    compile 'commons-codec:commons-codec:1.10'
-    compile 'com.facebook.stetho:stetho:1.5.0'
+    debugImplementation "com.squareup.leakcanary:leakcanary-android:$LEAKCANARY_VERSION"
+    releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:$LEAKCANARY_VERSION"
+
+    testImplementation 'org.mockito:mockito-all:1.10.19'
+    testImplementation 'junit:junit:4.12'
 }

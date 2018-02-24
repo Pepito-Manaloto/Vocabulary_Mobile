@@ -6,9 +6,8 @@ import com.aaron.vocabulary.bean.Settings.FontName;
 import com.aaron.vocabulary.bean.Settings.FontStyle;
 import com.aaron.vocabulary.bean.Settings.UpdateInterval;
 import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+import com.aaron.vocabulary.fragment.listener.BackButtonListener;
 import com.aaron.vocabulary.model.LogsManager;
-
-import static com.aaron.vocabulary.bean.Vocabulary.*;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -16,7 +15,6 @@ import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,12 +25,10 @@ import android.widget.Spinner;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.lang.ref.WeakReference;
-
 /**
  * The application settings fragment.
  */
-public class SettingsFragment extends Fragment
+public class SettingsFragment extends Fragment implements Backable
 {
     public static final String CLASS_NAME = SettingsFragment.class.getSimpleName();
     public static final String EXTRA_SETTINGS = "com.aaron.vocabulary.fragment.settings";
@@ -81,7 +77,7 @@ public class SettingsFragment extends Fragment
     {
         super.onCreate(savedInstanceState);
 
-        this.settings = getArguments().getParcelable(SettingsFragment.EXTRA_SETTINGS);
+        settings = getArguments().getParcelable(SettingsFragment.EXTRA_SETTINGS);
 
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.menu_settings);
@@ -92,11 +88,11 @@ public class SettingsFragment extends Fragment
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        this.languageAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, ForeignLanguage.values());
-        this.languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        languageAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, ForeignLanguage.values());
+        languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate. settings=" + this.settings);
-        LogsManager.addToLogs(CLASS_NAME + ": onCreate. settings=" + this.settings);
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate. settings=" + settings);
+        LogsManager.addToLogs(CLASS_NAME + ": onCreate. settings=" + settings);
     }
 
     /**
@@ -105,38 +101,37 @@ public class SettingsFragment extends Fragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState)
     {
+        BackButtonListener backButtonListener = new BackButtonListener(this);
+
         View view = inflater.inflate(R.layout.fragment_settings, parent, false);
+        view.setFocusableInTouchMode(true);
+        view.requestFocus();
+        view.setOnKeyListener(backButtonListener);
 
-        this.foreignLanguageSpinner = view.findViewById(R.id.spinner_foreign_language);
-        this.foreignLanguageSpinner.setAdapter(this.languageAdapter);
+        foreignLanguageSpinner = view.findViewById(R.id.spinner_foreign_language);
+        foreignLanguageSpinner.setAdapter(languageAdapter);
+        foreignLanguageSpinner.setSelection(settings.getForeignLanguageIndex());
 
-        this.fontNameSpinner = view.findViewById(R.id.spinner_font_name);
-        this.fontStyleSpinner = view.findViewById(R.id.spinner_font_style);
-        this.fontSizeSpinner = view.findViewById(R.id.spinner_font_size);
-        this.updateIntervalSpinner = view.findViewById(R.id.spinner_update_interval);
-        this.serverURLEditText = view.findViewById(R.id.edittext_server_url);
+        fontNameSpinner = view.findViewById(R.id.spinner_font_name);
+        fontNameSpinner.setSelection(settings.getFontNameIndex());
 
-        this.foreignLanguageSpinner.setSelection(this.settings.getForeignLanguageIndex());
-        this.fontNameSpinner.setSelection(this.settings.getFontNameIndex());
-        this.fontStyleSpinner.setSelection(this.settings.getFontStyleIndex());
-        this.fontSizeSpinner.setSelection(this.settings.getFontSizeIndex());
-        this.updateIntervalSpinner.setSelection(this.settings.getUpdateIntervalIndex());
+        fontStyleSpinner = view.findViewById(R.id.spinner_font_style);
+        fontStyleSpinner.setSelection(settings.getFontStyleIndex());
 
-        String serverUrl = this.settings.getServerURL();
+        fontSizeSpinner = view.findViewById(R.id.spinner_font_size);
+        fontSizeSpinner.setSelection(settings.getFontSizeIndex());
 
+        updateIntervalSpinner = view.findViewById(R.id.spinner_update_interval);
+        updateIntervalSpinner.setSelection(settings.getUpdateIntervalIndex());
+
+        serverURLEditText = view.findViewById(R.id.edittext_server_url);
+        String serverUrl = settings.getServerURL();
         if(StringUtils.isBlank(serverUrl))
         {
             serverUrl = getActivity().getString(R.string.url_address_default);
         }
-
-        this.serverURLEditText.setText(serverUrl);
-
-        view.setFocusableInTouchMode(true);
-        view.requestFocus();
-
-        BackButtonListener backButtonListener = new BackButtonListener(this);
-        view.setOnKeyListener(backButtonListener);
-        this.serverURLEditText.setOnKeyListener(backButtonListener);
+        serverURLEditText.setText(serverUrl);
+        serverURLEditText.setOnKeyListener(backButtonListener);
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateView");
 
@@ -153,7 +148,7 @@ public class SettingsFragment extends Fragment
         {
             case android.R.id.home:
             {
-                this.setFragmentActivityResult();
+                setFragmentActivityResult();
                 return true;
             }
             default:
@@ -170,53 +165,36 @@ public class SettingsFragment extends Fragment
     {
         Intent data = new Intent();
 
-        ForeignLanguage foreignLanguage = ForeignLanguage.valueOf(this.foreignLanguageSpinner.getSelectedItem().toString());
-        FontName fontName = FontName.valueOf(this.fontNameSpinner.getSelectedItem().toString());
-        FontStyle fontStyle = FontStyle.valueOf(this.fontStyleSpinner.getSelectedItem().toString());
-        int fontSize = Integer.parseInt(this.fontSizeSpinner.getSelectedItem().toString());
-        UpdateInterval updateInterval = UpdateInterval.valueOf(this.updateIntervalSpinner.getSelectedItem().toString());
-        String serverURL = this.serverURLEditText.getText().toString();
+        updateSettingsBasedOnSelection();
 
-        this.settings.setForeignLanguage(foreignLanguage).setFontName(fontName).setFontStyle(fontStyle).setFontSize(fontSize).setUpdateInterval(updateInterval).setServerURL(serverURL);
-
-        data.putExtra(EXTRA_SETTINGS, this.settings);
+        data.putExtra(EXTRA_SETTINGS, settings);
         getActivity().setResult(Activity.RESULT_OK, data);
         getActivity().finish();
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": setFragmentActivityResult. New settings -> " + this.settings);
-        LogsManager.addToLogs(CLASS_NAME + ": setFragmentActivityResult. New settings -> " + this.settings);
+        Log.d(LogsManager.TAG, CLASS_NAME + ": setFragmentActivityResult. New settings -> " + settings);
+        LogsManager.addToLogs(CLASS_NAME + ": setFragmentActivityResult. New settings -> " + settings);
     }
 
-    private static class BackButtonListener implements View.OnKeyListener
+    private void updateSettingsBasedOnSelection()
     {
-        private WeakReference<SettingsFragment> fragmentRef;
+        ForeignLanguage foreignLanguage = ForeignLanguage.valueOf(foreignLanguageSpinner.getSelectedItem().toString());
+        FontName fontName = FontName.valueOf(fontNameSpinner.getSelectedItem().toString());
+        FontStyle fontStyle = FontStyle.valueOf(fontStyleSpinner.getSelectedItem().toString());
+        int fontSize = Integer.parseInt(fontSizeSpinner.getSelectedItem().toString());
+        UpdateInterval updateInterval = UpdateInterval.valueOf(updateIntervalSpinner.getSelectedItem().toString());
+        String serverURL = serverURLEditText.getText().toString();
 
-        BackButtonListener(final SettingsFragment fragment)
-        {
-            this.fragmentRef = new WeakReference<>(fragment);
-        }
+        settings.setForeignLanguage(foreignLanguage)
+                .setFontName(fontName)
+                .setFontStyle(fontStyle)
+                .setFontSize(fontSize)
+                .setUpdateInterval(updateInterval)
+                .setServerURL(serverURL);
+    }
 
-        /**
-         * Handles back button.
-         */
-        @Override
-        public boolean onKey(View v, int keyCode, KeyEvent event)
-        {
-            // For back button
-            if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
-            {
-                SettingsFragment fragment = this.fragmentRef.get();
-                if(fragment != null)
-                {
-                    fragment.setFragmentActivityResult();
-                }
-
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+    @Override
+    public void setActivityResultOnBackEvent()
+    {
+        setFragmentActivityResult();
     }
 }

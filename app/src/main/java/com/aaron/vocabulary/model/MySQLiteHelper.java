@@ -70,7 +70,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper
          *      (3) create new db --- IMPLEMENTED 
          *      (4) insert temp data in new db --- NOT YET
          */
-        database.execSQL("DROP IF TABLE EXISTS " + TABLE_VOCABULARY);
+        database.execSQL("DROP TABLE IF EXISTS " + TABLE_VOCABULARY);
         this.onCreate(database);
     }
 

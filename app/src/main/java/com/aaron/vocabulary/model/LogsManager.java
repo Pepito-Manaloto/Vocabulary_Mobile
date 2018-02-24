@@ -1,5 +1,7 @@
 package com.aaron.vocabulary.model;
 
+import java.util.Arrays;
+
 /**
  * Handles the application logging(different from LogCat).
  */
@@ -39,13 +41,7 @@ public class LogsManager
         String[] lines = logs.toString().split(lineSeparator);
         StringBuilder sb = new StringBuilder();
 
-        for(String line : lines)
-        {
-            if(line.contains(keyWord))
-            {
-                sb.append(line).append(lineSeparator);
-            }
-        }
+        Arrays.stream(lines).filter(line -> line.contains(keyWord)).forEach((line) -> sb.append(line).append(lineSeparator));
 
         return sb.toString();
     }

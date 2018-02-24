@@ -17,6 +17,7 @@ import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.model.LogsManager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * ListView adapter for vocabulary list.
@@ -24,6 +25,8 @@ import java.util.ArrayList;
 public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 {
     private static final String CLASS_NAME = VocabularyAdapter.class.getSimpleName();
+    private static final String ENGLISH_WORD_SEPARATOR = " / ";
+
     private ArrayList<Vocabulary> vocabularyList;
     private ArrayList<Vocabulary> vocabularyListTemp;
     private Settings settings;
@@ -90,44 +93,52 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
      */
     public void filter(final String searched, SearchType searchType)
     {
-        this.vocabularyList.clear();
+        vocabularyList.clear();
         String searchedText = searched.trim();
 
         if(searchedText.length() == 0)
         {
-            this.vocabularyList.addAll(this.vocabularyListTemp);
+            vocabularyList.addAll(this.vocabularyListTemp);
         }
         else
         {
             boolean isEnglish = SearchType.ENGLISH.equals(searchType);
-            for(Vocabulary vocab : this.vocabularyListTemp)
+            vocabularyListTemp.forEach(vocabulary ->
             {
                 if(isEnglish)
                 {
-                    String englishWord = vocab.getEnglishWord();
-                    for(String word : englishWord.split(" / "))
-                    {
-                        if(word.startsWith(searchedText))
-                        {
-                            this.vocabularyList.add(vocab);
-                        }
-                    }
+                    filterEnglish(vocabulary, searchedText);
                 }
                 else
                 {
-                    String foreignWord = vocab.getForeignWord();
-                    if(foreignWord.startsWith(searchedText))
-                    {
-                        this.vocabularyList.add(vocab);
-                    }
+                    filterForeign(vocabulary, searchedText);
                 }
-            }
+            });
         }
 
-        this.notifyDataSetChanged();
+        notifyDataSetChanged();
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": filter. New list -> " + this.vocabularyList);
-        LogsManager.addToLogs(CLASS_NAME + ": filter. New list size -> " + this.vocabularyList.size());
+        Log.d(LogsManager.TAG, CLASS_NAME + ": filter. New list = " + vocabularyList);
+        LogsManager.addToLogs(CLASS_NAME + ": filter. New list size = " + vocabularyList.size());
+    }
+
+    private void filterEnglish(Vocabulary vocabulary, String searchedText)
+    {
+        String englishWord = vocabulary.getEnglishWord();
+        boolean searchedTextFound = Arrays.stream(englishWord.split(ENGLISH_WORD_SEPARATOR)).anyMatch(word -> word.startsWith(searchedText));
+        if(searchedTextFound)
+        {
+            vocabularyList.add(vocabulary);
+        }
+    }
+
+    private void filterForeign(Vocabulary vocabulary, String searchedText)
+    {
+        String foreignWord = vocabulary.getForeignWord();
+        if(foreignWord.startsWith(searchedText))
+        {
+            this.vocabularyList.add(vocabulary);
+        }
     }
 
     /**
@@ -140,15 +151,15 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     {
         if(list != null)
         {
-            this.vocabularyList.clear();
+            vocabularyList.clear();
 
             // If user deletes vocabulary list in AboutFragment
             if(!list.isEmpty())
             {
-                this.vocabularyList.addAll(list);
+                vocabularyList.addAll(list);
             }
 
-            this.notifyDataSetChanged();
+            notifyDataSetChanged();
         }
     }
 

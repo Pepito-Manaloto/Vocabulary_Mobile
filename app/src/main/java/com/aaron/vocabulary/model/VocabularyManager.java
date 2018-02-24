@@ -20,14 +20,15 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
+import java.util.stream.Collectors;
 
 import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.english_word;
 import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.foreign_word;
@@ -43,13 +44,12 @@ public class VocabularyManager
 {
     private static final String CLASS_NAME = VocabularyManager.class.getSimpleName();
 
-    public static final String DATE_FORMAT_LONG = "MMMM d, yyyy hh:mm:ss a";
-    public static final String DATE_FORMAT_SHORT_24 = "yyyy-MM-dd HH:mm:ss";
-    private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMAT_LONG, Locale.getDefault());
+    public static final String DATE_FORMAT_DATABASE = "MMMM d, yyyy hh:mm:ss a";
+    public static final String DATE_FORMAT_WEB = "yyyy-MM-dd HH:mm:ss";
     private static final List<HttpClient.Header> HEADERS;
 
     private MySQLiteHelper dbHelper;
-    private Date curDate;
+    private LocalDateTime now;
     private HttpClient httpClient;
 
     static
@@ -66,15 +66,15 @@ public class VocabularyManager
     public VocabularyManager(Context context)
     {
         this.dbHelper = new MySQLiteHelper(context);
-        this.curDate = new Date();
+        this.now = LocalDateTime.now();
         this.httpClient = new HttpClient();
     }
 
     /**
      * Does the following logic. (1) Retrieves the vocabularies from the server. (2) Saves the vocabularies in local disk.
      *
-     * @param url
-     *            the url of the vocabulary web service
+     * @param url the url of the vocabulary web service
+     *
      * @return ResponseVocabulary
      */
     public ResponseVocabulary getVocabulariesFromWeb(String url)
@@ -84,7 +84,7 @@ public class VocabularyManager
 
         try
         {
-            String query = "?last_updated=" + URLEncoder.encode(this.getLastUpdated(DATE_FORMAT_SHORT_24), "UTF-8");
+            String query = "?last_updated=" + URLEncoder.encode(this.getLastUpdated(DATE_FORMAT_WEB), "UTF-8");
 
             Log.d(LogsManager.TAG, CLASS_NAME + ": getVocabulariesFromWeb. url=" + url + query);
             LogsManager.addToLogs(CLASS_NAME + ": getVocabulariesFromWeb. url=" + url + query);
@@ -152,8 +152,8 @@ public class VocabularyManager
     /**
      * Parse the given jsonObject and returns the recently added count.
      *
-     * @param jsonObject
-     *            the jsonObject to be parsed
+     * @param jsonObject the jsonObject to be parsed
+     *
      * @return int
      * @throws NumberFormatException
      *             the recently added count is not an integer
@@ -166,8 +166,8 @@ public class VocabularyManager
     /**
      * Parse the given jsonObject containing the list of vocabularies retrieved from the web call.
      *
-     * @param jsonObject
-     *            the jsonObject to be parsed
+     * @param jsonObject the jsonObject to be parsed
+     *
      * @return jsonObject converted into an EnumMap, wherein the key is the foreign language and values are list of vocabularies
      * @throws JSONException
      *             the vocabulary json response is not in valid json format
@@ -181,24 +181,11 @@ public class VocabularyManager
         }
 
         EnumMap<ForeignLanguage, ArrayList<Vocabulary>> map = new EnumMap<>(ForeignLanguage.class); // Map containing the parsed result
-
-        // Loop each language
         for(ForeignLanguage foreignLanguage : ForeignLanguage.values())
         {
             JSONArray jsonLangArray = jsonObject.getJSONArray(foreignLanguage.name()); // JSON array, for each language
-            JSONObject jsonLangValues; // JSON items of the array of each language
-
-            int jsonLangArrayLength = jsonLangArray.length();
-            ArrayList<Vocabulary> listTemp = new ArrayList<>(jsonLangArrayLength);
-
-            // Loop each values of the language
-            for(int i = 0; i < jsonLangArrayLength; i++)
-            {
-                jsonLangValues = jsonLangArray.getJSONObject(i);
-                listTemp.add(new Vocabulary(jsonLangValues.getString(english_word.name()), jsonLangValues.getString(foreign_word.name()), foreignLanguage));
-            }
-
-            map.put(foreignLanguage, listTemp);
+            ArrayList<Vocabulary> vocabularyList = parseVocabulariesOfForeignLanguage(foreignLanguage, jsonLangArray);
+            map.put(foreignLanguage, vocabularyList);
         }
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": parseVocabulariesFromJsonObject. map=" + map);
@@ -207,18 +194,30 @@ public class VocabularyManager
         return map;
     }
 
+    private ArrayList<Vocabulary> parseVocabulariesOfForeignLanguage(ForeignLanguage foreignLanguage, JSONArray jsonLangArray) throws JSONException
+    {
+        int jsonLangArrayLength = jsonLangArray.length();
+        ArrayList<Vocabulary> vocabularyList = new ArrayList<>(jsonLangArrayLength);
+        // Loop each values of the language
+        for(int i = 0; i < jsonLangArrayLength; i++)
+        {
+            JSONObject jsonLangValues = jsonLangArray.getJSONObject(i);
+            vocabularyList.add(new Vocabulary(jsonLangValues.getString(english_word.name()), jsonLangValues.getString(foreign_word.name()), foreignLanguage));
+        }
+
+        return vocabularyList;
+    }
+
     /**
      * Saves the given lists of vocabularies to the local database.
      *
-     * @param vocabularyLists
-     *            the recipe lists to be stored
+     * @param vocabularyLists the recipe lists to be stored
      * @return true on success, else false
      */
     public boolean saveRecipesToDisk(final Collection<ArrayList<Vocabulary>> vocabularyLists)
     {
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
-        dateFormatter.applyPattern(DATE_FORMAT_LONG);
 
         try
         {
@@ -226,20 +225,15 @@ public class VocabularyManager
             // Delete vocabularies. To ensure no duplicates, if existing vocabularies are modified in the server.
             db.delete(TABLE_VOCABULARY, null, null);
 
-            // Loop each language
-            for(ArrayList<Vocabulary> vocabularyList : vocabularyLists)
+            vocabularyLists.forEach(vocabularyList -> vocabularyList.forEach(vocabulary ->
             {
-                // Loop contents of the language
-                for(Vocabulary vocabulary : vocabularyList)
-                {
-                    values.put(Column.english_word.name(), vocabulary.getEnglishWord());
-                    values.put(Column.foreign_word.name(), vocabulary.getForeignWord());
-                    values.put(Column.foreign_language.name(), vocabulary.getForeignLanguage().name());
-                    values.put(Column.date_in.name(), dateFormatter.format(this.curDate));
+                values.put(Column.english_word.name(), vocabulary.getEnglishWord());
+                values.put(Column.foreign_word.name(), vocabulary.getForeignWord());
+                values.put(Column.foreign_language.name(), vocabulary.getForeignLanguage().name());
+                values.put(Column.date_in.name(), now.format(DateTimeFormatter.ofPattern(DATE_FORMAT_DATABASE)));
 
-                    db.insert(TABLE_VOCABULARY, null, values);
-                }
-            }
+                db.insert(TABLE_VOCABULARY, null, values);
+            }));
 
             db.setTransactionSuccessful();
         }
@@ -264,7 +258,6 @@ public class VocabularyManager
     public ArrayList<Vocabulary> getVocabulariesFromDisk(final ForeignLanguage selectedLanguage)
     {
         ArrayList<Vocabulary> list;
-
         try(SQLiteDatabase db = this.dbHelper.getReadableDatabase())
         {
             String[] columns = new String[] { Column.english_word.name(), Column.foreign_word.name(), Column.foreign_language.name() };
@@ -360,19 +353,9 @@ public class VocabularyManager
             }
         }
 
-        try
-        {
-            dateFormatter.applyPattern(DATE_FORMAT_LONG);
-            Date date = dateFormatter.parse(lastUpdatedDate); // Parse String to Date, to be able to format properly.
-
-            dateFormatter.applyPattern(format);
-            lastUpdatedDate = dateFormatter.format(date);
-        }
-        catch(ParseException e)
-        {
-            Log.e(LogsManager.TAG, CLASS_NAME + ": getLastUpdated. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
-            LogsManager.addToLogs(CLASS_NAME + ": getLastUpdated. Exception=" + e.getClass().getSimpleName() + " trace=" + e.getStackTrace());
-        }
+        // Parse String to LocalDateTime, to be able to format properly.
+        LocalDateTime date = LocalDateTime.parse(lastUpdatedDate, DateTimeFormatter.ofPattern(DATE_FORMAT_DATABASE));
+        lastUpdatedDate = DateTimeFormatter.ofPattern(format).format(date);
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": getLastUpdated. lastUpdatedDate=" + lastUpdatedDate);
         LogsManager.addToLogs(CLASS_NAME + ": getLastUpdated. lastUpdatedDate=" + lastUpdatedDate);

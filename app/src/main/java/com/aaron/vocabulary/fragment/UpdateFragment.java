@@ -27,14 +27,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * The update dialog fragment that retrieves vocabulary list from the server.
  */
+@Deprecated
 public class UpdateFragment extends DialogFragment
 {
     public static final String CLASS_NAME = UpdateFragment.class.getSimpleName();
     public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.update.list";
+    private static final AtomicBoolean isUpdating = new AtomicBoolean(false);
+
     private VocabularyManager vocabularyManager;
     private Settings settings;
     private String url;
-    private static final AtomicBoolean isUpdating = new AtomicBoolean(false);
 
     /**
      * Creates a new UpdateFragment and sets its arguments.

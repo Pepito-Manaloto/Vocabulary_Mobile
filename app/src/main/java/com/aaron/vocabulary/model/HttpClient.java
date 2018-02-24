@@ -15,6 +15,7 @@ import java.util.List;
 /**
  * The model class for making http requests.
  */
+@Deprecated
 public class HttpClient
 {
     public static final int CONNECTION_TIMEOUT = 10_000;
