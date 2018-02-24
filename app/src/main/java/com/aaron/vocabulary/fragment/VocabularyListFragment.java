@@ -67,6 +67,7 @@ public class VocabularyListFragment extends ListFragment
     private EditText searchEditText;
     private VocabularySearchListener searchListener;
     private SearchType selectedSearchType;
+    private ForeignLanguage selectedForeignLanguage = ForeignLanguage.Hokkien;
 
     /**
      * Initializes non-fragment user interface.
@@ -88,13 +89,13 @@ public class VocabularyListFragment extends ListFragment
         selectedSearchType = SearchType.ENGLISH;
         searchListener = new VocabularySearchListener(vocabularyAdapter, selectedSearchType);
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate. settings=" + settings + " list=" + list);
+        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate. settings=" + settings + " list_size=" + list.size());
         LogsManager.addToLogs(CLASS_NAME + ": onCreate. settings=" + settings + " list_size=" + list.size());
     }
 
     private void initializeSettings(Bundle savedInstanceState)
     {
-        if(savedInstanceState != null)
+        if(savedInstanceState != null && savedInstanceState.containsKey(EXTRA_SETTINGS))
         {
             settings = savedInstanceState.getParcelable(EXTRA_SETTINGS);
         }
@@ -103,11 +104,15 @@ public class VocabularyListFragment extends ListFragment
         {
             settings = new Settings();
         }
+        else
+        {
+            selectedForeignLanguage = settings.getForeignLanguage();
+        }
     }
 
     private void initializeVocabularyList(Bundle savedInstanceState)
     {
-        if(savedInstanceState != null)
+        if(savedInstanceState != null && savedInstanceState.containsKey(EXTRA_VOCABULARY_LIST))
         {
             list = savedInstanceState.getParcelableArrayList(EXTRA_VOCABULARY_LIST);
         }
@@ -125,7 +130,6 @@ public class VocabularyListFragment extends ListFragment
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState)
     {
         View view = inflater.inflate(R.layout.fragment_vocabulary_list, parent, false);
-        vocabularyAdapter.update(list);
         Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateView.");
 
         return view;
@@ -154,6 +158,7 @@ public class VocabularyListFragment extends ListFragment
 
         String language = getString(R.string.app_name, settings.getForeignLanguage().name());
         getActivity().setTitle(language);
+        vocabularyAdapter.notifyDataSetChanged();
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onResume");
     }
@@ -199,10 +204,10 @@ public class VocabularyListFragment extends ListFragment
             }
             else
             {
-                list = vocabularyManager.getVocabulariesFromDisk(settings.getForeignLanguage());
+                this.list = vocabularyManager.getVocabulariesFromDisk(settings.getForeignLanguage());
             }
 
-            vocabularyAdapter.update(list);
+            updateVocabularyAdapter();
 
             return;
         }
@@ -214,14 +219,25 @@ public class VocabularyListFragment extends ListFragment
         {
             settings = data.getParcelableExtra(EXTRA_SETTINGS);
 
-            ForeignLanguage language = ForeignLanguage.Hokkien;
             if(settings != null)
             {
-                language = settings.getForeignLanguage();
-            }
+                boolean foreignLanguageChanged = !selectedForeignLanguage.equals(settings.getForeignLanguage());
 
-            list = vocabularyManager.getVocabulariesFromDisk(language);
-            vocabularyAdapter.update(list);
+                selectedForeignLanguage = settings.getForeignLanguage();
+                list = vocabularyManager.getVocabulariesFromDisk(selectedForeignLanguage);
+
+                if(foreignLanguageChanged)
+                {
+                    // Update the list of the adapter and search
+                    vocabularyAdapter = new VocabularyAdapter(getActivity(), list, settings);
+                    setListAdapter(vocabularyAdapter);
+                    searchListener.setVocabularyAdapter(vocabularyAdapter);
+                }
+                else
+                {
+                    updateVocabularyAdapter();
+                }
+            }
         }
     }
 
@@ -244,6 +260,13 @@ public class VocabularyListFragment extends ListFragment
         searchEditText = view.findViewById(R.id.edittext_search_field);
         searchEditText.setHint(R.string.hint_vocabulary);
         searchEditText.addTextChangedListener(searchListener);
+    }
+
+    @Override
+    public void onStop()
+    {
+        super.onStop();
+        searchEditText.getText().clear();
     }
 
     /**
@@ -345,5 +368,10 @@ public class VocabularyListFragment extends ListFragment
 
             vocabularyAdapter.filter(searchText, selectedSearchType);
         }
+    }
+
+    private void updateVocabularyAdapter()
+    {
+        getActivity().runOnUiThread(() -> vocabularyAdapter.update(list));
     }
 }

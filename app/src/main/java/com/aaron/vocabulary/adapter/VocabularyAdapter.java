@@ -27,7 +27,6 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     private static final String CLASS_NAME = VocabularyAdapter.class.getSimpleName();
     private static final String ENGLISH_WORD_SEPARATOR = " / ";
 
-    private ArrayList<Vocabulary> vocabularyList;
     private ArrayList<Vocabulary> vocabularyListTemp;
     private Settings settings;
 
@@ -45,7 +44,6 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     {
         super(context, 0, vocabularyList);
 
-        this.vocabularyList = new ArrayList<>(vocabularyList);
         this.vocabularyListTemp = new ArrayList<>(vocabularyList);
         this.settings = settings;
     }
@@ -93,12 +91,12 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
      */
     public void filter(final String searched, SearchType searchType)
     {
-        vocabularyList.clear();
+        clear();
         String searchedText = searched.trim();
 
         if(searchedText.length() == 0)
         {
-            vocabularyList.addAll(this.vocabularyListTemp);
+            addAll(this.vocabularyListTemp);
         }
         else
         {
@@ -118,8 +116,8 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 
         notifyDataSetChanged();
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": filter. New list = " + vocabularyList);
-        LogsManager.addToLogs(CLASS_NAME + ": filter. New list size = " + vocabularyList.size());
+        Log.d(LogsManager.TAG, CLASS_NAME + ": filter. New list size = " + getCount());
+        LogsManager.addToLogs(CLASS_NAME + ": filter. New list size = " + getCount());
     }
 
     private void filterEnglish(Vocabulary vocabulary, String searchedText)
@@ -128,7 +126,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
         boolean searchedTextFound = Arrays.stream(englishWord.split(ENGLISH_WORD_SEPARATOR)).anyMatch(word -> word.startsWith(searchedText));
         if(searchedTextFound)
         {
-            vocabularyList.add(vocabulary);
+            add(vocabulary);
         }
     }
 
@@ -137,7 +135,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
         String foreignWord = vocabulary.getForeignWord();
         if(foreignWord.startsWith(searchedText))
         {
-            this.vocabularyList.add(vocabulary);
+            add(vocabulary);
         }
     }
 
@@ -151,12 +149,12 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     {
         if(list != null)
         {
-            vocabularyList.clear();
+            clear();
 
             // If user deletes vocabulary list in AboutFragment
             if(!list.isEmpty())
             {
-                vocabularyList.addAll(list);
+                addAll(list);
             }
 
             notifyDataSetChanged();

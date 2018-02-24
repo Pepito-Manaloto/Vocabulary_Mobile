@@ -30,6 +30,8 @@ import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
 public class LogsFragment extends Fragment implements Backable
 {
     public static final String CLASS_NAME = LogsFragment.class.getSimpleName();
+
+    private EditText searchEditText;
     private TextView textarea;
     private LogsManager logsManager;
     private Settings settings;
@@ -109,12 +111,21 @@ public class LogsFragment extends Fragment implements Backable
 
         // Get the action view of the menu item whose id is edittext_search_field
         View view = menu.findItem(R.id.menu_search).getActionView();
+        initializeSearchEditText(view);
+    }
 
-        // Get the edit text from the action view
-        final EditText searchTextfield = view.findViewById(R.id.edittext_search_field);
-        searchTextfield.setHint(R.string.hint_logs);
+    private void initializeSearchEditText(View view)
+    {
+        searchEditText = view.findViewById(R.id.edittext_search_field);
+        searchEditText.setHint(R.string.hint_logs);
+        searchEditText.addTextChangedListener(new LogsSearchListener(this, this.logsManager));
+    }
 
-        searchTextfield.addTextChangedListener(new LogsSearchListener(this, this.logsManager));
+    @Override
+    public void onStop()
+    {
+        super.onStop();
+        searchEditText.getText().clear();
     }
 
     /**

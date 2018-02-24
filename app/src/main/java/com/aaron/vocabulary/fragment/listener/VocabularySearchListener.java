@@ -52,4 +52,9 @@ public class VocabularySearchListener implements TextWatcher
     {
         this.searchType = searchType;
     }
+
+    public void setVocabularyAdapter(VocabularyAdapter vocabularyAdapter)
+    {
+        this.adapter = vocabularyAdapter;
+    }
 }
