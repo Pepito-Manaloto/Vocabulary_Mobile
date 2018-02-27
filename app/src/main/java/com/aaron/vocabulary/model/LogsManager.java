@@ -1,5 +1,7 @@
 package com.aaron.vocabulary.model;
 
+import android.util.Log;
+
 import java.util.Arrays;
 
 /**
@@ -12,12 +14,26 @@ public class LogsManager
 
     /**
      * Adds the given message to the string builder logs.
+     * Logs to Logcat.
      *
      * @param text the message to add
      */
-    public static void addToLogs(final String text)
+    public static void log(final String className, final String methodName, final String text)
     {
         logs.append(text).append("\n");
+        Log.d(LogsManager.TAG, className + ": " + methodName + ". " + text);
+    }
+
+    /**
+     * Adds the given message to the string builder logs.
+     * Logs error to Logcat.
+     *
+     * @param text the message to add
+     */
+    public static void log(final String className, final String methodName, final String text, final Throwable t)
+    {
+        logs.append(text).append("\nError: ").append(t.getMessage()).append("\n");
+        Log.e(LogsManager.TAG, className + ": " + methodName + ". " + text, t);
     }
 
     /**

@@ -2,7 +2,6 @@ package com.aaron.vocabulary.adapter;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -116,8 +115,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 
         notifyDataSetChanged();
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": filter. New list size = " + getCount());
-        LogsManager.addToLogs(CLASS_NAME + ": filter. New list size = " + getCount());
+        LogsManager.log(CLASS_NAME, "filter", "New list size = " + getCount());
     }
 
     private void filterEnglish(Vocabulary vocabulary, String searchedText)

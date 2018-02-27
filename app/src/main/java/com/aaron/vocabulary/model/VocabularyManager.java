@@ -50,7 +50,7 @@ public class VocabularyManager
      * @param vocabularyLists the recipe lists to be stored
      * @return true on success, else false
      */
-    public boolean saveRecipesToDisk(final Collection<ArrayList<Vocabulary>> vocabularyLists)
+    public boolean saveRecipesToDisk(final EnumMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap)
     {
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -61,11 +61,11 @@ public class VocabularyManager
             // Delete vocabularies. To ensure no duplicates, if existing vocabularies are modified in the server.
             db.delete(TABLE_VOCABULARY, null, null);
 
-            vocabularyLists.forEach(vocabularyList -> vocabularyList.forEach(vocabulary ->
+            vocabularyMap.forEach((language, vocabularyList) -> vocabularyList.forEach(vocabulary ->
             {
                 values.put(Column.english_word.name(), vocabulary.getEnglishWord());
                 values.put(Column.foreign_word.name(), vocabulary.getForeignWord());
-                values.put(Column.foreign_language.name(), vocabulary.getForeignLanguage().name());
+                values.put(Column.foreign_language.name(), language.getLanguage());
                 values.put(Column.date_in.name(), now.format(DateTimeFormatter.ofPattern(DATE_FORMAT_DATABASE)));
 
                 db.insert(TABLE_VOCABULARY, null, values);
@@ -80,8 +80,7 @@ public class VocabularyManager
             this.dbHelper.close();
         }
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": saveToDisk.");
-        LogsManager.addToLogs(CLASS_NAME + ": saveToDisk.");
+        LogsManager.log(CLASS_NAME, "saveToDisk", "");
 
         return true;
     }
@@ -114,8 +113,7 @@ public class VocabularyManager
             }
         }
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": getVocabulariesFromDisk. list=" + list);
-        LogsManager.addToLogs(CLASS_NAME + ": getVocabulariesFromDisk. list_size=" + list.size());
+        LogsManager.log(CLASS_NAME, "getVocabulariesFromDisk", "list_size=" + list.size());
 
         return list;
     }
@@ -158,8 +156,7 @@ public class VocabularyManager
             }
         }
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": getVocabulariesCount. keys=" + map.keySet() + " values=" + map.values());
-        LogsManager.addToLogs(CLASS_NAME + ": getVocabulariesCount. keys=" + map.keySet() + " values_size=" + map.values().size());
+        LogsManager.log(CLASS_NAME, "getVocabulariesCount", "keys=" + map.keySet() + " values_size=" + map.values().size());
 
         return map;
     }
@@ -195,8 +192,7 @@ public class VocabularyManager
         LocalDateTime date = LocalDateTime.parse(lastUpdatedDate, DateTimeFormatter.ofPattern(DATE_FORMAT_DATABASE));
         lastUpdatedDate = DateTimeFormatter.ofPattern(format).format(date);
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": getLastUpdated. lastUpdatedDate=" + lastUpdatedDate);
-        LogsManager.addToLogs(CLASS_NAME + ": getLastUpdated. lastUpdatedDate=" + lastUpdatedDate);
+        LogsManager.log(CLASS_NAME, "getLastUpdated", "lastUpdatedDate=" + lastUpdatedDate);
 
         return lastUpdatedDate;
     }

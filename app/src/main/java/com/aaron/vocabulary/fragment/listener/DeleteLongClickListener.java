@@ -2,7 +2,6 @@ package com.aaron.vocabulary.fragment.listener;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.util.Log;
 import android.view.View;
 
 import com.aaron.vocabulary.fragment.AboutFragment;
@@ -41,8 +40,7 @@ public class DeleteLongClickListener implements View.OnLongClickListener
     @Override
     public boolean onLongClick(View view)
     {
-        Log.d(LogsManager.TAG, AboutFragment.CLASS_NAME + ": promptUserOnDelete.");
-        LogsManager.addToLogs(AboutFragment.CLASS_NAME + ": promptUserOnDelete.");
+        LogsManager.log(AboutFragment.CLASS_NAME, "onLongClick", "Delete vocabularies attempted.");
 
         final AboutFragment fragment = this.fragmentRef.get();
 
@@ -77,7 +75,6 @@ public class DeleteLongClickListener implements View.OnLongClickListener
 
     private void logDialogAction(String action)
     {
-        Log.d(LogsManager.TAG, AboutFragment.CLASS_NAME + ": promptUserOnDelete. " + action + " selected.");
-        LogsManager.addToLogs(AboutFragment.CLASS_NAME + ": promptUserOnDelete.  " + action + "  selected.");
+        LogsManager.log(AboutFragment.CLASS_NAME, "promptUserOnDelete", action + "  selected.");
     }
 }

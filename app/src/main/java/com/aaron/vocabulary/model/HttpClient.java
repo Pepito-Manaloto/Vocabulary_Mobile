@@ -29,14 +29,11 @@ public class HttpClient
     private static final int DEFAUT_TIMEOUT = 10_000;
     private static final String AUTHORIZATION = "Authorization";
     private static OkHttpClient okHttpClient;
-    private static Retrofit retrofit;
-
     private static VocabularyService service;
 
     public HttpClient(String hostname)
     {
         initializeRetrofit(hostname);
-        service = retrofit.create(VocabularyService.class);
     }
 
     private void initializeRetrofit(String hostname)
@@ -58,7 +55,7 @@ public class HttpClient
     public static void reinitializeRetrofit(String hostname)
     {
         String baseUrl = String.format(VocabularyService.BASE_URL, hostname);
-        retrofit = new Retrofit.Builder()
+        Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .client(okHttpClient).addConverterFactory(JacksonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())

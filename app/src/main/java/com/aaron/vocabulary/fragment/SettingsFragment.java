@@ -91,8 +91,7 @@ public class SettingsFragment extends Fragment implements Backable
         languageAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, ForeignLanguage.values());
         languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate. settings=" + settings);
-        LogsManager.addToLogs(CLASS_NAME + ": onCreate. settings=" + settings);
+        LogsManager.log(CLASS_NAME, "onCreate", "settings = " + settings);
     }
 
     /**
@@ -171,8 +170,7 @@ public class SettingsFragment extends Fragment implements Backable
         getActivity().setResult(Activity.RESULT_OK, data);
         getActivity().finish();
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": setFragmentActivityResult. New settings -> " + settings);
-        LogsManager.addToLogs(CLASS_NAME + ": setFragmentActivityResult. New settings -> " + settings);
+        LogsManager.log(CLASS_NAME, "setFragmentActivityResult", "New settings = " + settings);
     }
 
     private void updateSettingsBasedOnSelection()

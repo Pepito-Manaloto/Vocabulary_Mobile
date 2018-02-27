@@ -100,8 +100,7 @@ public class VocabularyListFragment extends ListFragment
         selectedSearchType = SearchType.ENGLISH;
         searchListener = new VocabularySearchListener(vocabularyAdapter, selectedSearchType);
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate. settings=" + settings + " list_size=" + list.size());
-        LogsManager.addToLogs(CLASS_NAME + ": onCreate. settings=" + settings + " list_size=" + list.size());
+        LogsManager.log(CLASS_NAME, "onCreate", "settings=" + settings + " list_size=" + list.size());
     }
 
     private void initializeSettings(Bundle savedInstanceState)
@@ -194,13 +193,14 @@ public class VocabularyListFragment extends ListFragment
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data)
     {
+        IS_UPDATING.set(false);
+
         if(resultCode != Activity.RESULT_OK)
         {
             return;
         }
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
-        LogsManager.addToLogs(CLASS_NAME + ": onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
+        LogsManager.log(CLASS_NAME, "onActivityResult", "requestCode=" + requestCode + " resultCode=" + resultCode);
 
         boolean requestResultFromSettingsOrAboutOrLogs = requestCode == MenuRequest.SETTINGS.getCode() || requestCode == MenuRequest.ABOUT.getCode()
                 || requestCode == MenuRequest.LOGS.getCode();
@@ -293,7 +293,6 @@ public class VocabularyListFragment extends ListFragment
                     IS_UPDATING.set(true);
 
                     httpClient.getVocabularies(vocabularyManager.getLastUpdated(DATE_FORMAT_WEB))
-                            .map(this::setForeignLanguageOnEachVocabularies)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .doAfterTerminate(() -> IS_UPDATING.set(false))
@@ -334,16 +333,6 @@ public class VocabularyListFragment extends ListFragment
         }
     }
 
-    private ResponseVocabulary setForeignLanguageOnEachVocabularies(ResponseVocabulary responseVocabulary)
-    {
-        responseVocabulary.getVocabularyMap().forEach((language, list) ->
-        {
-            list.forEach(vocabulary -> vocabulary.setForeignLanguage(language));
-        });
-
-        return responseVocabulary;
-    }
-
     private DisposableSingleObserver<ResponseVocabulary> updateVocabulariesFromWebObserver()
     {
         return new DisposableSingleObserver<ResponseVocabulary>()
@@ -359,7 +348,7 @@ public class VocabularyListFragment extends ListFragment
                 }
                 else
                 {
-                    boolean saveToDiskSuccess = vocabularyManager.saveRecipesToDisk(map.values());
+                    boolean saveToDiskSuccess = vocabularyManager.saveRecipesToDisk(map);
                     if(saveToDiskSuccess)
                     {
                         int newCount = response.getRecentlyAddedCount();
@@ -431,8 +420,7 @@ public class VocabularyListFragment extends ListFragment
     {
         if(searchText.length() > 0)
         {
-            Log.d(LogsManager.TAG, CLASS_NAME + ": applyVocabularyFilter. searchText=" + searchText + " selectedSearchType=" + selectedSearchType);
-            LogsManager.addToLogs(CLASS_NAME + ": applyVocabularyFilter. searchText=" + searchText + " selectedSearchType=" + selectedSearchType);
+            LogsManager.log(CLASS_NAME, "applyVocabularyFilter", "searchText=" + searchText + " selectedSearchType=" + selectedSearchType);
 
             vocabularyAdapter.filter(searchText, selectedSearchType);
         }

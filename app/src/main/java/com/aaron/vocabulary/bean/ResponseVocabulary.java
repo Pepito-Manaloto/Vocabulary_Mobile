@@ -10,6 +10,7 @@ import java.util.EnumMap;
  */
 public class ResponseVocabulary
 {
+    // Each Vocabulary's foreignLanguage is not set upon Web API request, and is determined by Map's key upon database insert.
     private EnumMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap;
     private int recentlyAddedCount;
 
