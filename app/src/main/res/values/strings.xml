@@ -13,11 +13,6 @@
     <string name="menu_about">About</string>
     <string name="menu_logs">Logs</string>
 
-    <!-- DIALOG LABELS -->
-    <string name="dialog_update_title">Updating</string>
-    <string name="dialog_update_message">Retrieving data from server&#8230;</string> <!-- &#8230; is the unicode html_entity of "..." -->
-    <string name="dialog_already_updating_message">Already retrieving data from server&#8230;</string> <!-- &#8230; is the unicode html_entity of "..." -->
-
     <!-- TEXT VIEW LABELS -->
     <string name="text_foreign_language">Foreign Language:</string>
     <string name="text_font">Font:</string>
@@ -30,13 +25,15 @@
     <string name="text_english">English</string>
     <string name="text_foreign">Foreign</string>
 
+    <!-- Toast -->
+    <string name="toast_already_updating">Already retrieving data from server</string>
+
     <!-- HINTS -->
     <string name="hint_vocabulary">Search Vocabulary</string>
     <string name="hint_logs">Search Logs</string>
 
     <!-- URL -->
     <string name="url_address_default">192.168.0.101</string>
-    <string name="url_resource">/Vocabulary/get</string>
 
     <!-- COMBO BOX ITEMS -->
     <string-array name="font_name_arrays">

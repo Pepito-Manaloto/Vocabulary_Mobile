@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Settings;
-import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+import com.aaron.vocabulary.bean.ForeignLanguage;
 import com.aaron.vocabulary.fragment.listener.BackButtonListener;
 import com.aaron.vocabulary.fragment.listener.DeleteLongClickListener;
 import com.aaron.vocabulary.model.LogsManager;

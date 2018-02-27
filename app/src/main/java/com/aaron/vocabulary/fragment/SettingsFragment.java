@@ -5,7 +5,7 @@ import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Settings.FontName;
 import com.aaron.vocabulary.bean.Settings.FontStyle;
 import com.aaron.vocabulary.bean.Settings.UpdateInterval;
-import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+import com.aaron.vocabulary.bean.ForeignLanguage;
 import com.aaron.vocabulary.fragment.listener.BackButtonListener;
 import com.aaron.vocabulary.model.LogsManager;
 

@@ -6,33 +6,15 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
-import com.aaron.vocabulary.bean.ResponseVocabulary;
+import com.aaron.vocabulary.bean.ForeignLanguage;
 import com.aaron.vocabulary.bean.Vocabulary;
-import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.stream.Collectors;
 
-import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.english_word;
-import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.foreign_word;
-import static com.aaron.vocabulary.bean.Vocabulary.JsonKey.recently_added_count;
 import static com.aaron.vocabulary.model.MySQLiteHelper.COLUMN_COUNT;
 import static com.aaron.vocabulary.model.MySQLiteHelper.Column;
 import static com.aaron.vocabulary.model.MySQLiteHelper.TABLE_VOCABULARY;
@@ -46,17 +28,9 @@ public class VocabularyManager
 
     public static final String DATE_FORMAT_DATABASE = "MMMM d, yyyy hh:mm:ss a";
     public static final String DATE_FORMAT_WEB = "yyyy-MM-dd HH:mm:ss";
-    private static final List<HttpClient.Header> HEADERS;
 
     private MySQLiteHelper dbHelper;
     private LocalDateTime now;
-    private HttpClient httpClient;
-
-    static
-    {
-        HEADERS = new ArrayList<>(0);
-        HEADERS.add(new HttpClient.Header("Authorization", new String(Hex.encodeHex(DigestUtils.md5("aaron")))));
-    }
 
     /**
      * Default constructor
@@ -67,145 +41,7 @@ public class VocabularyManager
     {
         this.dbHelper = new MySQLiteHelper(context);
         this.now = LocalDateTime.now();
-        this.httpClient = new HttpClient();
-    }
 
-    /**
-     * Does the following logic. (1) Retrieves the vocabularies from the server. (2) Saves the vocabularies in local disk.
-     *
-     * @param url the url of the vocabulary web service
-     *
-     * @return ResponseVocabulary
-     */
-    public ResponseVocabulary getVocabulariesFromWeb(String url)
-    {
-        ResponseVocabulary response = new ResponseVocabulary();
-        Exception ex = null;
-
-        try
-        {
-            String query = "?last_updated=" + URLEncoder.encode(this.getLastUpdated(DATE_FORMAT_WEB), "UTF-8");
-
-            Log.d(LogsManager.TAG, CLASS_NAME + ": getVocabulariesFromWeb. url=" + url + query);
-            LogsManager.addToLogs(CLASS_NAME + ": getVocabulariesFromWeb. url=" + url + query);
-
-            response = this.httpClient.get(url, query, HEADERS);
-
-            if(response.getStatusCode() == HttpURLConnection.HTTP_OK)
-            {
-                if(StringUtils.isBlank(response.getBody())) // Response body empty
-                {
-                    return response;
-                }
-
-                JSONObject jsonObject = new JSONObject(response.getBody()); // Response body in JSON object
-
-                int recentlyAddedCount = this.parseRecentlyAddedCountFromJsonObject(jsonObject);
-                response.setRecentlyAddedCount(recentlyAddedCount);
-                if(recentlyAddedCount <= 0) // No need to save to disk, because there are no new data entries.
-                {
-                    return response;
-                }
-
-                response.setVocabularyMap(this.parseVocabulariesFromJsonObject(jsonObject));
-                response.setText("Success");
-                return response;
-            }
-        }
-        catch(final IOException | JSONException e)
-        {
-            response.setStatusCode(HttpURLConnection.HTTP_INTERNAL_ERROR);
-            response.setText(e.getMessage());
-            ex = e;
-        }
-        catch(final NumberFormatException e)
-        {
-            response.setStatusCode(HttpURLConnection.HTTP_INTERNAL_ERROR);
-            response.setText("Error parsing json response: recently_added_count is not a number.");
-            ex = e;
-        }
-        catch(final IllegalArgumentException e)
-        {
-            response.setStatusCode(HttpURLConnection.HTTP_INTERNAL_ERROR);
-            response.setText(url + " is not a valid host name.");
-            ex = e;
-        }
-        finally
-        {
-            if(ex == null)
-            {
-                Log.d(LogsManager.TAG, CLASS_NAME + ": getVocabulariesFromWeb. responseText=" + response.getText() +
-                        " responseCode=" + response.getStatusCode());
-                LogsManager.addToLogs(CLASS_NAME + ": getVocabulariesFromWeb. responseText=" + response.getText() +
-                        " responseCode=" + response.getStatusCode());
-            }
-            else
-            {
-                Log.e(LogsManager.TAG, CLASS_NAME + ": getVocabulariesFromWeb. " + ex.getClass().getSimpleName() + ": " + ex.getMessage(), ex);
-                LogsManager.addToLogs(CLASS_NAME + ": getVocabulariesFromWeb. Exception=" + ex.getClass().getSimpleName() + " trace=" + ex.getStackTrace());
-            }
-        }
-
-        return response;
-    }
-
-    /**
-     * Parse the given jsonObject and returns the recently added count.
-     *
-     * @param jsonObject the jsonObject to be parsed
-     *
-     * @return int
-     * @throws NumberFormatException
-     *             the recently added count is not an integer
-     */
-    private int parseRecentlyAddedCountFromJsonObject(final JSONObject jsonObject) throws NumberFormatException
-    {
-        return Integer.parseInt(String.valueOf(jsonObject.remove(recently_added_count.name())));
-    }
-
-    /**
-     * Parse the given jsonObject containing the list of vocabularies retrieved from the web call.
-     *
-     * @param jsonObject the jsonObject to be parsed
-     *
-     * @return jsonObject converted into an EnumMap, wherein the key is the foreign language and values are list of vocabularies
-     * @throws JSONException
-     *             the vocabulary json response is not in valid json format
-     */
-    private EnumMap<ForeignLanguage, ArrayList<Vocabulary>> parseVocabulariesFromJsonObject(final JSONObject jsonObject) throws JSONException
-    {
-        // Ensure the json string only contains recipes
-        if(jsonObject.has(recently_added_count.name()))
-        {
-            jsonObject.remove(recently_added_count.name());
-        }
-
-        EnumMap<ForeignLanguage, ArrayList<Vocabulary>> map = new EnumMap<>(ForeignLanguage.class); // Map containing the parsed result
-        for(ForeignLanguage foreignLanguage : ForeignLanguage.values())
-        {
-            JSONArray jsonLangArray = jsonObject.getJSONArray(foreignLanguage.name()); // JSON array, for each language
-            ArrayList<Vocabulary> vocabularyList = parseVocabulariesOfForeignLanguage(foreignLanguage, jsonLangArray);
-            map.put(foreignLanguage, vocabularyList);
-        }
-
-        Log.d(LogsManager.TAG, CLASS_NAME + ": parseVocabulariesFromJsonObject. map=" + map);
-        LogsManager.addToLogs(CLASS_NAME + ": parseVocabulariesFromJsonObject. json_length=" + jsonObject.length());
-
-        return map;
-    }
-
-    private ArrayList<Vocabulary> parseVocabulariesOfForeignLanguage(ForeignLanguage foreignLanguage, JSONArray jsonLangArray) throws JSONException
-    {
-        int jsonLangArrayLength = jsonLangArray.length();
-        ArrayList<Vocabulary> vocabularyList = new ArrayList<>(jsonLangArrayLength);
-        // Loop each values of the language
-        for(int i = 0; i < jsonLangArrayLength; i++)
-        {
-            JSONObject jsonLangValues = jsonLangArray.getJSONObject(i);
-            vocabularyList.add(new Vocabulary(jsonLangValues.getString(english_word.name()), jsonLangValues.getString(foreign_word.name()), foreignLanguage));
-        }
-
-        return vocabularyList;
     }
 
     /**
@@ -251,7 +87,9 @@ public class VocabularyManager
     }
 
     /**
-     * Does the following logic. (1) Retrieves the vocabularies from the local disk. (2) Returns the vocabulary list of the selected language.
+     * Does the following logic:
+     * (1) Retrieves the vocabularies from the local disk.
+     * (2) Returns the vocabulary list of the selected language.
      *
      * @return ArrayList<Vocabulary>
      */

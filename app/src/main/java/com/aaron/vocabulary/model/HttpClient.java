@@ -1,183 +1,90 @@
 package com.aaron.vocabulary.model;
 
+import android.util.Log;
+
 import com.aaron.vocabulary.bean.ResponseVocabulary;
 
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.Single;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /**
  * The model class for making http requests.
  */
-@Deprecated
 public class HttpClient
 {
-    public static final int CONNECTION_TIMEOUT = 10_000;
-    public static final int READ_TIMEOUT = 10_000;
+    private static final String CLASS_NAME = HttpClient.class.getSimpleName();
+
+    private static final int DEFAUT_TIMEOUT = 10_000;
+    private static final String AUTHORIZATION = "Authorization";
+    private static OkHttpClient okHttpClient;
+    private static Retrofit retrofit;
+
+    private static VocabularyService service;
+
+    public HttpClient(String hostname)
+    {
+        initializeRetrofit(hostname);
+        service = retrofit.create(VocabularyService.class);
+    }
+
+    private void initializeRetrofit(String hostname)
+    {
+        okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(DEFAUT_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(DEFAUT_TIMEOUT, TimeUnit.SECONDS)
+                .writeTimeout(DEFAUT_TIMEOUT, TimeUnit.SECONDS)
+                .pingInterval(DEFAUT_TIMEOUT, TimeUnit.SECONDS)
+                .addInterceptor(this::authorizationHeaderInterceptor)
+                .build();
+
+        reinitializeRetrofit(hostname);
+    }
 
     /**
-     * Performs a GET request.
+     * Sets the retrofit http client.
+     */
+    public static void reinitializeRetrofit(String hostname)
+    {
+        String baseUrl = String.format(VocabularyService.BASE_URL, hostname);
+        retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(okHttpClient).addConverterFactory(JacksonConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .build();
+        service = retrofit.create(VocabularyService.class);
+
+        Log.d(LogsManager.TAG, CLASS_NAME + ": reinitializeRetrofit. new BaseUrl=" + baseUrl);
+    }
+
+    private Response authorizationHeaderInterceptor(Interceptor.Chain chain) throws IOException
+    {
+        Request request = chain.request().newBuilder()
+                .addHeader(AUTHORIZATION, new String(Hex.encodeHex(DigestUtils.md5("aaron"))))
+                .build();
+
+        return chain.proceed(request);
+    }
+
+    /**
+     * Get all vocabularies that are greater than or equal with the given last updated.
      *
-     * @param url the url to make http request
+     * @param lastUpdated the last updated filter
      * @return ResponseVocabulary
      */
-    public ResponseVocabulary get(String url) throws IOException
+    public Single<ResponseVocabulary> getVocabularies(String lastUpdated)
     {
-        return this.get(url, null, null);
-    }
-
-    /**
-     * Performs a GET request with query.
-     *
-     * @param url the url to make http request
-     * @param query the query parameters
-     * @return ResponseVocabulary
-     */
-    public ResponseVocabulary get(String url, String query) throws IOException
-    {
-        return this.get(url, query, null);
-    }
-
-    /**
-     * Performs a GET request with specific headers.
-     *
-     * @param url the url to make http request
-     * @param headers the request headers
-     * @return ResponseVocabulary
-     */
-    public ResponseVocabulary get(String url, List<Header> headers) throws IOException
-    {
-        return this.get(url, null, headers);
-    }
-
-    /**
-     * Performs a GET request with query and specific headers.
-     *
-     * @param url the url to make http request
-     * @param query the query parameters
-     * @param headers the request headers
-     * @return ResponseVocabulary
-     */
-    public ResponseVocabulary get(String url, String query, List<Header> headers) throws IOException
-    {
-        String urlStr = url;
-        if(StringUtils.isNotBlank(query))
-        {
-            urlStr += query;
-        }
-        HttpURLConnection con = null;
-
-        URL getURL = new URL(urlStr);
-        ResponseVocabulary response = new ResponseVocabulary(HttpURLConnection.HTTP_INTERNAL_ERROR);
-
-        try
-        {
-            con = (HttpURLConnection) getURL.openConnection();
-            con.setConnectTimeout(CONNECTION_TIMEOUT);
-            con.setReadTimeout(READ_TIMEOUT);
-
-            if(headers != null)
-            {
-                for(Header header : headers)
-                {
-                    con.addRequestProperty(header.getField(), header.getValue());
-                }
-            }
-
-            response.setStatusCode(con.getResponseCode());
-            response.setBody(getResponseVocabularyBodyFromStream(con.getInputStream()));
-            response.setText(getStatusText(response.getStatusCode()));
-        }
-        finally
-        {
-            if(con != null)
-            {
-                con.disconnect();
-            }
-        }
-
-        return response;
-    }
-
-    /**
-     * Converts the inputStream to String.
-     *
-     * @param inputStream HttpURLConnection response
-     * @return String
-     */
-    private String getResponseVocabularyBodyFromStream(final InputStream inputStream) throws IOException
-    {
-        String response = IOUtils.toString(inputStream, Charsets.UTF_8);
-        IOUtils.closeQuietly(inputStream);
-
-        return response;
-    }
-
-    /**
-     * Returns the string representation of the status code returned by the last web call. Internal Server Error is returned if the class does not have a
-     * previous web call.
-     *
-     * @return String
-     */
-    private String getStatusText(int statusCode)
-    {
-        switch(statusCode)
-        {
-            case 200:
-                return "Ok";
-            case 400:
-                return "Bad Request";
-            case 401:
-                return "Unauthorized Access";
-            case 500:
-                return "Internal Server Error";
-            default:
-                return "Status Code Unknown: " + statusCode;
-        }
-    }
-
-    /**
-     * Helper class that represents an http header.
-     */
-    public static class Header
-    {
-        private String field;
-        private String value;
-
-        public Header()
-        {
-        }
-
-        public Header(String field, String value)
-        {
-            this.field = field;
-            this.value = value;
-        }
-
-        public void setField(String field)
-        {
-            this.field = field;
-        }
-
-        public String getField()
-        {
-            return this.field;
-        }
-
-        public String getValue()
-        {
-            return this.value;
-        }
-
-        public void setValue(String value)
-        {
-            this.value = value;
-        }
+        return service.getAllVocabularies(lastUpdated);
     }
 }

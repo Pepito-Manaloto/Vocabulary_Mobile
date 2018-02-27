@@ -3,30 +3,20 @@ package com.aaron.vocabulary.bean;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Java bean for a vocabulary.
  */
 public class Vocabulary implements Parcelable
 {
-    /**
-     * Enum for the list of available foreign languages.
-     */
-    public enum ForeignLanguage
-    {
-        Hokkien, Japanese, Mandarin,
-    }
+    private String englishWord;
+    private String foreignWord;
+    private ForeignLanguage foreignLanguage;
 
-    /**
-     * Enum for the json key.
-     */
-    public enum JsonKey
+    public Vocabulary()
     {
-        english_word, foreign_word, recently_added_count,
     }
-
-    private final String englishWord;
-    private final String foreignWord;
-    private final ForeignLanguage foreignLanguage;
 
     /**
      * Constructor with three arguments.
@@ -43,14 +33,31 @@ public class Vocabulary implements Parcelable
         return this.englishWord;
     }
 
+    @JsonProperty("english_word")
+    public void setEnglishWord(String englishWord)
+    {
+        this.englishWord = englishWord;
+    }
+
     public String getForeignWord()
     {
         return this.foreignWord;
     }
 
+    @JsonProperty("foreign_word")
+    public void setForeignWord(String foreignWord)
+    {
+        this.foreignWord = foreignWord;
+    }
+
     public ForeignLanguage getForeignLanguage()
     {
         return this.foreignLanguage;
+    }
+
+    public void setForeignLanguage(ForeignLanguage foreignLanguage)
+    {
+        this.foreignLanguage = foreignLanguage;
     }
 
     /**

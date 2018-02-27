@@ -1,7 +1,6 @@
 package com.aaron.vocabulary.fragment;
 
 import android.app.Activity;
-import android.app.FragmentManager;
 import android.app.ListFragment;
 import android.content.Intent;
 import android.os.Bundle;
@@ -20,18 +19,27 @@ import com.aaron.vocabulary.activity.AboutActivity;
 import com.aaron.vocabulary.activity.LogsActivity;
 import com.aaron.vocabulary.activity.SettingsActivity;
 import com.aaron.vocabulary.adapter.VocabularyAdapter;
+import com.aaron.vocabulary.bean.ForeignLanguage;
+import com.aaron.vocabulary.bean.ResponseVocabulary;
 import com.aaron.vocabulary.bean.SearchType;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
-import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
 import com.aaron.vocabulary.fragment.listener.ShowHideFastScrollListener;
 import com.aaron.vocabulary.fragment.listener.VocabularySearchListener;
+import com.aaron.vocabulary.model.HttpClient;
 import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.observers.DisposableSingleObserver;
+import io.reactivex.schedulers.Schedulers;
 
 import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
+import static com.aaron.vocabulary.model.VocabularyManager.DATE_FORMAT_WEB;
 
 /**
  * Main view fragment containing the vocabulary list with main menu bar.
@@ -40,7 +48,7 @@ public class VocabularyListFragment extends ListFragment
 {
     private enum MenuRequest
     {
-        UPDATE(0), SETTINGS(1), ABOUT(2), LOGS(3);
+        SETTINGS(0), ABOUT(1), LOGS(2);
 
         private int code;
 
@@ -57,17 +65,19 @@ public class VocabularyListFragment extends ListFragment
 
     public static final String CLASS_NAME = VocabularyListFragment.class.getSimpleName();
     public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.vocabulary_list.list";
-    private static final String DIALOG_UPDATE = "update";
+    private static final AtomicBoolean IS_UPDATING = new AtomicBoolean(false);
 
     private ArrayList<Vocabulary> list;
     private VocabularyAdapter vocabularyAdapter;
 
     private Settings settings;
-    private VocabularyManager vocabularyManager;
     private EditText searchEditText;
     private VocabularySearchListener searchListener;
     private SearchType selectedSearchType;
     private ForeignLanguage selectedForeignLanguage = ForeignLanguage.Hokkien;
+
+    private VocabularyManager vocabularyManager;
+    private HttpClient httpClient;
 
     /**
      * Initializes non-fragment user interface.
@@ -78,6 +88,7 @@ public class VocabularyListFragment extends ListFragment
         super.onCreate(savedInstanceState);
 
         vocabularyManager = new VocabularyManager(getActivity().getApplicationContext());
+        httpClient = new HttpClient(getString(R.string.url_address_default));
 
         initializeSettings(savedInstanceState);
         initializeVocabularyList(savedInstanceState);
@@ -191,27 +202,6 @@ public class VocabularyListFragment extends ListFragment
         Log.d(LogsManager.TAG, CLASS_NAME + ": onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
         LogsManager.addToLogs(CLASS_NAME + ": onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
 
-        boolean requestResultFromUpdate = requestCode == MenuRequest.UPDATE.getCode();
-        boolean hasExtraVocabularyListData = data != null && data.hasExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
-        if(requestResultFromUpdate && hasExtraVocabularyListData)
-        {
-            ArrayList<Vocabulary> list = data.getParcelableArrayListExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
-
-            // Handles occasional NullPointerException.
-            if(list != null && !list.isEmpty())
-            {
-                this.list = list;
-            }
-            else
-            {
-                this.list = vocabularyManager.getVocabulariesFromDisk(settings.getForeignLanguage());
-            }
-
-            updateVocabularyAdapter();
-
-            return;
-        }
-
         boolean requestResultFromSettingsOrAboutOrLogs = requestCode == MenuRequest.SETTINGS.getCode() || requestCode == MenuRequest.ABOUT.getCode()
                 || requestCode == MenuRequest.LOGS.getCode();
         boolean hasExtraSettingsData = data != null && data.hasExtra(EXTRA_SETTINGS);
@@ -228,16 +218,30 @@ public class VocabularyListFragment extends ListFragment
 
                 if(foreignLanguageChanged)
                 {
-                    // Update the list of the adapter and search
-                    vocabularyAdapter = new VocabularyAdapter(getActivity(), list, settings);
-                    setListAdapter(vocabularyAdapter);
-                    searchListener.setVocabularyAdapter(vocabularyAdapter);
+                    reinitializeAdapterAndSearchListener();
                 }
                 else
                 {
                     updateVocabularyAdapter();
                 }
+
+                updateRetrofitBaseUrl(requestCode);
             }
+        }
+    }
+
+    private void reinitializeAdapterAndSearchListener()
+    {
+        vocabularyAdapter = new VocabularyAdapter(getActivity(), list, settings);
+        setListAdapter(vocabularyAdapter);
+        searchListener.setVocabularyAdapter(vocabularyAdapter);
+    }
+
+    private void updateRetrofitBaseUrl(int requestCode)
+    {
+        if(requestCode == MenuRequest.SETTINGS.getCode())
+        {
+            HttpClient.reinitializeRetrofit(settings.getServerURL());
         }
     }
 
@@ -275,8 +279,6 @@ public class VocabularyListFragment extends ListFragment
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        FragmentManager fm = getActivity().getFragmentManager();
-
         switch(item.getItemId())
         {
             case R.id.menu_search:
@@ -285,16 +287,21 @@ public class VocabularyListFragment extends ListFragment
             }
             case R.id.menu_update:
             {
-                UpdateFragment updateDialog = UpdateFragment.newInstance(settings);
-
-                if(updateDialog.isUpdating())
+                if(!IS_UPDATING.get())
                 {
-                    Toast.makeText(getActivity(), getActivity().getString(R.string.dialog_already_updating_message), Toast.LENGTH_LONG).show();
+                    Log.d(LogsManager.TAG, CLASS_NAME + ": onOptionsItemSelected. Updating vocabularies.");
+                    IS_UPDATING.set(true);
+
+                    httpClient.getVocabularies(vocabularyManager.getLastUpdated(DATE_FORMAT_WEB))
+                            .map(this::setForeignLanguageOnEachVocabularies)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .doAfterTerminate(() -> IS_UPDATING.set(false))
+                            .subscribeWith(updateVocabulariesFromWebObserver());
                 }
                 else
                 {
-                    updateDialog.setTargetFragment(this, MenuRequest.UPDATE.getCode());
-                    updateDialog.show(fm, DIALOG_UPDATE);
+                    Toast.makeText(getContext(), getString(R.string.toast_already_updating), Toast.LENGTH_SHORT).show();
                 }
 
                 return true;
@@ -325,6 +332,67 @@ public class VocabularyListFragment extends ListFragment
                 return super.onOptionsItemSelected(item);
             }
         }
+    }
+
+    private ResponseVocabulary setForeignLanguageOnEachVocabularies(ResponseVocabulary responseVocabulary)
+    {
+        responseVocabulary.getVocabularyMap().forEach((language, list) ->
+        {
+            list.forEach(vocabulary -> vocabulary.setForeignLanguage(language));
+        });
+
+        return responseVocabulary;
+    }
+
+    private DisposableSingleObserver<ResponseVocabulary> updateVocabulariesFromWebObserver()
+    {
+        return new DisposableSingleObserver<ResponseVocabulary>()
+        {
+            @Override
+            public void onSuccess(ResponseVocabulary response)
+            {
+                String message;
+                EnumMap<ForeignLanguage, ArrayList<Vocabulary>> map = response.getVocabularyMap();
+                if(map == null || map.isEmpty())
+                {
+                    message = "No new vocabularies available.";
+                }
+                else
+                {
+                    boolean saveToDiskSuccess = vocabularyManager.saveRecipesToDisk(map.values());
+                    if(saveToDiskSuccess)
+                    {
+                        int newCount = response.getRecentlyAddedCount();
+                        if(newCount > 1)
+                        {
+                            message = newCount + " new vocabularies added.";
+                        }
+                        else
+                        {
+                            message = newCount + " new vocabulary added.";
+                        }
+
+                        list = vocabularyManager.getVocabulariesFromMap(map, settings.getForeignLanguage());
+                    }
+                    else
+                    {
+                        message = "Failed saving to disk.";
+                    }
+                }
+
+                updateVocabularyAdapter();
+
+                Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onError(Throwable e)
+            {
+                Toast.makeText(getContext(), "Error updating vocabularies: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                Log.d(LogsManager.TAG, CLASS_NAME + ": onError. Error updating vocabularies. " + e.getMessage());
+            }
+        };
+
     }
 
     private void startActivityWithExtraSettings(Class<? extends Activity> activityToStart, MenuRequest menuRequestOrigin)
