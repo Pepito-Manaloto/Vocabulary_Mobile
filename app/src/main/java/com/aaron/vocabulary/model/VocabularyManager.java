@@ -9,10 +9,10 @@ import android.util.Log;
 import com.aaron.vocabulary.bean.ForeignLanguage;
 import com.aaron.vocabulary.bean.Vocabulary;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import org.threeten.bp.LocalDateTime;
+import org.threeten.bp.format.DateTimeFormatter;
+
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumMap;
 
 import static com.aaron.vocabulary.model.MySQLiteHelper.COLUMN_COUNT;
@@ -47,7 +47,7 @@ public class VocabularyManager
     /**
      * Saves the given lists of vocabularies to the local database.
      *
-     * @param vocabularyLists the recipe lists to be stored
+     * @param vocabularyMap the vocabularies to be stored
      * @return true on success, else false
      */
     public boolean saveRecipesToDisk(final EnumMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap)
