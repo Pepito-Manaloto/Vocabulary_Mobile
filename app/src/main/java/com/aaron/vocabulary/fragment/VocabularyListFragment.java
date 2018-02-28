@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.aaron.vocabulary.R;
@@ -72,6 +73,7 @@ public class VocabularyListFragment extends ListFragment
 
     private Settings settings;
     private EditText searchEditText;
+    private ProgressBar updateProgressBar;
     private VocabularySearchListener searchListener;
     private SearchType selectedSearchType;
     private ForeignLanguage selectedForeignLanguage = ForeignLanguage.Hokkien;
@@ -140,6 +142,9 @@ public class VocabularyListFragment extends ListFragment
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState)
     {
         View view = inflater.inflate(R.layout.fragment_vocabulary_list, parent, false);
+
+        updateProgressBar = view.findViewById(R.id.progress_bar_update);
+
         Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateView.");
 
         return view;
@@ -193,7 +198,7 @@ public class VocabularyListFragment extends ListFragment
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data)
     {
-        IS_UPDATING.set(false);
+        doneUpdating(); // Ensures this flag is set to false upon Activity transition while updating.
 
         if(resultCode != Activity.RESULT_OK)
         {
@@ -222,7 +227,7 @@ public class VocabularyListFragment extends ListFragment
                 }
                 else
                 {
-                    updateVocabularyAdapter();
+                    updateVocabularyAdapterInUiThread();
                 }
 
                 updateRetrofitBaseUrl(requestCode);
@@ -271,6 +276,7 @@ public class VocabularyListFragment extends ListFragment
     {
         super.onStop();
         searchEditText.getText().clear();
+        doneUpdating();
     }
 
     /**
@@ -290,12 +296,12 @@ public class VocabularyListFragment extends ListFragment
                 if(!IS_UPDATING.get())
                 {
                     Log.d(LogsManager.TAG, CLASS_NAME + ": onOptionsItemSelected. Updating vocabularies.");
-                    IS_UPDATING.set(true);
+                    preUpdating();
 
                     httpClient.getVocabularies(vocabularyManager.getLastUpdated(DATE_FORMAT_WEB))
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
-                            .doAfterTerminate(() -> IS_UPDATING.set(false))
+                            .doAfterTerminate(this::doneUpdating)
                             .subscribeWith(updateVocabulariesFromWebObserver());
                 }
                 else
@@ -331,6 +337,18 @@ public class VocabularyListFragment extends ListFragment
                 return super.onOptionsItemSelected(item);
             }
         }
+    }
+
+    private void preUpdating()
+    {
+        IS_UPDATING.set(true);
+        updateProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void doneUpdating()
+    {
+        IS_UPDATING.set(false);
+        updateProgressBar.setVisibility(View.INVISIBLE);
     }
 
     private DisposableSingleObserver<ResponseVocabulary> updateVocabulariesFromWebObserver()
@@ -369,7 +387,7 @@ public class VocabularyListFragment extends ListFragment
                     }
                 }
 
-                updateVocabularyAdapter();
+                updateVocabularyAdapterInUiThread();
 
                 Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
             }
@@ -426,7 +444,7 @@ public class VocabularyListFragment extends ListFragment
         }
     }
 
-    private void updateVocabularyAdapter()
+    private void updateVocabularyAdapterInUiThread()
     {
         getActivity().runOnUiThread(() -> vocabularyAdapter.update(list));
     }

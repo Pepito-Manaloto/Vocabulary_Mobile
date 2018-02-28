@@ -26,7 +26,7 @@ public class HttpClient
 {
     private static final String CLASS_NAME = HttpClient.class.getSimpleName();
 
-    private static final int DEFAUT_TIMEOUT = 10_000;
+    private static final int DEFAUT_TIMEOUT = 10;
     private static final String AUTHORIZATION = "Authorization";
     private static OkHttpClient okHttpClient;
     private static VocabularyService service;
