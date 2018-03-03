@@ -113,8 +113,6 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
             });
         }
 
-        notifyDataSetChanged();
-
         LogsManager.log(CLASS_NAME, "filter", "New list size = " + getCount());
     }
 
@@ -147,15 +145,18 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     {
         if(list != null)
         {
+            // Store this new list into temp, because the list parameter shares the same reference as the Adapter's list.
+            // Thus, calling clear() will clear out both the adapter's list and the new list.
+            ArrayList<Vocabulary> tmpList = new ArrayList<>(list);
             clear();
 
             // If user deletes vocabulary list in AboutFragment
-            if(!list.isEmpty())
+            if(!tmpList.isEmpty())
             {
-                addAll(list);
+                addAll(tmpList);
+                vocabularyListTemp.clear();
+                vocabularyListTemp.addAll(tmpList);
             }
-
-            notifyDataSetChanged();
         }
     }
 

@@ -173,7 +173,6 @@ public class VocabularyListFragment extends ListFragment
 
         String language = getString(R.string.app_name, settings.getForeignLanguage().name());
         getActivity().setTitle(language);
-        vocabularyAdapter.notifyDataSetChanged();
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onResume");
     }
