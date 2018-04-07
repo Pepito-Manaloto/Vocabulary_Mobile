@@ -28,6 +28,8 @@ public class HttpClient
 
     private static final int DEFAUT_TIMEOUT = 10;
     private static final String AUTHORIZATION = "Authorization";
+    private static final String AUTHORIZATION_VALUE = new String(Hex.encodeHex(DigestUtils.md5("aaron")));
+
     private static OkHttpClient okHttpClient;
     private static VocabularyService service;
 
@@ -68,7 +70,7 @@ public class HttpClient
     private Response authorizationHeaderInterceptor(Interceptor.Chain chain) throws IOException
     {
         Request request = chain.request().newBuilder()
-                .addHeader(AUTHORIZATION, new String(Hex.encodeHex(DigestUtils.md5("aaron"))))
+                .addHeader(AUTHORIZATION, AUTHORIZATION_VALUE)
                 .build();
 
         return chain.proceed(request);

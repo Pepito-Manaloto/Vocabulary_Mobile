@@ -4,7 +4,6 @@ def ANDROID_VERSION = "27.0.2"
 
 android {
     compileSdkVersion 27
-    buildToolsVersion "$ANDROID_VERSION"
 
     defaultConfig {
         applicationId "com.aaron.vocabulary"
@@ -63,7 +62,7 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.1.1'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
 
-    compile 'com.jakewharton.threetenabp:threetenabp:1.0.5'
+    implementation 'com.jakewharton.threetenabp:threetenabp:1.0.5'
 
     implementation 'com.facebook.stetho:stetho:1.5.0'
     debugImplementation "com.squareup.leakcanary:leakcanary-android:$LEAKCANARY_VERSION"

@@ -34,8 +34,11 @@ import com.aaron.vocabulary.model.VocabularyManager;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
@@ -66,6 +69,7 @@ public class VocabularyListFragment extends ListFragment
 
     public static final String CLASS_NAME = VocabularyListFragment.class.getSimpleName();
     public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.vocabulary_list.list";
+    private static final Pattern IP_ADDRESS_PATTERN = Pattern.compile("(\\d{1,3}\\.){3}\\d{1,3}");
     private static final AtomicBoolean IS_UPDATING = new AtomicBoolean(false);
 
     private ArrayList<Vocabulary> list;
@@ -80,6 +84,7 @@ public class VocabularyListFragment extends ListFragment
 
     private VocabularyManager vocabularyManager;
     private HttpClient httpClient;
+    private CompositeDisposable compositeDisposable;
 
     /**
      * Initializes non-fragment user interface.
@@ -91,6 +96,7 @@ public class VocabularyListFragment extends ListFragment
 
         vocabularyManager = new VocabularyManager(getActivity().getApplicationContext());
         httpClient = new HttpClient(getString(R.string.url_address_default));
+        compositeDisposable = new CompositeDisposable();
 
         initializeSettings(savedInstanceState);
         initializeVocabularyList(savedInstanceState);
@@ -243,10 +249,15 @@ public class VocabularyListFragment extends ListFragment
 
     private void updateRetrofitBaseUrl(int requestCode)
     {
-        if(requestCode == MenuRequest.SETTINGS.getCode())
+        if(requestCode == MenuRequest.SETTINGS.getCode() && isValidURL(settings.getServerURL()))
         {
             HttpClient.reinitializeRetrofit(settings.getServerURL());
         }
+    }
+
+    private boolean isValidURL(String newBaseUrl)
+    {
+        return IP_ADDRESS_PATTERN.matcher(newBaseUrl).matches();
     }
 
     /**
@@ -274,7 +285,14 @@ public class VocabularyListFragment extends ListFragment
     public void onStop()
     {
         super.onStop();
+
         searchEditText.getText().clear();
+
+        if(!this.compositeDisposable.isDisposed())
+        {
+            this.compositeDisposable.dispose();
+        }
+
         doneUpdating();
     }
 
@@ -297,11 +315,13 @@ public class VocabularyListFragment extends ListFragment
                     Log.d(LogsManager.TAG, CLASS_NAME + ": onOptionsItemSelected. Updating vocabularies.");
                     preUpdating();
 
-                    httpClient.getVocabularies(vocabularyManager.getLastUpdated(DATE_FORMAT_WEB))
+                    Disposable disposable = httpClient.getVocabularies(vocabularyManager.getLastUpdated(DATE_FORMAT_WEB))
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
-                            .doAfterTerminate(this::doneUpdating)
+                            .doFinally(this::doneUpdating)
                             .subscribeWith(updateVocabulariesFromWebObserver());
+
+                    compositeDisposable.add(disposable);
                 }
                 else
                 {
@@ -398,7 +418,6 @@ public class VocabularyListFragment extends ListFragment
                 Log.d(LogsManager.TAG, CLASS_NAME + ": onError. Error updating vocabularies. " + e.getMessage());
             }
         };
-
     }
 
     private void startActivityWithExtraSettings(Class<? extends Activity> activityToStart, MenuRequest menuRequestOrigin)

@@ -1,5 +1,7 @@
 package com.aaron.vocabulary.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
@@ -8,6 +10,8 @@ import java.util.EnumMap;
 /**
  * Bean that represents the http response from Vocabulary request.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ResponseVocabulary
 {
     // Each Vocabulary's foreignLanguage is not set upon Web API request, and is determined by Map's key upon database insert.
