@@ -25,13 +25,14 @@ import android.widget.Spinner;
 
 import org.apache.commons.lang3.StringUtils;
 
+import static com.aaron.vocabulary.bean.DataKey.EXTRA_SETTINGS;
+
 /**
  * The application settings fragment.
  */
 public class SettingsFragment extends Fragment implements Backable
 {
     public static final String CLASS_NAME = SettingsFragment.class.getSimpleName();
-    public static final String EXTRA_SETTINGS = "com.aaron.vocabulary.fragment.settings";
     private Settings settings;
 
     private ArrayAdapter<ForeignLanguage> languageAdapter;
@@ -50,7 +51,7 @@ public class SettingsFragment extends Fragment implements Backable
     public static SettingsFragment newInstance(SettingsFragment fragment, final Settings settings)
     {
         Bundle args = new Bundle();
-        args.putParcelable(EXTRA_SETTINGS, settings);
+        args.putParcelable(EXTRA_SETTINGS.toString(), settings);
 
         SettingsFragment settingsFragment;
         if(fragment != null)
@@ -77,7 +78,7 @@ public class SettingsFragment extends Fragment implements Backable
     {
         super.onCreate(savedInstanceState);
 
-        settings = getArguments().getParcelable(SettingsFragment.EXTRA_SETTINGS);
+        settings = getArguments().getParcelable(EXTRA_SETTINGS.toString());
 
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.menu_settings);
@@ -166,7 +167,7 @@ public class SettingsFragment extends Fragment implements Backable
 
         updateSettingsBasedOnSelection();
 
-        data.putExtra(EXTRA_SETTINGS, settings);
+        data.putExtra(EXTRA_SETTINGS.toString(), settings);
         getActivity().setResult(Activity.RESULT_OK, data);
         getActivity().finish();
 

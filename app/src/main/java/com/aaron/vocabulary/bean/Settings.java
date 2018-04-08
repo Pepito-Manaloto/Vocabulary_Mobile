@@ -4,8 +4,6 @@ import android.graphics.Typeface;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.aaron.vocabulary.bean.ForeignLanguage;
-
 /**
  * Java bean for the application settings.
  */

@@ -26,7 +26,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
-import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
+import static com.aaron.vocabulary.bean.DataKey.EXTRA_SETTINGS;
 import static com.aaron.vocabulary.model.VocabularyManager.DATE_FORMAT_DATABASE;
 
 /**
@@ -52,7 +52,7 @@ public class AboutFragment extends Fragment implements Backable
     {
         super.onCreate(savedInstanceState);
 
-        this.settings = getActivity().getIntent().getParcelableExtra(EXTRA_SETTINGS);
+        this.settings = getActivity().getIntent().getParcelableExtra(EXTRA_SETTINGS.toString());
 
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.menu_about);
@@ -164,7 +164,7 @@ public class AboutFragment extends Fragment implements Backable
     {
         Intent data = new Intent();
 
-        data.putExtra(EXTRA_SETTINGS, this.settings);
+        data.putExtra(EXTRA_SETTINGS.toString(), this.settings);
         getActivity().setResult(Activity.RESULT_OK, data);
         getActivity().finish();
 

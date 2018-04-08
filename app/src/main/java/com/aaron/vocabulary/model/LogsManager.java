@@ -57,7 +57,7 @@ public class LogsManager
         String[] lines = logs.toString().split(lineSeparator);
         StringBuilder sb = new StringBuilder();
 
-        Arrays.stream(lines).filter(line -> line.contains(keyWord)).forEach((line) -> sb.append(line).append(lineSeparator));
+        Arrays.stream(lines).filter(line -> line.contains(keyWord)).forEach(line -> sb.append(line).append(lineSeparator));
 
         return sb.toString();
     }

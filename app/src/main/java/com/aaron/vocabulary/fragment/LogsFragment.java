@@ -22,7 +22,7 @@ import com.aaron.vocabulary.fragment.listener.BackButtonListener;
 import com.aaron.vocabulary.fragment.listener.LogsSearchListener;
 import com.aaron.vocabulary.model.LogsManager;
 
-import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
+import static com.aaron.vocabulary.bean.DataKey.EXTRA_SETTINGS;
 
 /**
  * The application logs fragment.
@@ -44,7 +44,7 @@ public class LogsFragment extends Fragment implements Backable
     {
         super.onCreate(savedInstanceState);
 
-        this.settings = getActivity().getIntent().getParcelableExtra(EXTRA_SETTINGS);
+        this.settings = getActivity().getIntent().getParcelableExtra(EXTRA_SETTINGS.toString());
 
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.menu_logs);
@@ -135,7 +135,7 @@ public class LogsFragment extends Fragment implements Backable
     {
         Intent data = new Intent();
 
-        data.putExtra(EXTRA_SETTINGS, this.settings);
+        data.putExtra(EXTRA_SETTINGS.toString(), this.settings);
         getActivity().setResult(Activity.RESULT_OK, data);
         getActivity().finish();
 

@@ -42,7 +42,8 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
-import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
+import static com.aaron.vocabulary.bean.DataKey.EXTRA_SETTINGS;
+import static com.aaron.vocabulary.bean.DataKey.EXTRA_VOCABULARY_LIST;
 import static com.aaron.vocabulary.model.VocabularyManager.DATE_FORMAT_WEB;
 
 /**
@@ -68,7 +69,6 @@ public class VocabularyListFragment extends ListFragment
     }
 
     public static final String CLASS_NAME = VocabularyListFragment.class.getSimpleName();
-    public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.vocabulary_list.list";
     private static final Pattern IP_ADDRESS_PATTERN = Pattern.compile("(\\d{1,3}\\.){3}\\d{1,3}");
     private static final AtomicBoolean IS_UPDATING = new AtomicBoolean(false);
 
@@ -113,9 +113,9 @@ public class VocabularyListFragment extends ListFragment
 
     private void initializeSettings(Bundle savedInstanceState)
     {
-        if(savedInstanceState != null && savedInstanceState.containsKey(EXTRA_SETTINGS))
+        if(savedInstanceState != null && savedInstanceState.containsKey(EXTRA_SETTINGS.toString()))
         {
-            settings = savedInstanceState.getParcelable(EXTRA_SETTINGS);
+            settings = savedInstanceState.getParcelable(EXTRA_SETTINGS.toString());
         }
 
         if(settings == null)
@@ -130,9 +130,9 @@ public class VocabularyListFragment extends ListFragment
 
     private void initializeVocabularyList(Bundle savedInstanceState)
     {
-        if(savedInstanceState != null && savedInstanceState.containsKey(EXTRA_VOCABULARY_LIST))
+        if(savedInstanceState != null && savedInstanceState.containsKey(EXTRA_VOCABULARY_LIST.toString()))
         {
-            list = savedInstanceState.getParcelableArrayList(EXTRA_VOCABULARY_LIST);
+            list = savedInstanceState.getParcelableArrayList(EXTRA_VOCABULARY_LIST.toString());
         }
 
         if(list == null)
@@ -191,8 +191,8 @@ public class VocabularyListFragment extends ListFragment
     {
         super.onSaveInstanceState(outState);
 
-        outState.putParcelable(EXTRA_SETTINGS, settings);
-        outState.putParcelableArrayList(EXTRA_VOCABULARY_LIST, list);
+        outState.putParcelable(EXTRA_SETTINGS.toString(), settings);
+        outState.putParcelableArrayList(EXTRA_VOCABULARY_LIST.toString(), list);
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onSaveInstanceState");
     }
@@ -214,10 +214,10 @@ public class VocabularyListFragment extends ListFragment
 
         boolean requestResultFromSettingsOrAboutOrLogs = requestCode == MenuRequest.SETTINGS.getCode() || requestCode == MenuRequest.ABOUT.getCode()
                 || requestCode == MenuRequest.LOGS.getCode();
-        boolean hasExtraSettingsData = data != null && data.hasExtra(EXTRA_SETTINGS);
+        boolean hasExtraSettingsData = data != null && data.hasExtra(EXTRA_SETTINGS.toString());
         if(requestResultFromSettingsOrAboutOrLogs && hasExtraSettingsData)
         {
-            settings = data.getParcelableExtra(EXTRA_SETTINGS);
+            settings = data.getParcelableExtra(EXTRA_SETTINGS.toString());
 
             if(settings != null)
             {
@@ -423,7 +423,7 @@ public class VocabularyListFragment extends ListFragment
     private void startActivityWithExtraSettings(Class<? extends Activity> activityToStart, MenuRequest menuRequestOrigin)
     {
         Intent intent = new Intent(getActivity(), activityToStart);
-        intent.putExtra(EXTRA_SETTINGS, settings);
+        intent.putExtra(EXTRA_SETTINGS.toString(), settings);
         startActivityForResult(intent, menuRequestOrigin.getCode());
     }
 

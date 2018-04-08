@@ -53,7 +53,7 @@ public class VocabularyManager
     public boolean saveRecipesToDisk(final EnumMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap)
     {
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
-        ContentValues values = new ContentValues();
+
 
         try
         {
@@ -61,15 +61,7 @@ public class VocabularyManager
             // Delete vocabularies. To ensure no duplicates, if existing vocabularies are modified in the server.
             db.delete(TABLE_VOCABULARY, null, null);
 
-            vocabularyMap.forEach((language, vocabularyList) -> vocabularyList.forEach(vocabulary ->
-            {
-                values.put(Column.english_word.name(), vocabulary.getEnglishWord());
-                values.put(Column.foreign_word.name(), vocabulary.getForeignWord());
-                values.put(Column.foreign_language.name(), language.getLanguage());
-                values.put(Column.date_in.name(), now.format(DateTimeFormatter.ofPattern(DATE_FORMAT_DATABASE)));
-
-                db.insert(TABLE_VOCABULARY, null, values);
-            }));
+            vocabularyMap.forEach((language, vocabularyList) -> insertVocabularyListPerCategoryToDatabase(language, vocabularyList, db));
 
             db.setTransactionSuccessful();
         }
@@ -83,6 +75,22 @@ public class VocabularyManager
         LogsManager.log(CLASS_NAME, "saveToDisk", "");
 
         return true;
+    }
+
+    private void insertVocabularyListPerCategoryToDatabase(ForeignLanguage language, ArrayList<Vocabulary> vocabularyList, SQLiteDatabase db)
+    {
+        vocabularyList.forEach(vocabulary -> insertVocabularyToDatabase(language, vocabulary, db));
+    }
+
+    private void insertVocabularyToDatabase(ForeignLanguage language, Vocabulary vocabulary, SQLiteDatabase db)
+    {
+        ContentValues values = new ContentValues();
+        values.put(Column.english_word.name(), vocabulary.getEnglishWord());
+        values.put(Column.foreign_word.name(), vocabulary.getForeignWord());
+        values.put(Column.foreign_language.name(), language.getLanguage());
+        values.put(Column.date_in.name(), now.format(DateTimeFormatter.ofPattern(DATE_FORMAT_DATABASE)));
+
+        db.insert(TABLE_VOCABULARY, null, values);
     }
 
     /**
