@@ -131,7 +131,6 @@ public class SettingsFragment extends Fragment implements Backable
             serverUrl = getActivity().getString(R.string.url_address_default);
         }
         serverURLEditText.setText(serverUrl);
-        serverURLEditText.setOnKeyListener(backButtonListener);
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateView");
 

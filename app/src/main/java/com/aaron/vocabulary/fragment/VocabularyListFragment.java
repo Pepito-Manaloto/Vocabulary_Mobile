@@ -286,11 +286,15 @@ public class VocabularyListFragment extends ListFragment
     {
         super.onStop();
 
-        searchEditText.getText().clear();
-
-        if(!this.compositeDisposable.isDisposed())
+        if(searchEditText != null)
         {
-            this.compositeDisposable.dispose();
+            searchEditText.getText().clear();
+        }
+
+        if(!compositeDisposable.isDisposed())
+        {
+            // Calling dispose() breaks retrofit2, which does nothing on succeeding calls. Why?
+            compositeDisposable.clear();
         }
 
         doneUpdating();
@@ -368,6 +372,8 @@ public class VocabularyListFragment extends ListFragment
     {
         IS_UPDATING.set(false);
         updateProgressBar.setVisibility(View.INVISIBLE);
+
+        Log.d(LogsManager.TAG, CLASS_NAME + ": doneUpdating.");
     }
 
     private DisposableSingleObserver<ResponseVocabulary> updateVocabulariesFromWebObserver()
@@ -386,6 +392,7 @@ public class VocabularyListFragment extends ListFragment
                 else
                 {
                     boolean saveToDiskSuccess = vocabularyManager.saveRecipesToDisk(map);
+
                     if(saveToDiskSuccess)
                     {
                         int newCount = response.getRecentlyAddedCount();

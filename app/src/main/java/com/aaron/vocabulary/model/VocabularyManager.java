@@ -54,7 +54,6 @@ public class VocabularyManager
     {
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
 
-
         try
         {
             db.beginTransaction();
@@ -150,20 +149,22 @@ public class VocabularyManager
     public EnumMap<ForeignLanguage, Integer> getVocabulariesCount()
     {
         EnumMap<ForeignLanguage, Integer> map = new EnumMap<>(ForeignLanguage.class);
-        SQLiteDatabase db = this.dbHelper.getReadableDatabase();
-        String whereClause = "foreign_language = ?";
 
-        for(ForeignLanguage language : ForeignLanguage.values())
+        try(SQLiteDatabase db = this.dbHelper.getReadableDatabase())
         {
-            try(Cursor cursor = db.query(TABLE_VOCABULARY, COLUMN_COUNT, whereClause, new String[] { language.name() }, null, null, null))
+            String whereClause = "foreign_language = ?";
+
+            for(ForeignLanguage language : ForeignLanguage.values())
             {
-                if(cursor.moveToFirst())
+                try(Cursor cursor = db.query(TABLE_VOCABULARY, COLUMN_COUNT, whereClause, new String[] { language.name() }, null, null, null))
                 {
-                    map.put(language, cursor.getInt(0));
+                    if(cursor.moveToFirst())
+                    {
+                        map.put(language, cursor.getInt(0));
+                    }
                 }
             }
         }
-
         LogsManager.log(CLASS_NAME, "getVocabulariesCount", "keys=" + map.keySet() + " values_size=" + map.values().size());
 
         return map;
@@ -179,23 +180,25 @@ public class VocabularyManager
     public String getLastUpdated(final String format)
     {
         String lastUpdatedDate = "1950-01-01 00:00:00";
-        SQLiteDatabase db = this.dbHelper.getReadableDatabase();
-        String[] columns = new String[] { Column.date_in.name(), };
-        String orderBy = "date_in DESC";
-        String limit = "1";
-
-        try(Cursor cursor = db.query(TABLE_VOCABULARY, columns, null, null, null, null, orderBy, limit))
+        try(SQLiteDatabase db = this.dbHelper.getReadableDatabase())
         {
-            if(cursor.moveToFirst())
+            String[] columns = new String[] { Column.date_in.name(), };
+            String orderBy = "date_in DESC";
+            String limit = "1";
+
+            try(Cursor cursor = db.query(TABLE_VOCABULARY, columns, null, null, null, null, orderBy, limit))
             {
-                lastUpdatedDate = cursor.getString(0);
-            }
-            else
-            {
-                return lastUpdatedDate;
+                if(cursor.moveToFirst())
+                {
+                    lastUpdatedDate = cursor.getString(0);
+                }
+                else
+                {
+                    LogsManager.log(CLASS_NAME, "getLastUpdated", "lastUpdatedDate=" + lastUpdatedDate);
+                    return lastUpdatedDate;
+                }
             }
         }
-
         // Parse String to LocalDateTime, to be able to format properly.
         LocalDateTime date = LocalDateTime.parse(lastUpdatedDate, DateTimeFormatter.ofPattern(DATE_FORMAT_DATABASE));
         lastUpdatedDate = DateTimeFormatter.ofPattern(format).format(date);
