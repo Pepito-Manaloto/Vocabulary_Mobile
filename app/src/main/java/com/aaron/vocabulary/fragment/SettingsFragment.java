@@ -26,6 +26,7 @@ import android.widget.Spinner;
 import org.apache.commons.lang3.StringUtils;
 
 import static com.aaron.vocabulary.bean.DataKey.EXTRA_SETTINGS;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * The application settings fragment.
@@ -126,7 +127,7 @@ public class SettingsFragment extends Fragment implements Backable
 
         serverURLEditText = view.findViewById(R.id.edittext_server_url);
         String serverUrl = settings.getServerURL();
-        if(StringUtils.isBlank(serverUrl))
+        if(isBlank(serverUrl))
         {
             serverUrl = getActivity().getString(R.string.url_address_default);
         }

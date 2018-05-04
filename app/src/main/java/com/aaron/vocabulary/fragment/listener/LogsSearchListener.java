@@ -9,6 +9,8 @@ import com.aaron.vocabulary.model.LogsManager;
 
 import java.lang.ref.WeakReference;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 public class LogsSearchListener implements TextWatcher
 {
     private WeakReference<LogsFragment> fragmentRef;
@@ -30,7 +32,7 @@ public class LogsSearchListener implements TextWatcher
 
         LogsFragment fragment = this.fragmentRef.get();
 
-        if(searched.length() <= 0)
+        if(isBlank(searched))
         {
             fragment.setTextAreaText(this.logsManager.getLogs());
         }

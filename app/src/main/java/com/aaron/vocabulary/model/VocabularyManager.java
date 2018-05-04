@@ -14,6 +14,7 @@ import org.threeten.bp.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.Map;
 
 import static com.aaron.vocabulary.model.MySQLiteHelper.COLUMN_COUNT;
 import static com.aaron.vocabulary.model.MySQLiteHelper.Column;
@@ -60,7 +61,13 @@ public class VocabularyManager
             // Delete vocabularies. To ensure no duplicates, if existing vocabularies are modified in the server.
             db.delete(TABLE_VOCABULARY, null, null);
 
-            vocabularyMap.forEach((language, vocabularyList) -> insertVocabularyListPerCategoryToDatabase(language, vocabularyList, db));
+            for(Map.Entry<ForeignLanguage, ArrayList<Vocabulary>> entry : vocabularyMap.entrySet())
+            {
+                ForeignLanguage language = entry.getKey();
+                ArrayList<Vocabulary> vocabularyList = entry.getValue();
+
+                insertVocabularyListPerCategoryToDatabase(language, vocabularyList, db);
+            }
 
             db.setTransactionSuccessful();
         }
@@ -78,7 +85,10 @@ public class VocabularyManager
 
     private void insertVocabularyListPerCategoryToDatabase(ForeignLanguage language, ArrayList<Vocabulary> vocabularyList, SQLiteDatabase db)
     {
-        vocabularyList.forEach(vocabulary -> insertVocabularyToDatabase(language, vocabulary, db));
+        for(Vocabulary vocabulary : vocabularyList)
+        {
+            insertVocabularyToDatabase(language, vocabulary, db);
+        }
     }
 
     private void insertVocabularyToDatabase(ForeignLanguage language, Vocabulary vocabulary, SQLiteDatabase db)

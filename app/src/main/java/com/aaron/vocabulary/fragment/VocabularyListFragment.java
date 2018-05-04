@@ -45,6 +45,7 @@ import io.reactivex.schedulers.Schedulers;
 import static com.aaron.vocabulary.bean.DataKey.EXTRA_SETTINGS;
 import static com.aaron.vocabulary.bean.DataKey.EXTRA_VOCABULARY_LIST;
 import static com.aaron.vocabulary.model.VocabularyManager.DATE_FORMAT_WEB;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * Main view fragment containing the vocabulary list with main menu bar.
@@ -372,8 +373,6 @@ public class VocabularyListFragment extends ListFragment
     {
         IS_UPDATING.set(false);
         updateProgressBar.setVisibility(View.INVISIBLE);
-
-        Log.d(LogsManager.TAG, CLASS_NAME + ": doneUpdating.");
     }
 
     private DisposableSingleObserver<ResponseVocabulary> updateVocabulariesFromWebObserver()
@@ -461,7 +460,7 @@ public class VocabularyListFragment extends ListFragment
 
     private void applyVocabularyFilter(String searchText)
     {
-        if(searchText.length() > 0)
+        if(isNotBlank(searchText))
         {
             LogsManager.log(CLASS_NAME, "applyVocabularyFilter", "searchText=" + searchText + " selectedSearchType=" + selectedSearchType);
 

@@ -100,7 +100,8 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
         else
         {
             boolean isEnglish = SearchType.ENGLISH.equals(searchType);
-            vocabularyListTemp.forEach(vocabulary ->
+
+            for(Vocabulary vocabulary: vocabularyListTemp)
             {
                 if(isEnglish)
                 {
@@ -110,7 +111,7 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
                 {
                     filterForeign(vocabulary, searchedText);
                 }
-            });
+            }
         }
 
         LogsManager.log(CLASS_NAME, "filter", "New list size = " + getCount());
