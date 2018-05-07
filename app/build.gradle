@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 
-def ANDROID_VERSION = "27.0.2"
+def ANDROID_VERSION = "27.1.1"
 
 android {
     compileSdkVersion 27
@@ -68,6 +68,7 @@ dependencies {
     debugImplementation "com.squareup.leakcanary:leakcanary-android:$LEAKCANARY_VERSION"
     releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:$LEAKCANARY_VERSION"
 
-    testImplementation 'org.mockito:mockito-all:1.10.19'
+    testImplementation 'org.mockito:mockito-core:2.18.3'
     testImplementation 'junit:junit:4.12'
+    testImplementation 'org.robolectric:robolectric:3.6.1'
 }

@@ -5,6 +5,8 @@ import android.os.Parcelable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Objects;
+
 /**
  * Java bean for a vocabulary.
  */
@@ -92,12 +94,7 @@ public class Vocabulary implements Parcelable
     @Override
     public int hashCode()
     {
-        int hash = 3;
-        hash = 47 * hash + this.englishWord.hashCode();
-        hash = 47 * hash + this.foreignWord.hashCode();
-        hash = 47 * hash + this.foreignLanguage.hashCode();
-
-        return hash;
+        return Objects.hash(englishWord, foreignWord, foreignLanguage);
     }
 
     /**
