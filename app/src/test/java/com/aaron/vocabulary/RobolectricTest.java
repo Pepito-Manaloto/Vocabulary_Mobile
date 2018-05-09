@@ -1,14 +1,11 @@
 package com.aaron.vocabulary;
 
+import android.content.Context;
+
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
-
-import android.app.Application;
-import android.content.Context;
-
-import com.aaron.vocabulary.application.VocabularyApplication;
 
 /**
  * Created by Aaron on 02/01/2018.
