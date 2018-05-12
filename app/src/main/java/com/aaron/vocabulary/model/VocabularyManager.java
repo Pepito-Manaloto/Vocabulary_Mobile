@@ -27,11 +27,12 @@ public class VocabularyManager
 {
     private static final String CLASS_NAME = VocabularyManager.class.getSimpleName();
 
+    public static final String DEFAULT_LAST_UPDATED = "1950-01-01 00:00:00";
     public static final String DATE_FORMAT_DATABASE = "MMMM d, yyyy hh:mm:ss a";
     public static final String DATE_FORMAT_WEB = "yyyy-MM-dd HH:mm:ss";
 
     private MySQLiteHelper dbHelper;
-    private LocalDateTime now;
+    private LocalDateTime dateIn;
 
     /**
      * Default constructor
@@ -41,17 +42,16 @@ public class VocabularyManager
     public VocabularyManager(Context context)
     {
         this.dbHelper = new MySQLiteHelper(context);
-        this.now = LocalDateTime.now();
-
+        this.dateIn = LocalDateTime.now();
     }
 
     /**
-     * Saves the given lists of vocabularies to the local database.
+     * Deletes all vocabularies and saves the given lists of vocabularies to the local database.
      *
      * @param vocabularyMap the vocabularies to be stored
      * @return true on success, else false
      */
-    public boolean saveRecipesToDisk(final EnumMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap)
+    public boolean replaceVocabulariesInDisk(final EnumMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap)
     {
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
 
@@ -75,7 +75,6 @@ public class VocabularyManager
         {
             db.endTransaction();
             db.close();
-            this.dbHelper.close();
         }
 
         LogsManager.log(CLASS_NAME, "saveToDisk", "");
@@ -97,7 +96,7 @@ public class VocabularyManager
         values.put(Column.english_word.name(), vocabulary.getEnglishWord());
         values.put(Column.foreign_word.name(), vocabulary.getForeignWord());
         values.put(Column.foreign_language.name(), language.getLanguage());
-        values.put(Column.date_in.name(), now.format(DateTimeFormatter.ofPattern(DATE_FORMAT_DATABASE)));
+        values.put(Column.date_in.name(), dateIn.format(DateTimeFormatter.ofPattern(DATE_FORMAT_DATABASE)));
 
         db.insert(TABLE_VOCABULARY, null, values);
     }
@@ -189,7 +188,7 @@ public class VocabularyManager
      */
     public String getLastUpdated(final String format)
     {
-        String lastUpdatedDate = "1950-01-01 00:00:00";
+        String lastUpdatedDate = DEFAULT_LAST_UPDATED;
         try(SQLiteDatabase db = this.dbHelper.getReadableDatabase())
         {
             String[] columns = new String[] { Column.date_in.name(), };
@@ -228,10 +227,5 @@ public class VocabularyManager
             int result = db.delete(TABLE_VOCABULARY, null, null);
             Log.d(LogsManager.TAG, CLASS_NAME + ": deleteVocabularyFromDisk. affected=" + result);
         }
-    }
-
-    public ArrayList<Vocabulary> getVocabulariesFromMap(EnumMap<ForeignLanguage, ArrayList<Vocabulary>> vocabularyMap, ForeignLanguage foreignLanguage)
-    {
-        return vocabularyMap.get(foreignLanguage);
     }
 }

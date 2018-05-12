@@ -390,7 +390,8 @@ public class VocabularyListFragment extends ListFragment
                 }
                 else
                 {
-                    boolean saveToDiskSuccess = vocabularyManager.saveRecipesToDisk(map);
+                    // Also calls delete all vocabularies, before saving. (Atomic)
+                    boolean saveToDiskSuccess = vocabularyManager.replaceVocabulariesInDisk(map);
 
                     if(saveToDiskSuccess)
                     {
@@ -404,7 +405,7 @@ public class VocabularyListFragment extends ListFragment
                             message = newCount + " new vocabulary added.";
                         }
 
-                        list = vocabularyManager.getVocabulariesFromMap(map, settings.getForeignLanguage());
+                        list = map.get(settings.getForeignLanguage());
                     }
                     else
                     {
