@@ -1,0 +1,47 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage("Checkout")
+        {
+            steps
+            {
+                git "https://github.com/Pepito-Manaloto/Vocabulary_Mobile.git"
+                sh "gradlew clean"
+            }
+        }
+        stage("Build")
+        {
+            steps
+            {
+                sh "gradlew assemble"
+            }
+        }
+        stage("Unit Tests")
+        {
+            steps
+            {
+                sh "gradlew test"
+            }
+        }
+    }
+    post
+    {
+        success
+        {
+            emailext
+            {
+                subject: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: """SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]': Check console output at ${env.BUILD_URL}""""
+                to: "aaronjohn.asuncion@gmail.com"
+            }
+        }
+        failure
+        {
+            subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+            body: """FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]': Check console output at ${env.BUILD_URL}""""
+            to: "aaronjohn.asuncion@gmail.com"
+        }
+    }
+}
