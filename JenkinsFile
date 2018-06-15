@@ -31,17 +31,20 @@ pipeline
         success
         {
             emailext
-            {
+            (
                 subject: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
                 body: """SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]': Check console output at ${env.BUILD_URL}""",
                 to: "aaronjohn.asuncion@gmail.com"
-            }
+            )
         }
         failure
         {
-            subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-            body: """FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]': Check console output at ${env.BUILD_URL}""",
-            to: "aaronjohn.asuncion@gmail.com"
+            emailext
+            (
+                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: """FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]': Check console output at ${env.BUILD_URL}""",
+                to: "aaronjohn.asuncion@gmail.com"
+            )
         }
     }
 }
