@@ -8,21 +8,21 @@ pipeline
             steps
             {
                 git "https://github.com/Pepito-Manaloto/Vocabulary_Mobile.git"
-                sh "gradlew clean"
+                bat "gradlew.bat clean"
             }
         }
         stage("Build")
         {
             steps
             {
-                sh "gradlew assemble"
+                bat "gradlew.bat assemble"
             }
         }
         stage("Unit Tests")
         {
             steps
             {
-                sh "gradlew test"
+                bat "gradlew.bat test"
             }
         }
     }
