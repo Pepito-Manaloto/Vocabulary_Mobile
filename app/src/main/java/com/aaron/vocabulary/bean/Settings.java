@@ -4,8 +4,6 @@ import android.graphics.Typeface;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
-
 /**
  * Java bean for the application settings.
  */
@@ -199,7 +197,6 @@ public class Settings implements Parcelable
             case Monospace:
                 family = Typeface.MONOSPACE;
                 break;
-
             default:
                 family = Typeface.DEFAULT;
         }

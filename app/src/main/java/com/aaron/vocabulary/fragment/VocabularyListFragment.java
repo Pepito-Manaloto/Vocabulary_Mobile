@@ -1,13 +1,9 @@
 package com.aaron.vocabulary.fragment;
 
 import android.app.Activity;
-import android.app.FragmentManager;
 import android.app.ListFragment;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -15,8 +11,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.aaron.vocabulary.R;
@@ -24,79 +20,126 @@ import com.aaron.vocabulary.activity.AboutActivity;
 import com.aaron.vocabulary.activity.LogsActivity;
 import com.aaron.vocabulary.activity.SettingsActivity;
 import com.aaron.vocabulary.adapter.VocabularyAdapter;
+import com.aaron.vocabulary.bean.ForeignLanguage;
+import com.aaron.vocabulary.bean.ResponseVocabulary;
 import com.aaron.vocabulary.bean.SearchType;
 import com.aaron.vocabulary.bean.Settings;
 import com.aaron.vocabulary.bean.Vocabulary;
-import com.aaron.vocabulary.bean.Vocabulary.ForeignLanguage;
+import com.aaron.vocabulary.fragment.listener.ShowHideFastScrollListener;
+import com.aaron.vocabulary.fragment.listener.VocabularySearchListener;
+import com.aaron.vocabulary.model.HttpClient;
 import com.aaron.vocabulary.model.LogsManager;
 import com.aaron.vocabulary.model.VocabularyManager;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
-import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.observers.DisposableSingleObserver;
+import io.reactivex.schedulers.Schedulers;
+
+import static com.aaron.vocabulary.bean.DataKey.EXTRA_SETTINGS;
+import static com.aaron.vocabulary.bean.DataKey.EXTRA_VOCABULARY_LIST;
+import static com.aaron.vocabulary.model.VocabularyManager.DATE_FORMAT_WEB;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * Main view fragment containing the vocabulary list with main menu bar.
  */
 public class VocabularyListFragment extends ListFragment
 {
-    public static final String CLASS_NAME = VocabularyListFragment.class.getSimpleName();
-    public static final String EXTRA_VOCABULARY_LIST = "com.aaron.vocabulary.fragment.vocabulary_list.list";
+    private enum MenuRequest
+    {
+        SETTINGS(0), ABOUT(1), LOGS(2);
 
-    private static final String DIALOG_UPDATE = "update";
-    private static final int REQUEST_UPDATE = 0;
-    private static final int REQUEST_SETTINGS = 1;
-    private static final int REQUEST_ABOUT = 2;
-    private static final int REQUEST_LOGS = 3;
+        private int code;
+
+        MenuRequest(int code)
+        {
+            this.code = code;
+        }
+
+        int getCode()
+        {
+            return code;
+        }
+    }
+
+    public static final String CLASS_NAME = VocabularyListFragment.class.getSimpleName();
+    private static final Pattern IP_ADDRESS_PATTERN = Pattern.compile("(\\d{1,3}\\.){3}\\d{1,3}");
+    private static final AtomicBoolean IS_UPDATING = new AtomicBoolean(false);
 
     private ArrayList<Vocabulary> list;
     private VocabularyAdapter vocabularyAdapter;
 
     private Settings settings;
-    private VocabularyManager vocabularyManager;
-    private EditText searchTextfield;
-    private SearchListener searchListener;
+    private EditText searchEditText;
+    private ProgressBar updateProgressBar;
+    private VocabularySearchListener searchListener;
     private SearchType selectedSearchType;
+    private ForeignLanguage selectedForeignLanguage = ForeignLanguage.Hokkien;
+
+    private VocabularyManager vocabularyManager;
+    private HttpClient httpClient;
+    private CompositeDisposable compositeDisposable;
 
     /**
      * Initializes non-fragment user interface.
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
-        if(savedInstanceState != null)
-        {
-            this.settings = savedInstanceState.getParcelable(EXTRA_SETTINGS);
+        vocabularyManager = new VocabularyManager(getActivity().getApplicationContext());
+        httpClient = new HttpClient(getString(R.string.url_address_default));
+        compositeDisposable = new CompositeDisposable();
 
-            // But we are sure of its type
-            this.list = savedInstanceState.getParcelableArrayList(EXTRA_VOCABULARY_LIST);
-        }
+        initializeSettings(savedInstanceState);
+        initializeVocabularyList(savedInstanceState);
 
-        if(this.settings == null)
-        {
-            this.settings = new Settings();
-        }
-
-        this.vocabularyManager = new VocabularyManager(getActivity().getApplicationContext());
-
-        if(this.list == null)
-        {
-            this.list = this.vocabularyManager.getVocabulariesFromDisk(this.settings.getForeignLanguage());
-        }
-
-        this.vocabularyAdapter = new VocabularyAdapter(getActivity(), this.list, this.settings);
-        this.setListAdapter(this.vocabularyAdapter);
+        vocabularyAdapter = new VocabularyAdapter(getActivity(), list, settings);
+        setListAdapter(vocabularyAdapter);
 
         setHasOptionsMenu(true);
-        this.selectedSearchType = SearchType.ENGLISH;
-        this.searchListener = new SearchListener(this.vocabularyAdapter, this.selectedSearchType);
+        selectedSearchType = SearchType.ENGLISH;
+        searchListener = new VocabularySearchListener(vocabularyAdapter, selectedSearchType);
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": onCreate. settings=" + this.settings + " list=" + this.list);
-        LogsManager.addToLogs(CLASS_NAME + ": onCreate. settings=" + this.settings + " list_size=" + this.list.size());
+        LogsManager.log(CLASS_NAME, "onCreate", "settings=" + settings + " list_size=" + list.size());
+    }
+
+    private void initializeSettings(Bundle savedInstanceState)
+    {
+        if(savedInstanceState != null && savedInstanceState.containsKey(EXTRA_SETTINGS.toString()))
+        {
+            settings = savedInstanceState.getParcelable(EXTRA_SETTINGS.toString());
+        }
+
+        if(settings == null)
+        {
+            settings = new Settings();
+        }
+        else
+        {
+            selectedForeignLanguage = settings.getForeignLanguage();
+        }
+    }
+
+    private void initializeVocabularyList(Bundle savedInstanceState)
+    {
+        if(savedInstanceState != null && savedInstanceState.containsKey(EXTRA_VOCABULARY_LIST.toString()))
+        {
+            list = savedInstanceState.getParcelableArrayList(EXTRA_VOCABULARY_LIST.toString());
+        }
+
+        if(list == null)
+        {
+            list = vocabularyManager.getVocabulariesFromDisk(settings.getForeignLanguage());
+        }
     }
 
     /**
@@ -106,6 +149,8 @@ public class VocabularyListFragment extends ListFragment
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState)
     {
         View view = inflater.inflate(R.layout.fragment_vocabulary_list, parent, false);
+
+        updateProgressBar = view.findViewById(R.id.progress_bar_update);
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateView.");
 
@@ -133,10 +178,8 @@ public class VocabularyListFragment extends ListFragment
     {
         super.onResume();
 
-        String language = getString(R.string.app_name, this.settings.getForeignLanguage().name());
+        String language = getString(R.string.app_name, settings.getForeignLanguage().name());
         getActivity().setTitle(language);
-
-        this.vocabularyAdapter.notifyDataSetChanged();
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onResume");
     }
@@ -149,8 +192,8 @@ public class VocabularyListFragment extends ListFragment
     {
         super.onSaveInstanceState(outState);
 
-        outState.putParcelable(EXTRA_SETTINGS, this.settings);
-        outState.putParcelableArrayList(EXTRA_VOCABULARY_LIST, this.list);
+        outState.putParcelable(EXTRA_SETTINGS.toString(), settings);
+        outState.putParcelableArrayList(EXTRA_VOCABULARY_LIST.toString(), list);
 
         Log.d(LogsManager.TAG, CLASS_NAME + ": onSaveInstanceState");
     }
@@ -161,46 +204,61 @@ public class VocabularyListFragment extends ListFragment
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data)
     {
+        doneUpdating(); // Ensures this flag is set to false upon Activity transition while updating.
+
         if(resultCode != Activity.RESULT_OK)
         {
             return;
         }
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
-        LogsManager.addToLogs(CLASS_NAME + ": onActivityResult. requestCode=" + requestCode + " resultCode=" + resultCode);
+        LogsManager.log(CLASS_NAME, "onActivityResult", "requestCode=" + requestCode + " resultCode=" + resultCode);
 
-        // Update action bar menu processing result
-        if(requestCode == REQUEST_UPDATE && data != null && data.hasExtra(UpdateFragment.EXTRA_VOCABULARY_LIST))
+        boolean requestResultFromSettingsOrAboutOrLogs = requestCode == MenuRequest.SETTINGS.getCode() || requestCode == MenuRequest.ABOUT.getCode()
+                || requestCode == MenuRequest.LOGS.getCode();
+        boolean hasExtraSettingsData = data != null && data.hasExtra(EXTRA_SETTINGS.toString());
+        if(requestResultFromSettingsOrAboutOrLogs && hasExtraSettingsData)
         {
-            // But we are sure of its type
-            @SuppressWarnings("unchecked")
-            ArrayList<Vocabulary> list = data.getParcelableArrayListExtra(UpdateFragment.EXTRA_VOCABULARY_LIST);
+            settings = data.getParcelableExtra(EXTRA_SETTINGS.toString());
 
-            // Handles occasional NullPointerException.
-            if(list != null && !list.isEmpty())
+            if(settings != null)
             {
-                this.list = list;
-            }
-            else
-            {
-                this.list = this.vocabularyManager.getVocabulariesFromDisk(this.settings.getForeignLanguage());
-            }
+                boolean foreignLanguageChanged = !selectedForeignLanguage.equals(settings.getForeignLanguage());
 
-            this.updateListOnUiThread(this.list);
+                selectedForeignLanguage = settings.getForeignLanguage();
+                list = vocabularyManager.getVocabulariesFromDisk(selectedForeignLanguage);
+
+                if(foreignLanguageChanged)
+                {
+                    reinitializeAdapterAndSearchListener();
+                }
+                else
+                {
+                    updateVocabularyAdapterInUiThread();
+                }
+
+                updateRetrofitBaseUrl(requestCode);
+            }
         }
-        else if((requestCode == REQUEST_SETTINGS || requestCode == REQUEST_ABOUT || requestCode == REQUEST_LOGS) && (data != null && data.hasExtra(EXTRA_SETTINGS)))
+    }
+
+    private void reinitializeAdapterAndSearchListener()
+    {
+        vocabularyAdapter = new VocabularyAdapter(getActivity(), list, settings);
+        setListAdapter(vocabularyAdapter);
+        searchListener.setVocabularyAdapter(vocabularyAdapter);
+    }
+
+    private void updateRetrofitBaseUrl(int requestCode)
+    {
+        if(requestCode == MenuRequest.SETTINGS.getCode() && isValidURL(settings.getServerURL()))
         {
-            this.settings = data.getParcelableExtra(EXTRA_SETTINGS);
-
-            ForeignLanguage language = ForeignLanguage.Hokkien;
-            if(this.settings != null)
-            {
-                language = this.settings.getForeignLanguage();
-            }
-
-            this.list = this.vocabularyManager.getVocabulariesFromDisk(language);
-            this.updateListOnUiThread(this.list);
+            HttpClient.reinitializeRetrofit(settings.getServerURL());
         }
+    }
+
+    private boolean isValidURL(String newBaseUrl)
+    {
+        return IP_ADDRESS_PATTERN.matcher(newBaseUrl).matches();
     }
 
     /**
@@ -214,11 +272,33 @@ public class VocabularyListFragment extends ListFragment
 
         // Get the action view of the menu item whose id is edittext_search_field
         View view = menu.findItem(R.id.menu_search).getActionView();
+        initializeSearchEditText(view);
+    }
 
-        // Get the edit text from the action view
-        this.searchTextfield = view.findViewById(R.id.edittext_search_field);
-        this.searchTextfield.setHint(R.string.hint_vocabulary);
-        this.searchTextfield.addTextChangedListener(this.searchListener);
+    private void initializeSearchEditText(View view)
+    {
+        searchEditText = view.findViewById(R.id.edittext_search_field);
+        searchEditText.setHint(R.string.hint_vocabulary);
+        searchEditText.addTextChangedListener(searchListener);
+    }
+
+    @Override
+    public void onStop()
+    {
+        super.onStop();
+
+        if(searchEditText != null)
+        {
+            searchEditText.getText().clear();
+        }
+
+        if(!compositeDisposable.isDisposed())
+        {
+            // Calling dispose() breaks retrofit2, which does nothing on succeeding calls. Why?
+            compositeDisposable.clear();
+        }
+
+        doneUpdating();
     }
 
     /**
@@ -227,8 +307,6 @@ public class VocabularyListFragment extends ListFragment
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        FragmentManager fm = getActivity().getFragmentManager();
-
         switch(item.getItemId())
         {
             case R.id.menu_search:
@@ -237,48 +315,45 @@ public class VocabularyListFragment extends ListFragment
             }
             case R.id.menu_update:
             {
-                UpdateFragment updateDialog = UpdateFragment.newInstance(this.settings);
-
-                if(updateDialog.isUpdating())
+                if(!IS_UPDATING.get())
                 {
-                    Toast.makeText(getActivity(), getActivity().getString(R.string.dialog_already_updating_message), Toast.LENGTH_LONG).show();
+                    Log.d(LogsManager.TAG, CLASS_NAME + ": onOptionsItemSelected. Updating vocabularies.");
+                    preUpdating();
+
+                    Disposable disposable = httpClient.getVocabularies(vocabularyManager.getLastUpdated(DATE_FORMAT_WEB))
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .doFinally(this::doneUpdating)
+                            .subscribeWith(updateVocabulariesFromWebObserver());
+
+                    compositeDisposable.add(disposable);
                 }
                 else
                 {
-                    updateDialog.setTargetFragment(this, REQUEST_UPDATE);
-                    updateDialog.show(fm, DIALOG_UPDATE);
+                    Toast.makeText(getContext(), getString(R.string.toast_already_updating), Toast.LENGTH_SHORT).show();
                 }
 
                 return true;
             }
             case R.id.menu_settings:
             {
-                Intent intent = new Intent(getActivity(), SettingsActivity.class);
-                intent.putExtra(EXTRA_SETTINGS, this.settings);
-                startActivityForResult(intent, REQUEST_SETTINGS);
-
+                startActivityWithExtraSettings(SettingsActivity.class, MenuRequest.SETTINGS);
                 return true;
             }
             case R.id.menu_search_type:
             {
-                this.toggleSearchTypeMenuItem(item);
+                toggleSearchTypeMenuItem(item);
 
                 return true;
             }
             case R.id.menu_about:
             {
-                Intent intent = new Intent(getActivity(), AboutActivity.class);
-                intent.putExtra(EXTRA_SETTINGS, this.settings);
-                startActivityForResult(intent, REQUEST_ABOUT);
-
+                startActivityWithExtraSettings(AboutActivity.class, MenuRequest.ABOUT);
                 return true;
             }
             case R.id.menu_logs:
             {
-                Intent intent = new Intent(getActivity(), LogsActivity.class);
-                intent.putExtra(EXTRA_SETTINGS, this.settings);
-                startActivityForResult(intent, REQUEST_LOGS);
-
+                startActivityWithExtraSettings(LogsActivity.class, MenuRequest.LOGS);
                 return true;
             }
             default:
@@ -286,6 +361,77 @@ public class VocabularyListFragment extends ListFragment
                 return super.onOptionsItemSelected(item);
             }
         }
+    }
+
+    private void preUpdating()
+    {
+        IS_UPDATING.set(true);
+        updateProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void doneUpdating()
+    {
+        IS_UPDATING.set(false);
+        updateProgressBar.setVisibility(View.INVISIBLE);
+    }
+
+    private DisposableSingleObserver<ResponseVocabulary> updateVocabulariesFromWebObserver()
+    {
+        return new DisposableSingleObserver<ResponseVocabulary>()
+        {
+            @Override
+            public void onSuccess(ResponseVocabulary response)
+            {
+                String message;
+                EnumMap<ForeignLanguage, ArrayList<Vocabulary>> map = response.getVocabularyMap();
+                if(map == null || map.isEmpty())
+                {
+                    message = "No new vocabularies available.";
+                }
+                else
+                {
+                    // Also calls delete all vocabularies, before saving. (Atomic)
+                    boolean saveToDiskSuccess = vocabularyManager.replaceVocabulariesInDisk(map);
+
+                    if(saveToDiskSuccess)
+                    {
+                        int newCount = response.getRecentlyAddedCount();
+                        if(newCount > 1)
+                        {
+                            message = newCount + " new vocabularies added.";
+                        }
+                        else
+                        {
+                            message = newCount + " new vocabulary added.";
+                        }
+
+                        list = map.get(settings.getForeignLanguage());
+                    }
+                    else
+                    {
+                        message = "Failed saving to disk.";
+                    }
+                }
+
+                updateVocabularyAdapterInUiThread();
+
+                Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onError(Throwable e)
+            {
+                Toast.makeText(getContext(), "Error updating vocabularies: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                Log.d(LogsManager.TAG, CLASS_NAME + ": onError. Error updating vocabularies. " + e.getMessage());
+            }
+        };
+    }
+
+    private void startActivityWithExtraSettings(Class<? extends Activity> activityToStart, MenuRequest menuRequestOrigin)
+    {
+        Intent intent = new Intent(getActivity(), activityToStart);
+        intent.putExtra(EXTRA_SETTINGS.toString(), settings);
+        startActivityForResult(intent, menuRequestOrigin.getCode());
     }
 
     /**
@@ -296,150 +442,35 @@ public class VocabularyListFragment extends ListFragment
      */
     private void toggleSearchTypeMenuItem(MenuItem item)
     {
-        if(SearchType.FOREIGN.equals(this.selectedSearchType))
+        if(SearchType.FOREIGN.equals(selectedSearchType))
         {
-            this.selectedSearchType = SearchType.ENGLISH;
+            selectedSearchType = SearchType.ENGLISH;
             item.setTitle(getString(R.string.menu_search_english));
         }
         else
         {
-            this.selectedSearchType = SearchType.FOREIGN;
+            selectedSearchType = SearchType.FOREIGN;
             item.setTitle(getString(R.string.menu_search_foreign));
         }
 
-        this.searchListener.setSearchType(this.selectedSearchType);
+        searchListener.setSearchType(selectedSearchType);
 
-        String searched = this.searchTextfield.getText().toString();
-        if(searched.length() > 0)
+        String searchText = searchEditText.getText().toString();
+        applyVocabularyFilter(searchText);
+    }
+
+    private void applyVocabularyFilter(String searchText)
+    {
+        if(isNotBlank(searchText))
         {
-            this.vocabularyAdapter.filter(searched, this.selectedSearchType);
+            LogsManager.log(CLASS_NAME, "applyVocabularyFilter", "searchText=" + searchText + " selectedSearchType=" + selectedSearchType);
+
+            vocabularyAdapter.filter(searchText, selectedSearchType);
         }
     }
 
-    /**
-     * Updates the list view on UI thread.
-     */
-    private void updateListOnUiThread(final ArrayList<Vocabulary> list)
+    private void updateVocabularyAdapterInUiThread()
     {
-        if(list != null)
-        {
-            this.getActivity().runOnUiThread(new UpdateAdapterRunnable(this.vocabularyAdapter, this.list));
-        }
-    }
-
-    /**
-     * Helper class for ListView's scroll listener.
-     */
-    private static class ShowHideFastScrollListener implements AbsListView.OnScrollListener, Runnable
-    {
-        private static final int DELAY = 1000;
-        private AbsListView view;
-        private final Handler handler = new Handler();
-
-        /**
-         * Runnable for handler object.
-         */
-        @Override
-        public void run()
-        {
-            this.view.setFastScrollAlwaysVisible(false);
-            this.view = null;
-        }
-
-        /**
-         * Show fast-scroll thumb if scrolling, and hides fast-scroll thumb if not scrolling.
-         */
-        @Override
-        public void onScrollStateChanged(AbsListView view, int scrollState)
-        {
-            if(scrollState != SCROLL_STATE_IDLE)
-            {
-                view.setFastScrollAlwaysVisible(true);
-
-                // Removes the runnable from the message queue.
-                // Stops the handler from hiding the fast-scroll.
-                this.handler.removeCallbacks(this);
-            }
-            else
-            {
-                this.view = view;
-
-                // Adds the runnable to the message queue, will run after the DELAY.
-                // Hides the fast-scroll after two seconds of no scrolling.
-                this.handler.postDelayed(this, DELAY);
-            }
-        }
-
-        @Override
-        public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount)
-        {
-        }
-    }
-
-    /**
-     * Helper class for search listener.
-     */
-    private static class SearchListener implements TextWatcher
-    {
-        private VocabularyAdapter adapter;
-        private SearchType searchType;
-
-        SearchListener(VocabularyAdapter adapter, SearchType searchType)
-        {
-            this.adapter = adapter;
-            this.searchType = searchType;
-        }
-
-        /**
-         * Handles search on text update.
-         */
-        @Override
-        public void afterTextChanged(Editable textField)
-        {
-            String searched = textField.toString();
-            this.adapter.filter(searched, this.searchType);
-
-            Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateOptionsMenu(afterTextChanged). searched=" + searched);
-        }
-
-        @Override
-        public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
-        {
-        }
-
-        @Override
-        public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
-        {
-        }
-
-        private void setSearchType(SearchType searchType)
-        {
-            this.searchType = searchType;
-        }
-    }
-
-    /**
-     * Helper class that updates the list on UI thread.
-     */
-    private static class UpdateAdapterRunnable implements Runnable
-    {
-        private WeakReference<VocabularyAdapter> vocabularyAdapterRef;
-        private final ArrayList<Vocabulary> list;
-
-        UpdateAdapterRunnable(VocabularyAdapter adapter, ArrayList<Vocabulary> list)
-        {
-            this.vocabularyAdapterRef = new WeakReference<>(adapter);
-            this.list = list;
-        }
-
-        @Override
-        public void run()
-        {
-            VocabularyAdapter adapter = this.vocabularyAdapterRef.get();
-            if(adapter != null)
-            {
-                adapter.update(this.list);
-            }
-        }
+        getActivity().runOnUiThread(() -> vocabularyAdapter.update(list));
     }
 }

@@ -3,6 +3,7 @@ package com.aaron.vocabulary.application;
 import android.app.Application;
 
 import com.facebook.stetho.Stetho;
+import com.jakewharton.threetenabp.AndroidThreeTen;
 import com.squareup.leakcanary.LeakCanary;
 
 /**
@@ -27,5 +28,6 @@ public class VocabularyApplication extends Application
         Stetho.initializeWithDefaults(this);
 
         // Normal app init code...
+        AndroidThreeTen.init(this);
     }
 }

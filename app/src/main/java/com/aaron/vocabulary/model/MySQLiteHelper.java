@@ -10,7 +10,6 @@ import android.util.Log;
  */
 public class MySQLiteHelper extends SQLiteOpenHelper
 {
-    public static final String TAG = "MySQLiteHelper";
     public static final String DATABASE_NAME = "aaron_vocabulary.db";
     private static final int DATABASE_VERSION = 1;
 
@@ -64,13 +63,13 @@ public class MySQLiteHelper extends SQLiteOpenHelper
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion)
     {
-        /**
+        /*
          * TODO (1) store db contents in temp --- NOT YET
          *      (2) drop db --- IMPLEMENTED
          *      (3) create new db --- IMPLEMENTED 
          *      (4) insert temp data in new db --- NOT YET
          */
-        database.execSQL("DROP IF TABLE EXISTS " + TABLE_VOCABULARY);
+        database.execSQL("DROP TABLE IF EXISTS " + TABLE_VOCABULARY);
         this.onCreate(database);
     }
 

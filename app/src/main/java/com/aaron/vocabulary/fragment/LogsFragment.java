@@ -5,11 +5,8 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,18 +18,20 @@ import android.widget.TextView;
 
 import com.aaron.vocabulary.R;
 import com.aaron.vocabulary.bean.Settings;
+import com.aaron.vocabulary.fragment.listener.BackButtonListener;
+import com.aaron.vocabulary.fragment.listener.LogsSearchListener;
 import com.aaron.vocabulary.model.LogsManager;
 
-import java.lang.ref.WeakReference;
-
-import static com.aaron.vocabulary.fragment.SettingsFragment.EXTRA_SETTINGS;
+import static com.aaron.vocabulary.bean.DataKey.EXTRA_SETTINGS;
 
 /**
  * The application logs fragment.
  */
-public class LogsFragment extends Fragment
+public class LogsFragment extends Fragment implements Backable
 {
     public static final String CLASS_NAME = LogsFragment.class.getSimpleName();
+
+    private EditText searchEditText;
     private TextView textarea;
     private LogsManager logsManager;
     private Settings settings;
@@ -45,7 +44,7 @@ public class LogsFragment extends Fragment
     {
         super.onCreate(savedInstanceState);
 
-        this.settings = getActivity().getIntent().getParcelableExtra(EXTRA_SETTINGS);
+        this.settings = getActivity().getIntent().getParcelableExtra(EXTRA_SETTINGS.toString());
 
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.menu_logs);
@@ -68,7 +67,6 @@ public class LogsFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState)
     {
         View view = inflater.inflate(R.layout.fragment_logs, parent, false);
-
         view.setFocusableInTouchMode(true);
         view.requestFocus();
         view.setOnKeyListener(new BackButtonListener(this));
@@ -113,12 +111,21 @@ public class LogsFragment extends Fragment
 
         // Get the action view of the menu item whose id is edittext_search_field
         View view = menu.findItem(R.id.menu_search).getActionView();
+        initializeSearchEditText(view);
+    }
 
-        // Get the edit text from the action view
-        final EditText searchTextfield = view.findViewById(R.id.edittext_search_field);
-        searchTextfield.setHint(R.string.hint_logs);
+    private void initializeSearchEditText(View view)
+    {
+        searchEditText = view.findViewById(R.id.edittext_search_field);
+        searchEditText.setHint(R.string.hint_logs);
+        searchEditText.addTextChangedListener(new LogsSearchListener(this, this.logsManager));
+    }
 
-        searchTextfield.addTextChangedListener(new SearchListener(this, this.logsManager));
+    @Override
+    public void onStop()
+    {
+        super.onStop();
+        searchEditText.getText().clear();
     }
 
     /**
@@ -128,95 +135,21 @@ public class LogsFragment extends Fragment
     {
         Intent data = new Intent();
 
-        data.putExtra(EXTRA_SETTINGS, this.settings);
+        data.putExtra(EXTRA_SETTINGS.toString(), this.settings);
         getActivity().setResult(Activity.RESULT_OK, data);
         getActivity().finish();
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": setFragmentActivityResult. Current settings -> " + this.settings);
-        LogsManager.addToLogs(CLASS_NAME + ": setFragmentActivityResult. Current settings -> " + this.settings);
+        LogsManager.log(CLASS_NAME, "setFragmentActivityResult", "Current settings = " + this.settings);
     }
 
-    private void setTextAreaText(final String text)
+    public void setTextAreaText(final String text)
     {
         this.textarea.setText(text);
     }
 
-    private static class BackButtonListener implements View.OnKeyListener
+    @Override
+    public void setActivityResultOnBackEvent()
     {
-        private WeakReference<LogsFragment> fragmentRef;
-
-        BackButtonListener(LogsFragment fragment)
-        {
-            this.fragmentRef = new WeakReference<>(fragment);
-        }
-
-        /**
-         * Handles back button.
-         */
-        @Override
-        public boolean onKey(android.view.View v, int keyCode, KeyEvent event)
-        {
-            // For back button
-            if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
-            {
-                LogsFragment fragment = this.fragmentRef.get();
-
-                if(fragment != null)
-                {
-                    fragment.setFragmentActivityResult();
-                }
-
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        setFragmentActivityResult();
     }
-
-    private static class SearchListener implements TextWatcher
-    {
-        private WeakReference<LogsFragment> fragmentRef;
-        private LogsManager logsManager;
-
-        SearchListener(LogsFragment fragment, LogsManager logsManager)
-        {
-            this.fragmentRef = new WeakReference<>(fragment);
-            this.logsManager = logsManager;
-        }
-
-        /**
-         * Handles search on text update.
-         */
-        @Override
-        public void afterTextChanged(Editable textField)
-        {
-            String searched = textField.toString();
-
-            LogsFragment fragment = this.fragmentRef.get();
-
-            if(searched.length() <= 0)
-            {
-                fragment.setTextAreaText(this.logsManager.getLogs());
-            }
-            else
-            {
-                fragment.setTextAreaText(this.logsManager.getLogs(searched));
-            }
-
-            Log.d(LogsManager.TAG, CLASS_NAME + ": onCreateOptionsMenu(afterTextChanged). searched=" + searched);
-        }
-
-        @Override
-        public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
-        {
-        }
-
-        @Override
-        public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
-        {
-        }
-    }
-
 }

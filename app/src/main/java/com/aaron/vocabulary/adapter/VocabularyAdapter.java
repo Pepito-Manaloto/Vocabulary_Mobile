@@ -2,7 +2,6 @@ package com.aaron.vocabulary.adapter;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +16,7 @@ import com.aaron.vocabulary.bean.Vocabulary;
 import com.aaron.vocabulary.model.LogsManager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * ListView adapter for vocabulary list.
@@ -24,7 +24,8 @@ import java.util.ArrayList;
 public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
 {
     private static final String CLASS_NAME = VocabularyAdapter.class.getSimpleName();
-    private ArrayList<Vocabulary> vocabularyList;
+    private static final String ENGLISH_WORD_SEPARATOR = " / ";
+
     private ArrayList<Vocabulary> vocabularyListTemp;
     private Settings settings;
 
@@ -42,7 +43,6 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     {
         super(context, 0, vocabularyList);
 
-        this.vocabularyList = vocabularyList;
         this.vocabularyListTemp = new ArrayList<>(vocabularyList);
         this.settings = settings;
     }
@@ -55,26 +55,28 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     public View getView(int position, View convertView, @NonNull ViewGroup parent)
     {
         ViewHolder holder;
+        View listRowView;
 
         if(convertView == null)
         {
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.fragment_vocabulary_list_row, parent, false);
+            listRowView = LayoutInflater.from(getContext()).inflate(R.layout.fragment_vocabulary_list_row, parent, false);
 
             holder = new ViewHolder();
-            holder.englishText = convertView.findViewById(R.id.text_english_language);
-            holder.foreignText = convertView.findViewById(R.id.text_foreign_language);
+            holder.englishText = listRowView.findViewById(R.id.text_english_language);
+            holder.foreignText = listRowView.findViewById(R.id.text_foreign_language);
 
-            convertView.setTag(holder);
+            listRowView.setTag(holder);
         }
         else
         {
+            listRowView = convertView;
             holder = (ViewHolder) convertView.getTag();
         }
 
         Vocabulary vocabulary = getItem(position);
         holder.setVocabularyView(vocabulary, this.settings);
 
-        return convertView;
+        return listRowView;
     }
 
     /**
@@ -88,44 +90,50 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
      */
     public void filter(final String searched, SearchType searchType)
     {
-        this.vocabularyList.clear();
+        clear();
         String searchedText = searched.trim();
 
         if(searchedText.length() == 0)
         {
-            this.vocabularyList.addAll(this.vocabularyListTemp);
+            addAll(this.vocabularyListTemp);
         }
         else
         {
             boolean isEnglish = SearchType.ENGLISH.equals(searchType);
-            for(Vocabulary vocab : this.vocabularyListTemp)
+
+            for(Vocabulary vocabulary: vocabularyListTemp)
             {
                 if(isEnglish)
                 {
-                    String englishWord = vocab.getEnglishWord();
-                    for(String word : englishWord.split(" / "))
-                    {
-                        if(word.startsWith(searchedText))
-                        {
-                            this.vocabularyList.add(vocab);
-                        }
-                    }
+                    filterEnglish(vocabulary, searchedText);
                 }
                 else
                 {
-                    String foreignWord = vocab.getForeignWord();
-                    if(foreignWord.startsWith(searchedText))
-                    {
-                        this.vocabularyList.add(vocab);
-                    }
+                    filterForeign(vocabulary, searchedText);
                 }
             }
         }
 
-        this.notifyDataSetChanged();
+        LogsManager.log(CLASS_NAME, "filter", "New list size = " + getCount());
+    }
 
-        Log.d(LogsManager.TAG, CLASS_NAME + ": filter. New list -> " + this.vocabularyList);
-        LogsManager.addToLogs(CLASS_NAME + ": filter. New list size -> " + this.vocabularyList.size());
+    private void filterEnglish(Vocabulary vocabulary, String searchedText)
+    {
+        String englishWord = vocabulary.getEnglishWord();
+        boolean searchedTextFound = Arrays.stream(englishWord.split(ENGLISH_WORD_SEPARATOR)).anyMatch(word -> word.startsWith(searchedText));
+        if(searchedTextFound)
+        {
+            add(vocabulary);
+        }
+    }
+
+    private void filterForeign(Vocabulary vocabulary, String searchedText)
+    {
+        String foreignWord = vocabulary.getForeignWord();
+        if(foreignWord.startsWith(searchedText))
+        {
+            add(vocabulary);
+        }
     }
 
     /**
@@ -138,15 +146,18 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
     {
         if(list != null)
         {
-            this.vocabularyList.clear();
+            // Store this new list into temp, because the list parameter shares the same reference as the Adapter's list.
+            // Thus, calling clear() will clear out both the adapter's list and the new list.
+            ArrayList<Vocabulary> tmpList = new ArrayList<>(list);
+            clear();
 
             // If user deletes vocabulary list in AboutFragment
-            if(!list.isEmpty())
+            if(!tmpList.isEmpty())
             {
-                this.vocabularyList.addAll(list);
+                addAll(tmpList);
+                vocabularyListTemp.clear();
+                vocabularyListTemp.addAll(tmpList);
             }
-
-            this.notifyDataSetChanged();
         }
     }
 
@@ -155,10 +166,10 @@ public class VocabularyAdapter extends ArrayAdapter<Vocabulary>
      */
     private static class ViewHolder
     {
-        TextView englishText;
-        TextView foreignText;
+        private TextView englishText;
+        private TextView foreignText;
 
-        void setVocabularyView(Vocabulary vocabulary, Settings settings)
+        private void setVocabularyView(Vocabulary vocabulary, Settings settings)
         {
             this.englishText.setText(vocabulary.getEnglishWord());
             this.englishText.setTextSize(TypedValue.COMPLEX_UNIT_SP, settings.getFontSize());
